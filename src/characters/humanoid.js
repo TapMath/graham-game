@@ -14,7 +14,8 @@
 //     hair:{color, style:'braid'|'long'|'short'|'bun'|'cap'|'hood'|'bald'|'turban'},
 //     top:{color, trim, length:'shirt'|'kurta'|'longKurta'|'coat', sleeves:'short'|'long'},
 //     bottom:{color, style:'trousers'|'shorts'|'skirt'}, shoes,
-//     scarf:{color, trim}|null, jacket:{color, stripe}|null, props:['cane','mouthOrgan','torch','bag','hardHat'],
+//     scarf:{color, trim}|null, jacket:{color, stripe}|null,
+//     props:['cane','mouthOrgan','torch','bag','hardHat','bandage' (white wrap on the left arm), 'headBand' (white bandage round the head), 'headLamp'],
 //     variants:{ name: {…fields to override…} } }
 // Everything is in metres. All characters share `characterMaterial(game)`.
 import * as THREE from 'three';
@@ -121,6 +122,7 @@ const BUILD = {
   normal: { w: 1.0, head: 0.065, hip: 0.5, arm: 0.37 },
   stocky: { w: 1.18, head: 0.066, hip: 0.49, arm: 0.37 },
   child: { w: 0.9, head: 0.088, hip: 0.44, arm: 0.36 },
+  big: { w: 1.7, head: 0.062, hip: 0.49, arm: 0.37 },          // the Big Man
 };
 
 function merged(spec, over) {
@@ -169,6 +171,11 @@ function buildSet(spec) {
       m.cyl(0.011, 0.011, cl, 0, -armLen + armR - cl / 2 + 0.06, 0, 0xf2f2ee, { seg: 5 });
       m.cyl(0.0125, 0.0125, cl * 0.14, 0, -armLen + armR - cl * 0.5 - cl * 0.12, 0, 0xc23a30, { seg: 5 });
       m.ball(0.02, 0, -armLen + armR - cl + 0.06, 0, 0xf2f2ee, { detail: 0 });
+    }
+    if (side < 0 && spec.props.includes('bandage')) {                                          // a white bandage wrapped round the forearm, a spot of red
+      m.cyl(armR * 1.75, armR * 1.55, armLen * 0.46, 0, -armLen * 0.62, 0, 0xe8e4d6, { seg: 8 });
+      m.cyl(armR * 1.8, armR * 1.8, armLen * 0.05, 0, -armLen * 0.5, 0, 0xcfc8b6, { seg: 8 });
+      m.box(armR * 1.2, armLen * 0.08, armR * 0.6, 0, -armLen * 0.66, -armR * 1.5, 0xb83a30);
     }
     if (side > 0 && spec.props.includes('mouthOrgan')) {
       m.box(H * 0.085, H * 0.022, H * 0.03, 0, -armLen + armR * 0.2, -armR * 1.6, 0xb8c4cc, { ry: 0.3 });
@@ -282,6 +289,14 @@ function buildSet(spec) {
       }
     }
     if (spec.props.includes('bag')) m.box(sw * 1.4, H * 0.2, H * 0.09, 0, shoulderY - H * 0.14, sw * 0.9, 0x6a5a3a);
+    if (spec.props.includes('headBand')) {
+      m.cyl(headR * 1.0, headR * 1.0, headR * 0.5, 0, headY + headR * 0.34, 0, 0xe8e4d6, { sx: 0.9, sz: 0.97, seg: 10 });
+      m.box(headR * 0.5, headR * 0.34, headR * 0.1, headR * 0.5, headY + headR * 0.34, -headR * 0.9, 0xb83a30);
+    }
+    if (spec.props.includes('headLamp')) {
+      m.cyl(headR * 1.02, headR * 1.02, headR * 0.16, 0, headY + headR * 0.45, 0, 0x3a3a38, { sx: 0.9, sz: 0.97, seg: 10 });
+      m.box(headR * 0.4, headR * 0.34, headR * 0.3, 0, headY + headR * 0.5, -headR * 1.0, 0xffe9a0);
+    }
     if (spec.props.includes('hardHat')) {
       m.ball(headR * 1.12, 0, headY + headR * 0.38, 0, 0xe8c030, { sy: 0.7, sx: 0.95 });
       m.box(headR * 1.5, headR * 0.1, headR * 1.0, 0, headY + headR * 0.28, -headR * 0.12, 0xe8c030);

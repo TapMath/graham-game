@@ -1,0 +1,327 @@
+[
+ {
+  "name": "p6a-setup",
+  "eval": "window.A=__grahan; window.G=A.game; window.S=()=>A.state().story6a;\nwindow.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; };\nwindow.go=()=>{ A.do('pause',false); if(!G.setu.found && !G.setu.dead && G.setu.health<80) G.setu.setHealth(100); if(G.visionSystem && !G.visionSystem.active) G.visionSystem.queue.length=0; if(!G.dialogue.isOpen && !G.visionSystem.active && !G.hazards.detaining) G.modal=false; };\nwindow.stop=()=>A.do('pause',true);\nwindow.maxCalls=0; window.sample=()=>{ const c=A.state().render.calls; if(c>maxCalls) maxCalls=c; return c; };\nwindow.lookAt=(o,pitch)=>{ const p=G.player.pos; A.look(Math.atan2(-(o.x-p.x),-(o.z-p.z))*180/Math.PI, pitch??0); };\nwindow.say=(t)=>G.dialogue.current?A.state().dialogue6a:null;\nG.dialogue.cps=1e6;\nA.set('invulnerable',true); A.set('hazards',false); A.setTime(12); A.step(0.3);\nconst ids=['jeetu','tara','sameer','gautam','aayat','kaalu','contractor','doctor','oldman','rescuers-collapse','rescuers-triage','nurses','patients','torchBoys','sleepers'];\nids.forEach(i=>ok(G.cast.get(i), 'cast member '+i));\nconst s=S(); ok(s.objectives.primary.id==='collapse','starts at the collapse objective');\nok(typeof G.dialogue.open==='function' && G.items.has('pills') && G.party.active==='mithi' && G.party.jeetu===null && G.objectives && G.cast.get('tara').group, 'contract APIs');\n({cast:s.cast.length, items:s.items, primary:s.objectives.primary.text, calls:A.state().render.calls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-cast-rescuers-collapse",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','rescuers-collapse',3.4); A.step(0.6); stop(); \nconst a=G.cast.get('rescuers-collapse'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-nurses",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','nurses',3.2); A.step(0.6); stop(); \nconst a=G.cast.get('nurses'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-tara",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','tara',3.0); A.step(0.6); stop(); \nconst a=G.cast.get('tara'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-jeetu-bed",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','jeetu',2.8); A.step(0.6); stop(); \nconst a=G.cast.get('jeetu'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-gautam-cell",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','gautam',2.8); A.step(0.6); stop(); \nconst a=G.cast.get('gautam'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-aayat",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','aayat',3.0); A.step(0.6); stop(); \nconst a=G.cast.get('aayat'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-kaalu",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','kaalu',3.2); A.step(0.6); stop(); \nconst a=G.cast.get('kaalu'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-cast-doctor",
+  "eval": "go(); A.set('perceive',0); const r=A.do('cast','doctor',3.2); A.step(0.6); stop(); \nconst a=G.cast.get('doctor'); ({at:r.at, visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-reset-after-cast-tour",
+  "eval": "go(); ['reachedBelow','visitedHospital','jeetuCalled','inHospital','metTara','metGautam'].forEach(k=>{ delete G.flags[k]; }); G.director._nearCalls=0; G.director._calledAt=-99; G.director._calling=null;\nG.objectives.doneIds.clear(); G.objectives.refresh(true); A.set('perceive',1); A.set('view','first'); A.teleport(-44,0,-30,-90); A.step(0.6); stop();\nok(S().objectives.primary.id==='collapse','back at the first objective: '+S().objectives.primary.id); ({primary:S().objectives.primary.id})",
+  "wait": 400
+ },
+ {
+  "name": "p6a-oldman-buried",
+  "eval": "go(); A.set('perceive',1); const o=G.cast.get('oldman'); const hx=o.pos.x-1.5*0.94, hz=o.pos.z+1.5*0.34;\nA.teleport(o.pos.x+1.3,0.9,o.pos.z+1.0,0); lookAt(o.pos,-0.45*57); A.step(0.6); stop();\nok(A.state().hud.prompt==='Hold E: dig him out','the dig prompt shows'); ok(!G.flags.oldManFreed,'not freed yet');\n({prompt:A.state().hud.prompt})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-oldman-dig-hold",
+  "eval": "go(); A.hold('KeyE'); A.step(1.9); const d=S().dig; A.release('KeyE'); stop();\nok(d>0.4 && d<1,'digging progresses while E is held: '+d);\n({dig:d})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-oldman-freed-card",
+  "eval": "go(); A.hold('KeyE'); A.step(2.6); A.release('KeyE'); A.step(0.2);\nok(G.flags.oldManFreed,'freed after holding E'); const dl=A.state().dialogue6a; ok(dl && dl.speaker==='Old man','conversation opened');\nA.do('dialogueSkip'); stop(); ({flags:{freed:G.flags.oldManFreed, hospital:G.flags.knowsHospital}, dl:A.state().dialogue6a.line})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-oldman-objective-hospital",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.9); stop(); const s=S();\nok(!G.dialogue.isOpen,'card closed'); ok(s.objectives.primary.id==='hospital','objective is now the hospital: '+s.objectives.primary.id);\n({primary:s.objectives.primary.text, done:s.objectives.done})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-rescuer-card",
+  "eval": "go(); A.do('cast','rescuers-collapse',2.2); A.step(0.5); ok(A.state().hud.prompt.startsWith('Talk to rescuer'),'rescuer prompt: '+A.state().hud.prompt);\nA.do('talk','rescuers-collapse',0); A.do('dialogueSkip'); stop(); ({dl:A.state().dialogue6a.line})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-nurse-card",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.do('cast','nurses',2.2); A.step(0.5); A.do('talk','nurses',0); A.do('dialogueSkip'); stop();\nok(A.state().dialogue6a.speaker==='Nurse','nurse speaks'); ({dl:A.state().dialogue6a.line})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-hospital-sing-jeetu-calls",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.set('perceive',1); A.teleport(-53,0,82,0); A.look(-20,0); A.step(0.3);\nok(!G.flags.jeetuCalled,'Jeetu has not called yet'); const t=G.sing.tryStart({force:true}); ok(t,'Mithi sings'); A.step(2.4); stop();\nok(G.flags.jeetuCalled,'Jeetu answered the song'); const m=A.state().messages.last;\n({called:G.flags.jeetuCalled, msg:m[m.length-1], objective:S().objectives.primary.text})",
+  "wait": 1500
+ },
+ {
+  "name": "p6a-jeetu-card",
+  "eval": "go(); A.do('cast','jeetu',2.3); A.step(0.5); ok(A.state().hud.prompt.includes('Jeetu'),'prompt: '+A.state().hud.prompt); A.do('talk','jeetu'); A.do('dialogueSkip'); stop();\n({dl:A.state().dialogue6a})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-jeetu-joins",
+  "eval": "go(); A.do('dialogueChoose',0); A.do('dialogueSkip'); A.step(0.5); stop();\nok(G.party.jeetu && G.party.jeetu.id==='jeetu','Jeetu joined the party'); ok(G.flags.jeetuJoined,'flag');\n({joined:S().party.joined, dl:A.state().dialogue6a && A.state().dialogue6a.line})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-jeetu-follows-third-person",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.set('view','third'); A.teleport(-45,0,60,0); A.look(0,0); A.step(0.2);\nA.walk([[-45,50],[-45,40],[-45,30]]); A.step(1.2); const p=S().party; stop();\nconst d=Math.hypot(p.jeetu.x-p.mithi.x,p.jeetu.z-p.mithi.z); ok(d<8,'Jeetu follows Mithi: '+d.toFixed(1)+' m'); ok(p.follower.who==='jeetu','follower is Jeetu');\nconst sn=S(); ok(sn.objectives.primary.id==='below','objective: getting below'); ok(sn.objectives.optional.some(o=>o.id==='light'),'optional: light');\n({dist:+d.toFixed(2), fogBonus:p.fogBonus, primary:sn.objectives.primary.text, optional:sn.objectives.optional.map(o=>o.id), items:sn.items})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tara-card",
+  "eval": "go(); A.set('view','first'); A.set('invulnerable',false); A.set('rays',9); A.do('cast','tara',2.4); A.step(0.5); A.do('talk','tara'); A.do('dialogueSkip'); stop();\nok(G.flags.metTara,'met Tara'); ({dl:A.state().dialogue6a})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tara-blood-given",
+  "eval": "go(); const r0=A.state().rays, c0=G.clock.t; A.do('dialogueChoose',0); A.do('dialogueSkip'); A.step(1.4); stop();\nwindow.cBlood=c0; ok(A.state().rays===r0-2,'blood costs 2 rays: '+r0+' -> '+A.state().rays); ok(G.flags.bloodGiven && G.flags.taraFavour,'taraFavour set');\n({r0, rays:A.state().rays, clockHours:+(G.clock.t-c0).toFixed(2), favour:G.flags.taraFavour, optional:S().objectives.optional.map(o=>o.id)})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tara-permit-talk",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.3); ok(G.clock.t-window.cBlood>0.2,'the blood took a quarter of an hour: '+(G.clock.t-window.cBlood).toFixed(2)); ok(!G.flags.bridgePermit,'no permit before talking again'); A.do('talk','tara'); A.do('dialogueSkip'); A.step(0.2); stop();\nok(G.flags.bridgePermit,'talking again after the blood gives the bridge permit'); ok(G.world.gates.find(g=>g.permit).permit==='bridgePermit','gate-bridge reads bridgePermit');\n({permit:G.flags.bridgePermit, dl:A.state().dialogue6a.line})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-sameer-icu",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.do('cast','sameer',2.6); A.step(0.4); A.do('talk','sameer'); A.do('dialogueSkip'); stop(); ({dl:A.state().dialogue6a.line})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-home-batteries-torch",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.set('view','first'); G.items.remove('torch'); const h=G.world.story.mithiHome;\nA.teleport(h.remote.x+1.4,0,h.remote.z,90); A.look(90,-10); A.step(0.5); const prompt=A.state().hud.prompt; ok(prompt && prompt.includes('batteries'),'prompt: '+prompt);\nA.run('KeyE',0.15); A.step(0.4); stop();\nok(G.items.has('torch') && G.flags.torch,'the torch works with the remote\\'s batteries'); ok(!G.items.has('batteries'),'batteries consumed');\nconst m=A.state().messages.last; ({prompt, items:S().items, msgs:m.slice(-2), optionalGone:!S().objectives.optional.some(o=>o.id==='light')})",
+  "wait": 1100
+ },
+ {
+  "name": "p6a-home-food",
+  "eval": "go(); const h=G.world.story.mithiHome; const jb=G.party.bodies.jeetu._pos; jb.x=h.x+1.2; jb.z=h.z+10; A.teleport(h.x+1.2,0,h.z+3.2-1.5,0); A.look(0,0); A.step(0.1); const prompt=A.state().hud.prompt; ok(prompt==='Pack food and water','prompt: '+prompt);\nA.run('KeyE',0.15); A.step(0.3); stop(); ok(G.items.has('food'),'food packed'); ({items:S().items})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-neighbour-jacket",
+  "eval": "go(); const nf=G.world.story.neighbourFlat; A.set('view','first'); A.teleport(nf.jacket.x+1.6,0,nf.jacket.z,90); A.look(90,0); A.step(0.5); const prompt=A.state().hud.prompt; ok(prompt==='Take the blue Metro jacket','prompt: '+prompt);\nA.run('KeyE',0.15); A.step(0.3); ok(G.items.has('jacket') && G.flags.jacket,'jacket in the pack'); ok(G.view.mithi.variant==='jacket' && G.party.mithiModel.variant==='jacket','Mithi wears the jacket variant');\nA.set('view','third'); A.look(90,-5); A.step(1.0); stop(); ({items:S().items, variant:G.view.mithi.variant})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-torch-boys-card",
+  "eval": "go(); G.items.remove('torch'); A.set('view','first'); A.do('cast','torchBoys',2.4); A.step(0.5); A.do('talk','torchBoys'); A.do('dialogueSkip'); stop();\n({dl:A.state().dialogue6a})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-torch-boys-buy-with-time",
+  "eval": "go(); const c0=G.clock.t; window.cTorch=c0; A.do('dialogueChoose',1); A.do('dialogueSkip'); A.step(1.4); stop();\nok(G.items.has('torch'),'torch bought');\n({torch:G.items.has('torch'), via:S().stats.torchVia})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-metro-jacket-passes-guard",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); ok(G.clock.t-window.cTorch>0.9,'the torch cost an hour: '+(G.clock.t-window.cTorch).toFixed(2)); A.set('hazards',true); A.do('hazardsClear'); A.set('view','first'); A.teleport(45,0,16,0); A.look(0,0); A.step(0.6);\nconst r=A.walk([[45,8],[45,2],[45,-4],[45,-10],[45,-16]]); A.step(0.5); stop(); const s=A.state();\nok(r.ok,'walked into the Metro'); ok(s.hazards.detentions===0,'no detention in the jacket: '+s.hazards.detentions); ok(s.level==='U','below ground'); ok(G.flags.reachedBelow,'reachedBelow');\n({level:s.level, guards:s.hazards.guards.stats, jacket:s.hazards.guards.jacket, primary:S().objectives.primary.id})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-metro-no-jacket-detained",
+  "eval": "go(); G.items.remove('jacket'); G.hazards.guards.stand_down(); A.teleport(45,0,16,0); A.look(0,0); A.step(0.4);\nA.walk([[45,6],[45,0]]); A.step(5); const detaining=A.state().hazards.detaining; stop(); ok(A.state().hazards.detentions>=1,'guard detains Mithi without the jacket');\n({detentions:A.state().hazards.detentions, detaining})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-detained-released-at-station",
+  "eval": "go(); A.step(3.6); stop(); const p=A.state().pos; ok(Math.abs(p.x-18)<2 && Math.abs(p.z+76.5)<4,'released at the police station while Gautam is inside: '+JSON.stringify(p));\n({pos:p, msgs:A.state().messages.last.slice(-3)})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-gautam-card",
+  "eval": "go(); A.set('hazards',false); A.set('invulnerable',false); A.set('rays',9); A.do('cast','gautam',2.5); A.step(0.5); ok(A.state().hud.prompt==='Talk to Gautam','prompt: '+A.state().hud.prompt);\nA.do('talk','gautam'); A.do('dialogueSkip'); stop(); ({dl:A.state().dialogue6a, bailOptional:S().objectives.optional.map(o=>o.id)})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-gautam-bail-paid-door-opens",
+  "eval": "go(); const r0=A.state().rays; A.do('dialogueChoose',0); A.do('dialogueSkip'); A.step(1.6); stop();\nok(A.state().rays===r0-3,'bail costs 3 rays'); ok(G.flags.gautamFree,'free'); ok(!G.world.doors['police-cell-gautam'].closed,'cell door open'); ok(S().gautam.walking,'Gautam walks out');\n({r0, rays:A.state().rays, door:G.world.doors['police-cell-gautam'].closed, gautam:S().gautam})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-gautam-at-the-metro-distracts-guards",
+  "eval": "go(); A.set('hazards',true); A.do('dialogueChoose',0); A.step(34); A.set('invulnerable',true); A.set('view','third'); A.teleport(45,0,16,0); A.look(0,0); A.step(1.2); stop();\nconst s=S(); ok(s.flags.gautamAtMetro && s.gautam.distracting,'Gautam is at the Metro and distracting'); ok(A.state().hazards.guards.distracted>0,'guards are distracted');\n({gautam:s.gautam, distracted:A.state().hazards.guards.distracted, calls:sample()})",
+  "wait": 1100
+ },
+ {
+  "name": "p6a-guards-ignore-her-while-distracted",
+  "eval": "go(); A.set('view','first'); G.hazards.guards.stand_down(); A.teleport(45,0,16,0); A.look(0,0); A.step(0.4); const d0=A.state().hazards.detentions;\nconst r=A.walk([[45,8],[45,2],[45,-4],[45,-10],[45,-16]]); A.step(0.4); stop(); ok(r.ok && A.state().hazards.detentions===d0 && A.state().level==='U','slipped past the distracted guards, no jacket');\n({detentions:A.state().hazards.detentions, level:A.state().level})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-gautam-talk-at-metro",
+  "eval": "go(); A.set('hazards',false); A.do('cast','gautam',2.4); A.step(0.5); A.do('talk','gautam'); A.do('dialogueSkip'); stop(); ({dl:A.state().dialogue6a})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tab-to-jeetu-ground",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.set('hazards',true); A.do('hazardsClear'); A.set('view','first'); G.items.add('jacket');\nA.teleport(-45,0,30,180); A.look(180,0); A.step(1.0); const before=S().party; A.hold('Tab'); A.release('Tab'); A.step(0.8); stop(); const p=S().party;\nok(before.active==='mithi' && p.active==='jeetu','Tab switches to Jeetu'); ok(p.canSing===false && G.sing.tryStart()===null,'Jeetu cannot sing'); ok(p.perceive===0,'sighted rendering (perceive 0)');\nok(Math.abs(p.eyeY-1.1)<0.02,'Jeetu eye height'); ok(p.speedScale<0.9 && p.speedScale>0.8,'speed x0.85: '+p.speedScale); ok(p.follower.who==='mithi','Mithi follows now');\n({active:p.active, perceive:p.perceive, speedScale:p.speedScale, canSing:p.canSing, eyeY:p.eyeY, viewModel:p.viewModel, fog:[G.scene.fog.near,G.scene.fog.far]})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-jeetu-third-person-with-mithi-following",
+  "eval": "go(); A.set('view','third'); A.walk([[-45,40],[-45,50],[-45,60]]); A.step(1.2); stop(); const p=S().party;\nconst d=Math.hypot(p.jeetu.x-p.mithi.x,p.jeetu.z-p.mithi.z); ok(d<8,'Mithi follows Jeetu: '+d.toFixed(1)); ok(G.party.bodies.mithi.model.group.visible,'Mithi model visible');\n({dist:+d.toFixed(2), viewModel:p.viewModel, mithiFollower:p.follower})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-jeetu-dark-tunnel-without-torch",
+  "eval": "go(); G.items.remove('torch'); A.set('view','first'); A.teleport(-113,-8,22,90); A.look(-90,0); A.step(1.2); stop(); const f=G.scene.fog;\nok(f.far<8,'without a torch Jeetu sees almost nothing underground: fog far '+f.far); ({fog:[f.near,f.far], dim:A.state().senses.dim, torchOn:S().party.torchOn})",
+  "wait": 700
+ },
+ {
+  "name": "p6a-jeetu-torch-cone-tunnel",
+  "eval": "go(); G.items.add('torch'); A.step(1.2); stop(); const f=G.scene.fog;\nok(S().party.torchOn && G.party.light.intensity>1,'torch cone on'); ok(f.far>20,'torch opens the dark: fog far '+f.far);\n({fog:[f.near,f.far], intensity:S().party.torchIntensity, calls:sample()})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-jeetu-torch-cone-third-person",
+  "eval": "go(); A.set('view','third'); A.step(1.2); stop(); ({calls:sample(), viewModel:S().party.viewModel})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-tab-back-to-mithi-jeetu-follows-with-torch",
+  "eval": "go(); A.set('view','first'); A.hold('Tab'); A.release('Tab'); A.step(0.4); A.set('view','third'); A.walk([[-113,22],[-113,30]]); A.step(1.2); stop(); const p=S().party;\nok(p.active==='mithi' && p.canSing && p.perceive===1,'back to Mithi'); ok(p.fogBonus===15,'Jeetu following adds 15 m to her fog'); ok(p.torchOn,'Jeetu holds the torch while he follows');\n({active:p.active, fogBonus:p.fogBonus, perceive:p.perceive, torchOn:p.torchOn, calls:sample()})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-jeetu-calls-out-hazards",
+  "eval": "go(); A.set('view','first'); A.teleport(-15,0,0,0); A.look(0,0); A.step(0.5); A.do('hazardGrace',0); A.set('invulnerable',true); A.do('hazardsClear'); A.do('spawnDogs',3,12,'wander'); A.step(2.0); stop();\nconst p=S().party; ok(p.lastCall && p.lastCall.kind==='dog' && /Didi, dogs/.test(p.lastCall.text),'Jeetu calls \"Didi, dogs, ...\" ');\n({lastCall:p.lastCall, msgs:A.state().messages.last.slice(-2)})",
+  "wait": 1100
+ },
+ {
+  "name": "p6a-feed-the-dogs",
+  "eval": "go(); A.do('hazardsClear'); G.items.add('food'); A.do('spawnDogs',3,5,'chase'); A.step(0.4); const prompt=A.state().hud.prompt; ok(prompt==='Throw the food to the dogs','prompt: '+prompt);\nA.run('KeyE',0.15); A.step(1.2); stop(); const st=G.hazards.dogs.dogs.map(d=>d.state); ok(st.every(s=>s==='calm'||s==='leave'),'dogs calm after food: '+st); ok(!G.items.has('food'),'food used');\n({prompt, dogs:st})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-aayat-lift-wreck-stage",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(7); A.step(0.5); go(); A.do('cast','aayat',2.5); A.step(0.4); A.do('talk','aayat'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"liftWreck\",\"lead: \"+S().flags.setuLead);\n\n({who:'aayat', hour:7, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-aayat-catacombs-stage",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(11); A.step(0.5); go(); A.do('cast','aayat',2.5); A.step(0.4); A.do('talk','aayat'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"catacombs\",\"lead: \"+S().flags.setuLead);\n\n({who:'aayat', hour:11, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-kaalu-says-sold-to-contractor",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(20); A.step(0.5); go(); A.do('cast','kaalu',2.5); A.step(0.4); A.do('talk','kaalu'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"contractor\",\"lead: \"+S().flags.setuLead);\n\n({who:'kaalu', hour:20, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-contractor-says-the-doctor",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(20); A.step(0.5); go(); A.do('cast','contractor',2.5); A.step(0.4); A.do('talk','contractor'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"clinic\",\"lead: \"+S().flags.setuLead);\n\n({who:'contractor', hour:20, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-doctor-has-him",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(20); A.step(0.5); go(); A.do('cast','doctor',2.5); A.step(0.4); A.do('talk','doctor'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"clinic\",\"lead: \"+S().flags.setuLead);\n\n({who:'doctor', hour:20, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-doctor-slipped-out",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(24.6); A.step(0.5); go(); A.do('cast','doctor',2.5); A.step(0.4); A.do('talk','doctor'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\n\nok(S().setuStage>=4,'Setu is past the clinic: '+S().setuStage); ok(/slipped|hours ago|left/.test(A.state().dialogue6a.line),'the doctor says he left');\n({who:'doctor', hour:24.6, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-aayat-bridge-stage",
+  "eval": "go(); while(G.dialogue.isOpen){ A.do(\"dialogueChoose\",0); } A.set('hazards',false); A.setTime(33); A.step(0.5); go(); A.do('cast','aayat',2.5); A.step(0.4); A.do('talk','aayat'); A.do('dialogueSkip');\nconst q=A.state().dialogue6a.choices[0]; A.do('dialogueChoose',0); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(S().flags.setuLead===\"bridge\",\"lead: \"+S().flags.setuLead);\n\n({who:'aayat', hour:33, stage:S().stageName, asked:q, line:d&&d.line, lead:S().flags.setuLead})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-underground-objective-follows-the-lead",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); if(G.dialogue.isOpen) A.do('dialogueChoose',0); A.step(0.9); stop(); const s=S();\nok(s.objectives.primary.id==='underground' || s.objectives.primary.id==='search','underground objective: '+s.objectives.primary.id); ok(/Sunrise Bridge/.test(s.objectives.primary.text),'its text follows the lead (bridge)');\n({primary:s.objectives.primary})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-sleepers-in-the-dark",
+  "eval": "go(); A.setTime(12); A.step(0.3); A.do('cast','sleepers',1.8); A.step(0.4); A.do('talk','sleepers'); A.do('dialogueSkip'); stop(); ({dl:A.state().dialogue6a})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-setu-found-bridge-objective",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); A.set('invulnerable',true); A.do('tpToSetu',2.5); A.do('setuFind'); A.step(1.2); stop(); const s=S();\nok(!G.items.has('pills'),'pills used up'); ok(s.objectives.primary.id==='bridge','bridge objective: '+s.objectives.primary.id); ok(/permit/i.test(s.objectives.primary.text),'mentions the permit');\n({primary:s.objectives.primary.text, items:s.items})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tara-warn-card",
+  "eval": "go(); G.flags.breachKnown=true; G.items.add('breachEvidence'); A.step(0.8); ok(S().objectives.optional.some(o=>o.id==='warn'),'optional: take the evidence to Tara');\nA.do('cast','tara',2.4); A.step(0.5); A.do('talk','tara'); A.do('dialogueSkip'); stop(); const d=A.state().dialogue6a;\nok(d.choices.some(c=>/evidence/i.test(c)),'Tara offers the TV broadcast'); ({dl:d})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-tara-warns-the-city",
+  "eval": "go(); A.clearEvents(); const i=A.state().dialogue6a.choices.findIndex(c=>/evidence/i.test(c)); A.do('dialogueChoose',i); A.do('dialogueSkip'); A.step(0.6); stop();\nok(G.flags.cityWarned,'cityWarned'); ok(A.events('city:warned').length>=1,'city:warned emitted'); ({cityWarned:G.flags.cityWarned, ev:A.events('city:warned').length})",
+  "wait": 900
+ },
+ {
+  "name": "p6a-budget-hospital-all-in-view",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(-50,0,75,0); A.look(-10,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-collapse-site-crowd",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(-44,0,-20,180); A.look(180,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-catacombs-with-party",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(-100,-8,24,0); A.look(0,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-boring-site",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(-72,-8,-52,90); A.look(90,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-clinic",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(-21,-8,72,0); A.look(0,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-police-station",
+  "eval": "go(); sample(); A.set('invulnerable',true); A.setTime(12); A.set('view','third'); A.teleport(15,0,-79,0); A.look(0,0); A.step(1.2); stop(); A.step(0.0); ({calls:sample(), max:maxCalls})",
+  "wait": 800
+ },
+ {
+  "name": "p6a-budget-result",
+  "eval": "go(); sample(); stop(); ok(maxCalls<150,'draw calls stay under 150: '+maxCalls); ({maxCalls})",
+  "wait": 300
+ },
+ {
+  "name": "p6a-final-state",
+  "eval": "const s=A.state(); ({story6a:s.story6a, flagsSample:{taraFavour:G.flags.taraFavour, bridgePermit:G.flags.bridgePermit, cityWarned:G.flags.cityWarned, jacket:G.flags.jacket, torch:G.flags.torch}, calls:s.render.calls, maxCalls})",
+  "wait": 300
+ }
+]

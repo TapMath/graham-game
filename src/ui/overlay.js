@@ -14,7 +14,7 @@ export class OverlaySystem {
     game.canvas.addEventListener('click', () => { if (game.mode === 'playing' && !game.input.locked) game.input.requestLock(); });
     game.events.on('input:lock', ({ locked }) => {
       if (locked) game.setMode('playing');
-      else if (game.mode === 'playing' && !game.params.autostart) game.setMode('paused');
+      else if (game.mode === 'playing' && !game.params.autostart && !game.modal) game.setMode('paused');   // a dialog / conversation releases the lock on purpose
     });
     // No pointer lock available (or refused): play anyway with keyboard only.
     game.events.on('input:lockerror', () => game.setMode('playing'));

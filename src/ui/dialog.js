@@ -43,6 +43,7 @@ export class DialogSystem {
     for (const b of this.el.querySelectorAll('button')) b.addEventListener('click', () => this.choose(b.dataset.id));
     this.el.hidden = false;
     this.game.modal = true;
+    if (!this._held) { this._held = true; this.game.dialogue?.holdPointer(true); }   // release the pointer lock so the buttons can be clicked
     this.game.events.emit('dialog:open', { title: cfg.title });
   }
 
@@ -57,6 +58,9 @@ export class DialogSystem {
     if (!this.current && !silent) return;
     this.current = null;
     this.el.hidden = true;
-    if (!silent) { this.game.modal = false; this.game.events.emit('dialog:close', {}); }
+    if (!silent) {
+      this.game.modal = false; this.game.events.emit('dialog:close', {});
+      if (this._held) { this._held = false; this.game.dialogue?.holdPointer(false); }
+    }
   }
 }

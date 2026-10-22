@@ -24,6 +24,12 @@ import { Sing } from './systems/senses/sing.js';
 import { SetuVoice } from './systems/senses/organ.js';
 import { VisionSystem } from './systems/senses/vision.js';
 import { guarded } from './systems/senses/guard.js';
+import { DialogueSystem } from './systems/story/dialogue.js';
+import { ItemSystem } from './systems/story/items.js';
+import { ObjectiveBoard } from './systems/story/objectives.js';
+import { CastSystem } from './systems/story/cast/index.js';
+import { Director } from './systems/story/director.js';
+import { PartySystem } from './systems/story/party.js';
 import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
@@ -75,6 +81,16 @@ function boot() {
   game.addSystem('visionSystem', guarded(new VisionSystem(), 'visionSystem'));
   game.addSystem('pa', guarded(new PASystem(), 'pa'));
   game.addSystem('hud', new HudSystem());
+  // Phase 6a story layer: the cast and the objective chain. After the HUD (the items row and the optional objectives mount into its DOM);
+  // `party` is last of them so its sighted-rendering override of the fog lands after the senses grade.
+  game.addSystem('dialogue', new DialogueSystem());
+  if (!params.arena) {
+    game.addSystem('items', new ItemSystem());
+    game.addSystem('objectives', new ObjectiveBoard());
+    game.addSystem('cast', new CastSystem());
+    game.addSystem('director', new Director());
+    game.addSystem('party', new PartySystem());
+  }
   game.addSystem('debughud', new DebugHudSystem());
   game.addSystem('overlay', new OverlaySystem());
 

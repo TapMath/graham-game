@@ -403,6 +403,7 @@ export class AudioSystem {
   /** Her white cane: a dry tick one step ahead, and a small sonar ping. */
   _caneTap() {
     const g = this.game, p = g.player;
+    if (g.party?.active === 'jeetu') return;                 // Phase 6a: Jeetu has no cane
     const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw), tip = { x: p.pos.x + fx * 1.5, y: p.pos.y + 0.05, z: p.pos.z + fz * 1.5 };
     this.play('caneTap', tip, { loud: 0.2 });
     g.senses?.caneTap(tip);
