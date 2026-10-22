@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Grahan</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="src/styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <!-- HUD container: later phases mount their widgets in here. -->
+  <div id="hud"><div id="crosshair"></div></div>
+  <!-- Debug readout, only populated when ?debug=1 -->
+  <pre id="debug-hud" hidden></pre>
+  <!-- Menu / pause overlay, driven by src/ui/overlay.js -->
+  <div id="overlay">
+    <h1>GRAHAN</h1>
+    <p class="sub">the search for sunrise in 2049 Mumbai</p>
+    <p class="cta" id="overlay-cta">Click to play</p>
+    <p class="keys">WASD move &middot; Shift sprint &middot; Space jump &middot; Mouse look &middot; E interact &middot; Q sing</p>
+  </div>
+  <div id="fatal" hidden></div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
