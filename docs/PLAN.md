@@ -211,6 +211,12 @@ Each phase is done by one agent, in order, and must finish with: smoke test pass
 - Both read each other's APIs defensively (`game.items?.has?.(...)`), because they're merged afterwards. 6a builds the cast models with Phase 3's `buildCharacter`/`NPC_PRESETS`, and 6b's cinematics use whatever NPC actors exist via `game.cast?.get(id)` (provided by 6a), or a fallback character of their own.
 - Shared hot files: each phase adds only its own registration lines to `src/main.js`, its own debug entries, its own §10 entry, and its own `tools/shots-phase6a.json` / `tools/shots-phase6b.json`.
 
+### Phase 7a ↔ 7b split (Phase 7 is built in parallel)
+
+- **7a, the UI shell and mobile**, owns `index.html`, `src/ui/**` (except the debug HUD), `src/styles.css`, touch input in `src/core/input.js`, a new `src/ui/settings.js` (settings persisted to `localStorage` with try/catch, applied via the existing setters: `audio.setVolume`/`setMuted`, `pa.enabled`, `audio.captionSounds`, mouse sensitivity, invert Y, run length via `?minutes` or a setting read by the clock at start), the title screen, how-to-play, pause menu, the responsive HUD layout and hierarchy, and `README.md`. It also covers the HUD-related known issues.
+- **7b, the gameplay polish**, owns everything under `src/systems/**`, `src/world/**`, `src/characters/**` and the debug API. It covers balancing, every non-HUD known issue below, the draw-call budget, a bug sweep, and a **scripted full playthrough** (`tools/shots-playthrough.json`) from the opening to ending 1 that uses only movement keys, E, Q and Tab (plus `setTime`/clock acceleration to compress waiting, and no teleports or flag setters), proving the good ending is reachable.
+- Interfaces: 7a reads settings into existing APIs; when 7b needs a settings value, it reads `game.settings?.get?.(key)` with a default. 7a starts play from the title screen with `game.setMode('playing')`; the opening cinematic is 6b's and triggers on first entry to play mode.
+
 ## 10. Progress log
 
 (Each phase appends a short entry here.)
