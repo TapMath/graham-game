@@ -15,6 +15,7 @@ import { VendorSystem } from './systems/vendors.js';
 import { EndingSystem } from './systems/endings.js';
 import { ObjectiveSystem } from './systems/objective.js';
 import { ViewSystem } from './systems/view.js';
+import { HazardSystem } from './systems/hazards/index.js';
 import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
@@ -54,6 +55,7 @@ function boot() {
   game.addSystem('endings', new EndingSystem());
   game.addSystem('objective', new ObjectiveSystem());
   game.addSystem('view', new ViewSystem());
+  if (!params.arena) game.addSystem('hazards', new HazardSystem());   // Phase 4 perils (after the view so the camera shake lands on the final camera)
   game.addSystem('hud', new HudSystem());
   game.addSystem('debughud', new DebugHudSystem());
   game.addSystem('overlay', new OverlaySystem());

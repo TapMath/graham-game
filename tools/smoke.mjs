@@ -84,7 +84,7 @@ if (shotsFile) {
     }
     await page.waitForTimeout(s.wait ?? 1000);
     const file = `${String(i++).padStart(2, '0')}-${s.name}.png`;
-    await page.screenshot({ path: path.join(outDir, file) });
+    await page.screenshot({ path: path.join(outDir, file), timeout: 120000 });
     console.log('saved', file);
   }
 }
