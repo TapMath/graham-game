@@ -7,6 +7,18 @@ import { SkySystem } from './world/sky.js';
 import { arenaSystem } from './world/arena.js';
 import { CitySystem } from './world/city.js';
 import { InteractableSystem } from './systems/interactables.js';
+import { ClockSystem } from './systems/clock.js';
+import { AirSystem } from './systems/air.js';
+import { HealthSystem } from './systems/health.js';
+import { SetuSystem } from './systems/setu.js';
+import { VendorSystem } from './systems/vendors.js';
+import { EndingSystem } from './systems/endings.js';
+import { ObjectiveSystem } from './systems/objective.js';
+import { ViewSystem } from './systems/view.js';
+import { MessageSystem } from './ui/messages.js';
+import { DialogSystem } from './ui/dialog.js';
+import { ScreenFxSystem } from './ui/screenfx.js';
+import { HudSystem } from './ui/hud.js';
 import { OverlaySystem } from './ui/overlay.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
@@ -25,8 +37,24 @@ function boot() {
   game.lifts = game.addSystem('lifts', new LiftSystem());
   game.sky = game.addSystem('sky', new SkySystem());
   game.addSystem('interactables', new InteractableSystem());   // before the world: it registers interactables in init
+  game.addSystem('messages', new MessageSystem());             // UI services first: any system may use them in init
+  game.addSystem('dialog', new DialogSystem());
+  game.addSystem('screenfx', new ScreenFxSystem());
   game.addSystem('world', params.arena ? arenaSystem : new CitySystem());   // the city; the Phase 1 test arena stays behind ?arena=1
   game.addSystem('player', new Player());
+  // Phase 3 core loop. Order is update order: the clock first, then health, Setu, vendors, endings, the view
+  // (it moves the camera after the player did), and the HUD last (it only reads).
+  game.addSystem('clock', new ClockSystem());
+  game.addSystem('air', new AirSystem());
+  game.addSystem('health', new HealthSystem());
+  if (!params.arena) {                                        // the city only: they need its POIs
+    game.addSystem('setu', new SetuSystem());
+    game.addSystem('vendors', new VendorSystem());
+  }
+  game.addSystem('endings', new EndingSystem());
+  game.addSystem('objective', new ObjectiveSystem());
+  game.addSystem('view', new ViewSystem());
+  game.addSystem('hud', new HudSystem());
   game.addSystem('debughud', new DebugHudSystem());
   game.addSystem('overlay', new OverlaySystem());
 

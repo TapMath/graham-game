@@ -14,6 +14,7 @@ export const ACTIONS = {
   sprint: ['ShiftLeft', 'ShiftRight'],
   interact: ['KeyE'],
   sing: ['KeyQ'],
+  view: ['KeyV'],
   lookLeft: ['ArrowLeft'],
   lookRight: ['ArrowRight'],
   lookUp: ['ArrowUp'],

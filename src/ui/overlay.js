@@ -24,7 +24,7 @@ export class OverlaySystem {
 
   sync() {
     const g = this.game;
-    this.el.hidden = g.mode === 'playing';
+    this.el.hidden = g.mode === 'playing' || g.mode === 'ending';
     this.cta.textContent = g.mode === 'paused' ? 'Paused. Click to resume' : 'Click to play';
   }
 }

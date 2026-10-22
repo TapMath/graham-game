@@ -1,7 +1,7 @@
 [
  {
   "name": "spawn",
-  "eval": "window.P=()=>{const s=__grahan.state();return {x:s.pos.x,y:s.pos.y,z:s.pos.z,level:s.level,ground:s.onGround,on:s.groundTag}};window.sky=(x,y,z)=>{const w=__grahan.game.physics;const N=96;let open=0;for(let i=0;i<N;i++){const el=Math.asin(0.34+0.66*(i+0.5)/N),az=i*2.39996;const d={x:Math.cos(el)*Math.cos(az),y:Math.sin(el),z:Math.cos(el)*Math.sin(az)};if(!w.raycast({x,y:y+1.6,z},d,260))open++;}return +(open/N).toFixed(2)};__grahan.set('rays',12); __grahan.look(-90,8); __grahan.step(0.3); ({spawn:P(), state:{level:__grahan.state().level, render:__grahan.state().render, world:__grahan.state().world.stats}})",
+  "eval": "__grahan.set('invulnerable', true); window.P=()=>{const s=__grahan.state();return {x:s.pos.x,y:s.pos.y,z:s.pos.z,level:s.level,ground:s.onGround,on:s.groundTag}};window.sky=(x,y,z)=>{const w=__grahan.game.physics;const N=96;let open=0;for(let i=0;i<N;i++){const el=Math.asin(0.34+0.66*(i+0.5)/N),az=i*2.39996;const d={x:Math.cos(el)*Math.cos(az),y:Math.sin(el),z:Math.cos(el)*Math.sin(az)};if(!w.raycast({x,y:y+1.6,z},d,260))open++;}return +(open/N).toFixed(2)};__grahan.set('rays',12); __grahan.look(-90,8); __grahan.step(0.3); ({spawn:P(), state:{level:__grahan.state().level, render:__grahan.state().render, world:__grahan.state().world.stats}})",
   "wait": 900
  },
  {

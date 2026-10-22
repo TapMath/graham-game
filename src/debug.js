@@ -23,6 +23,14 @@
 //                              {step:s} (advance s seconds), {say:'tag'} (log the position). Returns {ok, log[]}.
 //   ray(origin, dir, max)      physics raycast, handy for line-of-sight checks
 //   fps()                      measured frames per second (not meaningful in headless SwiftShader)
+//
+// Phase 3 setters (set(key, value)):  rays (via the health system, emits health:changed), invulnerable (no damage, no
+// darkness drain), view ('first'|'third'), jacket (Mithi's blue Metro jacket), viewOrbit (degrees, third-person test aid),
+// setuFollowing (true = Setu is found and follows, false = back on his timeline), setuHealth, clockRate (total real minutes),
+// hour (the clock). Any other key lands in game.flags, so cityWarned, bridgePermit, breachKnown, ... work as flags.
+// Phase 3 actions (do(name, ...)):  setuFind, setuSetHealth(v), setuTeleportToPlayer(dist), tpToSetu(dist), tpVendor(id),
+// vendorOpen(id), vendorRoll(id, {potency,hours,risk}), dialogChoose(id), ending(type), endingReset, clockAdvance(hours),
+// damage(n), heal(n), hudGlitch. state() gains clock, health, setu, vendors, view, hud, objective, dialog, ending, messages.
 import { STEP } from './game.js';
 
 const r3 = (v) => Math.round(v * 1000) / 1000;
@@ -42,6 +50,7 @@ export class DebugApi {
     this.addSetter('rays', (g, v) => { g.player.rays = Math.max(0, Math.min(g.player.maxRays, v)); });
     this.addSetter('freeze', (g, v) => { g.player.frozen = !!v; });
     this.addSetter('speed', (g, v) => { g.player.speedScale = v; });
+    this.addAction('pause', (g, on) => { g.setMode(on ? 'ending' : 'playing'); return g.mode; });   // tests: freeze the simulation for a screenshot ('ending' hides the pause overlay)
     this.addSetter('hour', (g, v) => { g.flags.debugHour = v; g.events.emit('debug:setTime', { hour: v }); });
   }
 

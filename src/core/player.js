@@ -15,7 +15,7 @@
 //   player:interact {}                          E pressed (systems check proximity themselves)
 //   player:sing     {}                          Q pressed
 //
-// `rays` is a placeholder here (7 of 12); the health system (Phase 3) owns it from then on.
+// `rays` (7 of 12 at the start) is owned by the health system (src/systems/health.js) from Phase 3 on.
 
 import { PLAYER } from './physics.js';
 import { levelAt } from '../world/levels.js';
@@ -136,7 +136,8 @@ export class Player {
     }
 
     // ---- wish direction
-    const ax = input.moveAxis(this._axis);
+    const blocked = !!this.game.modal;           // a dialog / cutscene holds the player still
+    const ax = blocked ? (this._axis.x = this._axis.y = 0, this._axis) : input.moveAxis(this._axis);
     let wx = 0, wz = 0;
     const len = Math.hypot(ax.x, ax.y);
     if (len > 0) {
@@ -145,7 +146,7 @@ export class Player {
       wx = -sin * f + cos * s;     // forward = (-sin, -cos); right = (cos, -sin)
       wz = -cos * f - sin * s;
     }
-    this.sprinting = input.action('sprint') && ax.y > 0;
+    this.sprinting = !blocked && input.action('sprint') && ax.y > 0;
     const speed = (this.sprinting ? MOVE.sprint : MOVE.walk) * this.speedScale;
 
     // ---- horizontal velocity
@@ -159,7 +160,7 @@ export class Player {
     }
 
     // ---- jump (with buffer + coyote time)
-    if (input.pressed('jump')) this._jumpBuf = MOVE.jumpBuffer;
+    if (!blocked && input.pressed('jump')) this._jumpBuf = MOVE.jumpBuffer;
     else this._jumpBuf = Math.max(0, this._jumpBuf - dt);
     this._coyote = this.onGround ? MOVE.coyote : Math.max(0, this._coyote - dt);
     if (this._jumpBuf > 0 && (this.onGround || this._coyote > 0)) {

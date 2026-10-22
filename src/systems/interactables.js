@@ -57,6 +57,7 @@ export class InteractableSystem {
 
   /** Route an E press to the nearest item. Returns true if something handled it. */
   interact() {
+    if (this.game.modal) return false;       // a dialog is open: E belongs to it
     const it = this.nearest();
     if (!it) return false;
     it.onInteract?.(this.game, it);

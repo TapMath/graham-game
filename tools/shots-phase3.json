@@ -1,0 +1,542 @@
+[
+ {
+  "name": "p3-setup",
+  "eval": "window.G=__grahan.game; window.A=__grahan; window.R=()=>G.player.rays; window.shaft=(lv)=>G.world.sunShafts.find(s=>s.level===lv); A.set('invulnerable',false); A.setTime(12); A.step(0.2); ({clock:A.state().clock.hhmm, shaftIntensity:G.world.sunShafts.intensity, rays:R(), objective:A.state().objective})",
+  "wait": 800
+ },
+ {
+  "name": "health-decay-ground",
+  "eval": "const s=shaft('G'); A.teleport(-80,0,2,0); A.set('rays',12); const t0=G.time; const log=[]; for(let i=0;i<5;i++){A.step(20); log.push(R());} ({level:A.state().level, raysEvery20s:log, secs:+(G.time-t0).toFixed(0), note:'1 ray per 40 s on G'})",
+  "wait": 600
+ },
+ {
+  "name": "health-decay-underground",
+  "eval": "A.teleport(-113,-8,22,0); A.set('rays',12); const log=[]; for(let i=0;i<4;i++){A.step(12.5); log.push(R());} ({level:A.state().level, raysEvery12_5s:log, note:'1 ray per 25 s in U'})",
+  "wait": 600
+ },
+ {
+  "name": "health-decay-walkway",
+  "eval": "A.teleport(20,12,-15,0); A.set('rays',12); const log=[]; for(let i=0;i<4;i++){A.step(35); log.push(R());} ({level:A.state().level, raysEvery35s:log, note:'1 per 70 s on L1'})",
+  "wait": 600
+ },
+ {
+  "name": "health-smog-triples",
+  "eval": "A.teleport(33,-8,10,0); A.set('rays',12); const a=A.state().health.decayMul; const air={...G.air.at(G.player.pos)}; A.step(25); ({inSmog:air.smog, lostIn25s:12-R(), note:'U 1/25 s x3 smog = 3 rays per 25 s'})",
+  "wait": 600
+ },
+ {
+  "name": "health-no-decay-flyover",
+  "eval": "A.teleport(-15,24,-100,0); A.set('rays',7); A.step(100); const r=R(); A.set('invulnerable',true); ({level:A.state().level, rays:r, note:'L2: no decay'})",
+  "wait": 600
+ },
+ {
+  "name": "health-heal-in-shaft",
+  "eval": "A.set('invulnerable',false); const s=shaft('G'); A.set('rays',3); A.teleport(s.x,s.y0,s.z,0); A.look(-60,40); A.step(0.3); const a=R(); A.step(5.1); const b=R(); ({shaft:s.id, inSun:G.world.isInSunlight(G.player.pos), before:a, after5s:b, status:A.state().health.status})",
+  "wait": 700
+ },
+ {
+  "name": "health-heal-cap",
+  "eval": "A.step(25); ({rays:R(), note:'heals 1/2.5 s up to 12'})",
+  "wait": 400
+ },
+ {
+  "name": "health-heal-night-off",
+  "eval": "A.setTime(2); A.step(0.3); const s=shaft('G'); A.set('rays',3); A.teleport(s.x,s.y0,s.z,0); A.step(6); ({hour:A.state().clock.hhmm, intensity:G.world.sunShafts.intensity, inSun:G.world.isInSunlight(G.player.pos), rays:R(), status:A.state().health.status})",
+  "wait": 700
+ },
+ {
+  "name": "health-lamp-half-rate",
+  "eval": "const l=G.world.solarLamps[0]; A.set('rays',3); A.teleport(l.x+1,l.y,l.z,0); A.look(0,10); A.step(0.2); const a=R(); A.step(10.2); ({lamp:l.id, near:G.world.isNearSolarLamp(G.player.pos), before:a, after10s:R(), note:'half rate at night: 1 per 5 s'})",
+  "wait": 700
+ },
+ {
+  "name": "health-fall-damage",
+  "eval": "A.setTime(12); A.set('rays',12); A.clearEvents(); A.teleport(-7,24.5,-100,0); A.step(3); ({rays:R(), falls:A.events('player:fall').map(e=>e.data), y:A.state().pos.y, note:'24.5 m drop = 4 rays'})",
+  "wait": 800
+ },
+ {
+  "name": "health-void-cost",
+  "eval": "A.set('rays',6); A.teleport(0,0,60,0); A.clearEvents(); G.player.pos.y=-45; A.step(0.1); ({rays:R(), ev:A.events('player:void').map(e=>e.data), respawned:A.events('player:respawn').length})",
+  "wait": 500
+ },
+ {
+  "name": "gate-denied",
+  "eval": "A.setTime(12); A.set('rays',3); A.teleport(-1,12,36,0); A.look(0,0); A.clearEvents(); const g=G.world.gate('gate-l2-stairs-b'); A.teleport(g.x - g.v[0]*3, 12, g.z - g.v[1]*3, 0); A.look(Math.atan2(g.v[0], -g.v[1])*180/Math.PI*0 + (g.inside==='+x'?-90:g.inside==='-x'?90:g.inside==='-z'?0:180), 3); A.step(0.5); ({gate:g.id, min:g.min, side:g.inside, pos:A.state().pos, denied:A.events('gate:denied').map(e=>e.data), open:g.open, card:A.state().hud.gateCard, feed:A.state().messages.last})",
+  "wait": 800
+ },
+ {
+  "name": "gate-opened",
+  "eval": "A.set('rays',7); A.step(0.4); const g=G.world.gate('gate-l2-stairs-b'); ({rays:R(), open:g.open, opened:A.events('gate:opened').map(e=>e.data), card:A.state().hud.gateCard})",
+  "wait": 800
+ },
+ {
+  "name": "gate-l3-denied-with-7",
+  "eval": "A.set('rays',7); const g=G.world.gate('gate-l3-stairs-sx3'); A.teleport(g.x - g.v[0]*3, g.y, g.z - g.v[1]*3, 0); A.look(g.inside==='+x'?-90:g.inside==='-x'?90:g.inside==='-z'?0:180, 3); A.clearEvents(); A.step(0.5); ({gate:g.id, min:g.min, side:g.inside, open:g.open, denied:A.events('gate:denied').length, card:A.state().hud.gateCard})",
+  "wait": 800
+ },
+ {
+  "name": "gate-l3-open-with-8",
+  "eval": "A.set('rays',8); A.step(0.5); const g=G.world.gate('gate-l3-stairs-sx3'); ({rays:R(), open:g.open})",
+  "wait": 800
+ },
+ {
+  "name": "gate-bridge-permit",
+  "eval": "A.set('rays',12); const g=G.world.gate('gate-bridge'); A.teleport(g.x - g.v[0]*3, g.y, g.z - g.v[1]*3, 0); A.look(g.inside==='+x'?-90:g.inside==='-x'?90:g.inside==='-z'?0:180, 3); A.clearEvents(); A.step(0.5); const d1={open:g.open,denied:A.events('gate:denied').length}; A.set('bridgePermit',true); A.step(0.5); ({denied:d1, withPermit:{open:g.open}, card:A.state().hud.gateCard})",
+  "wait": 800
+ },
+ {
+  "name": "clock-running",
+  "eval": "A.set('invulnerable',true); A.setTime(7.5); const c=G.clock; const t0=c.t; A.step(75); ({hhmm:c.hhmm, advancedHours:+(c.t-t0).toFixed(3), expect:'1 game hour per 75 s', secondsPerHour:A.state().clock.secondsPerHour, totalMinutes:+(24.3333/c.hoursPerSec/60).toFixed(2)})",
+  "wait": 400
+ },
+ {
+  "name": "clock-night",
+  "eval": "A.setTime(1.5); A.teleport(-47,0,-25,0); A.look(-70,30); A.step(0.5); ({clock:A.state().clock.hhmm, phase:G.sky.phase, shaftIntensity:G.world.sunShafts.intensity, shaftMeshVisible:G.world.sunShafts.intensity>0.01})",
+  "wait": 900
+ },
+ {
+  "name": "clock-day-shafts",
+  "eval": "A.setTime(12); A.teleport(-47,0,-25,0); A.look(-70,30); A.step(0.5); ({clock:A.state().clock.hhmm, phase:G.sky.phase, shaftIntensity:G.world.sunShafts.intensity})",
+  "wait": 900
+ },
+ {
+  "name": "clock-advance-penalty",
+  "eval": "A.setTime(10); const a=G.clock.hhmm; G.clock.advance(1.5,'test'); ({before:a, after:G.clock.hhmm, ev:A.events('clock:advanced').slice(-1).map(e=>e.data)})",
+  "wait": 300
+ },
+ {
+  "name": "clock-flood-hook",
+  "eval": "A.set('breachKnown',true); A.setTime(14); A.step(0.3); ({flood:'visible when breachKnown', hud:A.state().hud})",
+  "wait": 700
+ },
+ {
+  "name": "clock-flood-off",
+  "eval": "A.set('breachKnown',false); A.step(0.2); ({hud:A.state().hud.floodVisible})",
+  "wait": 200
+ },
+ {
+  "name": "setu-prepare",
+  "eval": "A.set('invulnerable',true); A.set('breachKnown',false); A.setTime(6); A.step(0.2); ({schedule:A.state().setu.schedule})",
+  "wait": 300
+ },
+ {
+  "name": "setu-spot-lift-wreck",
+  "eval": "A.setTime(6.0); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-spot-catacombs",
+  "eval": "A.setTime(10.5); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-spot-boring-site",
+  "eval": "A.setTime(15.5); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-spot-clinic",
+  "eval": "A.setTime(20); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-spot-triage-tents",
+  "eval": "A.setTime(25); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-spot-bridge",
+  "eval": "A.setTime(29.5); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, level:s.level, pos:[s.x,s.y,s.z], health:s.health, dist:s.dist, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "setu-vent-exit",
+  "eval": "A.setTime(22.7); A.step(0.5); A.do('tpToSetu',3.2); A.look(0,2); A.step(0.6); const s=A.state().setu; ({hour:A.state().clock.hhmm, window:s.window, pos:[s.x,s.y,s.z], sched:s.schedule.filter(w=>w.id==='ventExit'||w.id==='clinic')})",
+  "wait": 900
+ },
+ {
+  "name": "setu-observed-defers-move",
+  "eval": "A.setTime(9.0); A.step(0.3); A.do('tpToSetu',4); A.look(0,2); const before=G.setu.windowId; const w0=G.setu.schedule[0].to; A.setTime(w0+0.05); A.step(0.3); const during=A.state().setu; ({windowBefore:before, afterBoundaryWhileWatched:{window:during.window,pending:during.pending}, note:'a watched Setu does not pop away until 0.4 h later'})",
+  "wait": 300
+ },
+ {
+  "name": "setu-moves-when-unobserved",
+  "eval": "A.teleport(0,0,100,0); A.step(0.3); const d=A.state().setu; ({window:d.window, pos:[d.x,d.y,d.z], moved:A.events('setu:moved').slice(-1).map(e=>e.data)})",
+  "wait": 300
+ },
+ {
+  "name": "setu-clue",
+  "eval": "A.setTime(9.9); A.step(0.3); A.teleport(-96,-8,12,0); A.step(0.3); A.teleport(55.5,-8,-21,0); A.look(0,0); A.step(0.5); ({clues:A.events('setu:clue').map(e=>e.data.id), feed:A.state().messages.last.slice(-2)})",
+  "wait": 1200
+ },
+ {
+  "name": "setu-breath-rate",
+  "eval": "A.setTime(6); A.step(0.2); A.do('setuSetHealth',100); G.clock.paused=false; const h0=G.setu.health, t0=G.clock.t; A.step(30); const dh=(G.clock.t-t0); ({healthLost:+(h0-G.setu.health).toFixed(2), gameHours:+dh.toFixed(3), perHour:+((h0-G.setu.health)/dh).toFixed(2), note:'U tunnel air = 5.25 x 1.25 = 6.56 %/h'})",
+  "wait": 300
+ },
+ {
+  "name": "setu-story-lines",
+  "eval": "A.do('setuSetHealth',100); G.setu.firedPct.clear(); G.setu.lineCount={}; A.clearEvents(); for(const h of [80,70,45,20,8]){A.do('setuSetHealth',h);} ({lines:A.events('setu:story').map(e=>[e.data.pct,e.data.text]), meter:A.state().hud.setuVisible})",
+  "wait": 1400
+ },
+ {
+  "name": "setu-doctor-boost",
+  "eval": "A.do('setuSetHealth',20); G.setu.boosted=false; A.setTime(17.0); G.clock.advance(1.6,'test'); ({health:A.state().setu.health, boosted:A.state().setu.boosted, ev:A.events('setu:doctor').length, clinicFrom:A.state().setu.schedule[3].from})",
+  "wait": 300
+ },
+ {
+  "name": "setu-dies-at-3",
+  "eval": "A.set('invulnerable',true); G.setu.reset(); A.setTime(5.667); A.step(0.1); let died=null; const off=G.events.on('setu:died',(d)=>{died=d;}); for(let i=0;i<200 && !G.setu.dead;i++){ G.clock.advance(0.25,'tick'); } off(); const out={diedAt:A.state().setu.diedAt, clock:A.state().clock.hhmm, ending:A.state().ending, note:'never found: dies at about 03:00 (median over 300 seeds 03:00, p10-p90 02:49-03:13)'}; A.do('endingReset'); G.setu.reset(); A.setTime(6); A.step(0.1); out",
+  "wait": 400
+ },
+ {
+  "name": "setu-find-prompt",
+  "eval": "A.setTime(6); A.step(0.3); A.do('tpToSetu',1.8); A.look(0,0); A.step(0.4); A.do('setuSetHealth',34); A.step(0.2); ({prompt:A.state().hud.prompt, focus:A.state().world.focus, health:A.state().setu.health})",
+  "wait": 1000
+ },
+ {
+  "name": "setu-find-pill",
+  "eval": "A.clearEvents(); A.run('KeyE',0.1); const s=A.state().setu; ({found:s.found, following:s.following, health:s.health, flags:A.state().flags, ev:A.events().filter(e=>e.type.startsWith('setu:')).map(e=>e.type), objective:A.state().objective})",
+  "wait": 1300
+ },
+ {
+  "name": "setu-follow-walk-g",
+  "eval": "A.set('invulnerable',true); A.teleport(-75,0,-110,0); A.do('setuTeleportToPlayer',2); A.step(0.3); A.walk([[-75,-75],[-75,-45]]); A.step(1.5); const s=A.state().setu; ({player:[A.state().pos.x,A.state().pos.z], setu:[s.x,s.z], dist:s.dist, follower:s.follower})",
+  "wait": 900
+ },
+ {
+  "name": "setu-follow-turns",
+  "eval": "A.walk([[-75,-20],[-40,-20],[-40,-8]]); A.step(1.2); const s=A.state().setu; ({player:[A.state().pos.x,A.state().pos.z], setu:[s.x,s.z], dist:s.dist, follower:s.follower})",
+  "wait": 900
+ },
+ {
+  "name": "setu-follow-stairs",
+  "eval": "A.teleport(-24,0,-10,0); A.do('setuTeleportToPlayer',2); A.step(0.3); const log=[]; const pts=[[-20,-8],[-20,-14],[-20,-20],[-20,-26],[-20,-30]]; for(const p of pts){ A.walk([p]); A.step(0.4); const s=A.state().setu; log.push([+A.state().pos.y.toFixed(1), s.y, s.dist, s.follower.teleports]); } ({log, note:'[playerY, setuY, dist, teleports] while climbing stairs-g1-plaza'})",
+  "wait": 900
+ },
+ {
+  "name": "setu-follow-sprint-and-catchup",
+  "eval": "A.teleport(-75,0,-100,0); A.do('setuTeleportToPlayer',2); A.step(0.3); A.look(0,0); A.run(['KeyW','ShiftLeft'],4); const mid=A.state().setu.dist; A.step(2.5); const s=A.state().setu; ({distAfter4sSprint:mid, distAfterRest:s.dist, speed:s.speed, teleports:s.follower.teleports})",
+  "wait": 900
+ },
+ {
+  "name": "setu-follow-teleports-when-far",
+  "eval": "const t0=A.state().setu.follower.teleports; A.teleport(-75,0,-20,0); A.step(0.5); const s=A.state().setu; ({teleportsBefore:t0, teleportsAfter:s.follower.teleports, reason:s.follower.lastTeleport, dist:s.dist})",
+  "wait": 700
+ },
+ {
+  "name": "setu-follow-other-level",
+  "eval": "const t0=A.state().setu.follower.teleports; A.teleport(20,12,0,0); A.step(2.6); const s=A.state().setu; ({teleportsBefore:t0, teleportsAfter:s.follower.teleports, reason:s.follower.lastTeleport, setuY:s.y, dist:s.dist})",
+  "wait": 700
+ },
+ {
+  "name": "setu-unfollow",
+  "eval": "A.set('setuFollowing',false); A.step(0.3); const s=A.state().setu; ({following:s.following, found:s.found, window:s.window, flags:A.state().flags.setuFollowing}) ",
+  "wait": 300
+ },
+ {
+  "name": "setu-set-following-flag",
+  "eval": "A.set('setuFollowing',true); A.step(0.3); const s=A.state().setu; ({following:s.following, found:s.found, dist:s.dist})",
+  "wait": 600
+ },
+ {
+  "name": "vendor-booth",
+  "eval": "A.set('invulnerable',true); A.setTime(12); const v=A.state().vendors; const first=v.active[0].id; const t=A.do('tpVendor', first); A.step(0.5); ({active:v.active, tp:t, prompt:A.state().hud.prompt})",
+  "wait": 900
+ },
+ {
+  "name": "vendor-dialog-open",
+  "eval": "A.set('rays',5); A.run('KeyE',0.1); A.step(0.2); ({vendor:A.state().vendors.state, dialog:A.state().dialog, modal:G.modal})",
+  "wait": 900
+ },
+ {
+  "name": "vendor-dialog-decline",
+  "eval": "const c=G.clock.hhmm, r=R(); A.press('KeyN',100); A.step(0.2); ({state:A.state().vendors.state, modal:G.modal, same:{clock:G.clock.hhmm===c, rays:R()===r}, declined:A.state().vendors.stats.declined})",
+  "wait": 800
+ },
+ {
+  "name": "vendor-dialog-reopen",
+  "eval": "A.run('KeyE',0.1); A.step(0.2); ({state:A.state().vendors.state})",
+  "wait": 500
+ },
+ {
+  "name": "vendor-dialog-accept-fade",
+  "eval": "A.do('vendorRoll', A.state().vendors.active[0].id, {risk:0}); G.vendors.state='dialog'; window.__c0=G.clock.t; window.__r0=R(); A.do('dialogChoose','accept'); A.step(0.45); ({state:A.state().vendors.state, modal:G.modal, fade:A.state().screenfx.fade})",
+  "wait": 300
+ },
+ {
+  "name": "vendor-dialog-accept-done",
+  "eval": "A.step(1.4); const o=A.state().vendors.active[0]; ({state:A.state().vendors.state, rays:{before:window.__r0, after:R(), potency:o.potency}, hoursPaid:+(G.clock.t-window.__c0).toFixed(3), priceHours:o.hours, clock:G.clock.hhmm, stats:A.state().vendors.stats})",
+  "wait": 900
+ },
+ {
+  "name": "vendor-contaminated",
+  "eval": "A.set('invulnerable',false); A.do('tpVendor', A.state().vendors.active[0].id); A.do('vendorRoll', A.state().vendors.active[0].id, {risk:1, hours:0.5}); A.set('rays',8); A.run('KeyE',0.1); A.step(0.1); A.do('dialogChoose','accept'); A.step(2.0); ({rays:R(), stats:A.state().vendors.stats, blur:A.state().screenfx.blur, feed:A.state().messages.last.slice(-2)})",
+  "wait": 500
+ },
+ {
+  "name": "vendor-contaminated-blur",
+  "eval": "A.step(0.2); ({blur:A.state().screenfx.blur})",
+  "wait": 600
+ },
+ {
+  "name": "vendor-l1",
+  "eval": "const v=A.state().vendors.active.find(a=>a.level==='L1'); const t=A.do('tpVendor', v.id); A.step(0.5); ({v:v.id, t, bucket:v.bucket, risk:v.risk})",
+  "wait": 900
+ },
+ {
+  "name": "vendor-other-seed-note",
+  "eval": "({active:A.state().vendors.active.map(a=>a.id), note:'seed=1: 4 of 6 booths open; another seed gives a different 4'})",
+  "wait": 100
+ },
+ {
+  "name": "hud-day-g",
+  "eval": "A.set('invulnerable',true); A.setTime(9); A.teleport(-47,0,-25,0); A.look(-70,18); A.set('rays',9); A.step(0.4); G.messages.say('A voice behind you: \"Didi? Is that you?\" It is not Setu.',{kind:'story',ttl:30}); G.messages.say('BIO-SCAN: 5 RAYS REQUIRED. YOU CARRY 3. ACCESS DENIED.',{kind:'system',ttl:30}); G.messages.say('dog barks, far off',{kind:'caption',ttl:30}); G.messages.say('Remain calm. Sunlight is a privilege, not a right. Report unregistered singing.',{kind:'pa',ttl:30}); A.step(0.3); ({hud:A.state().hud})",
+  "wait": 1400
+ },
+ {
+  "name": "hud-low-health",
+  "eval": "A.set('invulnerable',false); A.teleport(-75,0,-100,0); A.look(0,4); A.set('rays',2); A.step(0.3); A.do('hudGlitch'); A.step(0.1); ({status:A.state().health.status, hud:A.state().hud.raysLit})",
+  "wait": 220
+ },
+ {
+  "name": "hud-low-health-calm",
+  "eval": "A.step(0.4); ({rays:R()})",
+  "wait": 1000
+ },
+ {
+  "name": "hud-one-ray-setu-low",
+  "eval": "A.set('invulnerable',true); A.set('rays',1); A.do('setuSetHealth',12); A.set('breachKnown',true); A.step(0.3); ({flood:A.state().hud.floodVisible})",
+  "wait": 1000
+ },
+ {
+  "name": "hud-heal-gold",
+  "eval": "A.set('breachKnown',false); A.set('rays',3); G.health.heal(2,'test'); A.step(0.1); ({rays:R()})",
+  "wait": 200
+ },
+ {
+  "name": "hud-night-l3-lamp",
+  "eval": "A.setTime(2); A.do('setuSetHealth',60); const l=G.world.solarLamps[3]; A.teleport(l.x+1.5,l.y,l.z,0); A.look(120,6); A.set('rays',6); A.step(0.5); ({near:G.world.isNearSolarLamp(G.player.pos), status:A.state().health.status})",
+  "wait": 1200
+ },
+ {
+  "name": "view-third-start",
+  "eval": "A.setTime(8); A.set('invulnerable',true); A.set('rays',10); A.teleport(-44,0,-30,0); A.look(-90,6); A.step(0.3); A.set('view','third'); A.step(0.5); ({view:A.state().view})",
+  "wait": 900
+ },
+ {
+  "name": "view-third-walking",
+  "eval": "A.look(-90,4); const r=A.run('KeyW',1.0); ({view:A.state().view, moved:r.moved})",
+  "wait": 700
+ },
+ {
+  "name": "view-third-front",
+  "eval": "A.set('viewOrbit',180); A.look(0,0); A.step(0.5); ({view:A.state().view})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-front-moving",
+  "eval": "A.hold('KeyW'); A.step(0.5); ({v:A.state().view})",
+  "wait": 600
+ },
+ {
+  "name": "view-third-sprint-side",
+  "eval": "A.set('viewOrbit',100); A.hold('ShiftLeft'); A.step(0.5); ({v:A.state().view.camDistance})",
+  "wait": 600
+ },
+ {
+  "name": "view-third-release",
+  "eval": "A.release('KeyW'); A.release('ShiftLeft'); A.set('viewOrbit',0); A.step(0.3); ({})",
+  "wait": 300
+ },
+ {
+  "name": "view-third-jacket",
+  "eval": "A.set('jacket',true); A.set('viewOrbit',150); A.step(0.5); ({variant:A.state().view.variant})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-jacket-back",
+  "eval": "A.set('viewOrbit',0); A.look(-90,6); A.step(0.5); ({})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-no-jacket",
+  "eval": "A.set('jacket',false); A.set('viewOrbit',35); A.step(0.4); ({})",
+  "wait": 700
+ },
+ {
+  "name": "view-third-wall-pullin",
+  "eval": "A.set('viewOrbit',0); A.teleport(-83.4,0,-100,-90); A.look(-90,0); A.step(0.8); const v=A.state().view; ({camDistance:v.camDistance, full:v.full, pulledIn:v.pulledIn, modelVisible:v.modelVisible, wall:A.ray({x:-83.4,y:1.6,z:-100},{x:-1,y:0,z:0},6)})",
+  "wait": 900
+ },
+ {
+  "name": "view-third-wall-pullin-tight",
+  "eval": "A.teleport(-84.6,0,-100,-90); A.look(-90,0); A.step(0.8); const v=A.state().view; ({camDistance:v.camDistance, pulledIn:v.pulledIn, modelVisible:v.modelVisible})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-open-space-restores",
+  "eval": "A.teleport(-75,0,-100,0); A.look(0,0); A.step(1.5); const v=A.state().view; ({camDistance:v.camDistance, full:v.full, pulledIn:v.pulledIn})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-look-up",
+  "eval": "A.look(0,40); A.step(1.0); ({v:A.state().view})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-look-down",
+  "eval": "A.look(0,-50); A.step(1.0); ({v:A.state().view})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-low-ceiling-u",
+  "eval": "A.teleport(-113,-8,22,0); A.look(0,10); A.step(1.0); ({v:A.state().view})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-metro",
+  "eval": "A.teleport(33,-8,10,-90); A.look(-90,6); A.step(0.9); ({v:A.state().view})",
+  "wait": 800
+ },
+ {
+  "name": "view-third-with-setu-following",
+  "eval": "A.setTime(8); A.teleport(-75,0,-100,0); A.set('setuFollowing',true); A.look(0,6); A.step(0.3); A.run('KeyW',2.2); A.step(1.2); ({setu:A.state().setu.dist, v:A.state().view.mode})",
+  "wait": 900
+ },
+ {
+  "name": "view-third-with-setu-closeup",
+  "eval": "A.set('viewOrbit',160); A.look(0,0); A.step(0.8); ({})",
+  "wait": 900
+ },
+ {
+  "name": "view-third-setu-ahead",
+  "eval": "A.set('viewOrbit',0); A.look(180,2); A.step(1.0); ({s:A.state().setu.dist})",
+  "wait": 900
+ },
+ {
+  "name": "view-third-l3",
+  "eval": "A.teleport(75,38,-30,-90); A.look(-90,4); A.step(0.6); A.set('setuFollowing',true); A.step(0.9); ({})",
+  "wait": 900
+ },
+ {
+  "name": "view-toggle-key",
+  "eval": "A.set('view','first'); A.step(0.4); const a=A.state().view.mode; A.run('KeyV',0.1); A.step(0.4); const b=A.state().view; A.run('KeyV',0.1); A.step(0.4); ({first:a, afterV:b.mode, blend:b.blend, afterVV:A.state().view.mode})",
+  "wait": 500
+ },
+ {
+  "name": "view-first-still-default",
+  "eval": "A.set('viewOrbit',0); A.look(-90,0); A.step(0.3); ({mode:A.state().view.mode, modelVisible:A.state().view.modelVisible, calls:A.state().render.calls})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-front",
+  "eval": "A.do('pause',false); A.set('invulnerable',true); A.set('setuFollowing',false); A.setTime(9); A.teleport(-75,0,-100,0); A.look(90,3); A.set('view','third'); A.set('viewBack',3.2); A.set('viewOrbit',180); A.step(0.9); A.do('pause',true); ({view:A.state().view})",
+  "wait": 900
+ },
+ {
+  "name": "char-mithi-three-quarter",
+  "eval": "A.do('pause',false); A.set('viewOrbit',150); A.step(0.9); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-side-walk",
+  "eval": "A.do('pause',false); A.set('viewOrbit',90); A.hold('KeyW'); A.step(0.42); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-back-walk",
+  "eval": "A.do('pause',false); A.set('viewOrbit',0); A.step(0.2); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-side-stride2",
+  "eval": "A.do('pause',false); A.set('viewOrbit',90); A.step(0.17); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-sprint",
+  "eval": "A.do('pause',false); A.hold('ShiftLeft'); A.step(0.6); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-jump",
+  "eval": "A.do('pause',false); A.release('KeyW'); A.release('ShiftLeft'); A.set('viewOrbit',90); A.run('Space',0.12); A.step(0.18); A.do('pause',true); ({air:!A.state().onGround})",
+  "wait": 700
+ },
+ {
+  "name": "char-mithi-jacket-front",
+  "eval": "A.do('pause',false); A.step(1.0); A.set('jacket',true); A.set('viewOrbit',160); A.step(0.9); A.do('pause',true); ({variant:A.state().view.variant})",
+  "wait": 900
+ },
+ {
+  "name": "char-mithi-jacket-side",
+  "eval": "A.do('pause',false); A.set('viewOrbit',60); A.step(0.3); A.set('jacket',false); A.do('pause',true); ({})",
+  "wait": 700
+ },
+ {
+  "name": "char-setu-front-first-person",
+  "eval": "A.do('pause',false); A.set('view','first'); A.set('viewOrbit',0); A.set('viewBack',0); A.look(0,0); A.do('setuTeleportToPlayer',1.7); A.step(0.5); A.do('pause',true); ({setu:A.state().setu.dist})",
+  "wait": 900
+ },
+ {
+  "name": "char-setu-third-with-mithi",
+  "eval": "A.do('pause',false); A.set('view','third'); A.set('viewBack',3.0); A.set('viewOrbit',200); A.set('setuFollowing',true); A.look(0,0); A.step(1.2); A.do('pause',true); ({})",
+  "wait": 900
+ },
+ {
+  "name": "char-npc-lineup",
+  "eval": "A.do('pause',false); A.set('setuFollowing',false); A.set('viewOrbit',0); A.set('viewBack',0); A.set('view','first'); A.teleport(-60,0,60,0); A.look(0,0); const n=A.do('npcLineup',5.5); A.set('rays',12); A.step(0.5); ({npcs:n})",
+  "wait": 1000
+ },
+ {
+  "name": "char-npc-lineup-third",
+  "eval": "A.set('view','third'); A.set('viewBack',2.6); A.set('viewOrbit',0); A.look(0,3); A.step(0.9); ({})",
+  "wait": 900
+ },
+ {
+  "name": "char-lineup-clear",
+  "eval": "A.do('pause',false); A.do('npcLineup'); A.set('view','first'); A.set('viewBack',0); A.step(0.3); ({})",
+  "wait": 200
+ },
+ {
+  "name": "render-budget-third-person",
+  "eval": "A.set('view','third'); A.set('setuFollowing',true); A.set('invulnerable',true); A.setTime(10); const spots=[[-44,0,-30,-90],[20,12,-20,0],[-15,0,60,0],[75,38,-30,-90],[45,0,-10,0],[-75,0,-100,0],[33,-8,10,-90],[-113,-8,22,0],[-45,0,40,0],[0,0,125,180],[20,12,0,0],[100,38,-90,-90]]; let max=0, tri=0; const rows=[]; for(const s of spots){A.teleport(s[0],s[1],s[2],s[3]); A.look(s[3],4); A.step(0.8); G.render(); const r=G.renderStats(); rows.push(r.calls); max=Math.max(max,r.calls); tri=Math.max(tri,r.triangles);} ({callsPerSpot:rows, maxCalls:max, maxTriangles:tri, budget:'< 150 draw calls'})",
+  "wait": 600
+ },
+ {
+  "name": "render-budget-restore",
+  "eval": "A.set('view','first'); A.set('viewBack',0); A.set('setuFollowing',false); A.step(0.2); ({})",
+  "wait": 200
+ },
+ {
+  "name": "ending-bridge-warned",
+  "eval": "A.set('view','first'); A.set('invulnerable',true); A.setTime(29); A.step(0.2); A.set('cityWarned',true); A.teleport(195,38,-30,-90); A.set('setuFollowing',true); A.step(0.5); A.teleport(210,38,-30,-90); A.step(0.3); ({ending:A.state().ending, mode:A.state().mode})",
+  "wait": 4200
+ },
+ {
+  "name": "ending-bridge-unwarned",
+  "eval": "A.do('endingReset'); A.set('cityWarned',false); G.setu.dead=false; A.teleport(190,38,-30,-90); A.set('setuFollowing',true); A.step(0.3); A.teleport(210,38,-30,-90); A.step(0.3); ({ending:A.state().ending, mode:A.state().mode})",
+  "wait": 4200
+ },
+ {
+  "name": "ending-dawn-missed",
+  "eval": "A.do('endingReset'); A.setTime(29.99); A.teleport(0,0,60,0); A.set('setuFollowing',true); A.step(2); ({ending:A.state().ending, clock:A.state().clock.hhmm})",
+  "wait": 4200
+ },
+ {
+  "name": "ending-setu-lost",
+  "eval": "A.do('endingReset'); A.set('setuFollowing',false); A.setTime(29.99); A.step(2); ({ending:A.state().ending})",
+  "wait": 3500
+ },
+ {
+  "name": "ending-setu-dies",
+  "eval": "A.do('endingReset'); A.setTime(10); G.setu.dead=false; A.set('setuFollowing',false); A.do('setuSetHealth',100); A.do('setuSetHealth',0); A.step(0.2); ({ending:A.state().ending, setu:A.state().setu.dead})",
+  "wait": 3500
+ },
+ {
+  "name": "ending-mithi-dies",
+  "eval": "A.do('endingReset'); A.set('invulnerable',false); G.health._dead=false; G.setu.dead=false; G.setu.health=100; G.setu.idx=-1; A.teleport(-80,0,2,0); A.set('rays',1); A.step(0.2); A.do('damage',1); A.step(0.2); ({ending:A.state().ending, rays:R(), mode:A.state().mode})",
+  "wait": 3500
+ }
+]
