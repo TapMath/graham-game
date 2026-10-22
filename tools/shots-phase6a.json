@@ -106,7 +106,7 @@
  },
  {
   "name": "p6a-tara-blood-given",
-  "eval": "go(); const r0=A.state().rays, c0=G.clock.t; A.do('dialogueChoose',0); A.do('dialogueSkip'); A.step(1.4); stop();\nwindow.cBlood=c0; ok(A.state().rays===r0-2,'blood costs 2 rays: '+r0+' -> '+A.state().rays); ok(G.flags.bloodGiven && G.flags.taraFavour,'taraFavour set');\n({r0, rays:A.state().rays, clockHours:+(G.clock.t-c0).toFixed(2), favour:G.flags.taraFavour, optional:S().objectives.optional.map(o=>o.id)})",
+  "eval": "go(); const r0=A.state().rays, c0=G.clock.t; A.do('dialogueChoose',0); A.do('dialogueSkip'); A.step(1.4); stop();\nwindow.cBlood=c0; ok(A.state().rays===r0-3,'blood costs 3 rays (Phase 7b: was 2): '+r0+' -> '+A.state().rays); ok(G.flags.bloodGiven && G.flags.taraFavour,'taraFavour set');\n({r0, rays:A.state().rays, clockHours:+(G.clock.t-c0).toFixed(2), favour:G.flags.taraFavour, optional:S().objectives.optional.map(o=>o.id)})",
   "wait": 900
  },
  {

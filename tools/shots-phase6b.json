@@ -141,52 +141,52 @@
  },
  {
   "name": "reunion-warned-walk",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-no-one",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',4.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-face",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',8); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-organ",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',9); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',5.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-run-start",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6.799999999999997); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-run-meet",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',1.4000000000000057); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',2.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-embrace",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',4.799999999999997); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',2.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-sunbreak",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-sunrise-words",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',4); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-warned-crane",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',7); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
@@ -201,12 +201,12 @@
  },
  {
   "name": "reunion-unwarned-sunbreak",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',52); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',30); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-unwarned-crane",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',16); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',11); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
@@ -221,12 +221,12 @@
  },
  {
   "name": "reunion-together-walk",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',34); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-together-sunrise",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',18); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {

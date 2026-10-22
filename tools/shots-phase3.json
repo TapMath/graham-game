@@ -1,7 +1,7 @@
 [
  {
   "name": "p3-setup",
-  "eval": "window.G=__grahan.game; window.A=__grahan; window.R=()=>G.player.rays; window.shaft=(lv)=>G.world.sunShafts.find(s=>s.level===lv); A.set('invulnerable',false); A.setTime(12); A.step(0.2); ({clock:A.state().clock.hhmm, shaftIntensity:G.world.sunShafts.intensity, rays:R(), objective:A.state().objective})",
+  "eval": "window.G=__grahan.game; window.A=__grahan; window.R=()=>G.player.rays; window.shaft=(lv)=>G.world.sunShafts.find(s=>s.level===lv); A.set('hazards',false); /* Phase 7b: this tour predates the hazards; with them on, dogs and guards disturb the health and Setu steps */ A.set('invulnerable',false); A.setTime(12); A.step(0.2); ({clock:A.state().clock.hhmm, shaftIntensity:G.world.sunShafts.intensity, rays:R(), objective:A.state().objective})",
   "wait": 800
  },
  {
@@ -21,7 +21,7 @@
  },
  {
   "name": "health-smog-triples",
-  "eval": "A.teleport(33,-8,10,0); A.set('rays',12); const a=A.state().health.decayMul; const air={...G.air.at(G.player.pos)}; A.step(25); ({inSmog:air.smog, lostIn25s:12-R(), note:'U 1/25 s x3 smog = 3 rays per 25 s'})",
+  "eval": "A.set('hazards',true); A.do('hazardsClear'); A.do('hazardGrace',999); A.teleport(33,-8,10,0); A.set('rays',12); const a=A.state().health.decayMul; const air={...G.air.at(G.player.pos)}; A.step(25); const lost=12-R(); A.set('hazards',false); ({inSmog:air.smog, lostIn25s:lost, note:'U 1/25 s x3 smog = 3 rays per 25 s (dogs cleared, detection off)'})",
   "wait": 600
  },
  {
@@ -86,7 +86,7 @@
  },
  {
   "name": "clock-running",
-  "eval": "A.set('invulnerable',true); A.setTime(7.5); const c=G.clock; const t0=c.t; A.step(75); ({hhmm:c.hhmm, advancedHours:+(c.t-t0).toFixed(3), expect:'1 game hour per 75 s', secondsPerHour:A.state().clock.secondsPerHour, totalMinutes:+(24.3333/c.hoursPerSec/60).toFixed(2)})",
+  "eval": "A.set('invulnerable',true); A.setTime(7.5); const c=G.clock; const t0=c.t; A.step(75); ({hhmm:c.hhmm, advancedHours:+(c.t-t0).toFixed(3), expect:'1 game hour per 90 s (Phase 7b: the default run is 36.5 min, it was 75 s per hour)', secondsPerHour:A.state().clock.secondsPerHour, totalMinutes:+(24.3333/c.hoursPerSec/60).toFixed(2)})",
   "wait": 400
  },
  {
@@ -186,7 +186,7 @@
  },
  {
   "name": "setu-dies-at-3",
-  "eval": "A.set('invulnerable',true); G.setu.reset(); A.setTime(5.667); A.step(0.1); let died=null; const off=G.events.on('setu:died',(d)=>{died=d;}); for(let i=0;i<200 && !G.setu.dead;i++){ G.clock.advance(0.25,'tick'); } off(); const out={diedAt:A.state().setu.diedAt, clock:A.state().clock.hhmm, ending:A.state().ending, note:'never found: dies at about 03:00 (median over 300 seeds 03:00, p10-p90 02:49-03:13)'}; A.do('endingReset'); G.setu.reset(); A.setTime(6); A.step(0.1); out",
+  "eval": "A.set('invulnerable',true); G.setu.reset(); A.setTime(5.667); A.step(0.1); let died=null; const off=G.events.on('setu:died',(d)=>{died=d;}); for(let i=0;i<200 && !G.setu.dead;i++){ G.clock.advance(0.25,'tick'); } off(); const out={diedAt:A.state().setu.diedAt, clock:A.state().clock.hhmm, ending:A.state().ending, note:'never found: dies at about 05:00 to 05:30 (Phase 7b retune: breath 5.0 %/h, doctor +38; it was about 03:00)'}; A.do('endingReset'); G.setu.reset(); A.setTime(6); A.step(0.1); out",
   "wait": 400
  },
  {

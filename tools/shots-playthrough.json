@@ -27,12 +27,12 @@
  {
   "name": "hospital-jeetu",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.sing(); await B.idle(2.5); const sang = A.state().story6a.flags.jeetuCalled; await B.talk('jeetu', ['Come with me'], { at: [-57.6, 88.4] }); return { ...B.report(\"Jeetu joined\"), calledBySong: sang, party: A.state().party };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.sing(); await B.idle(2.5); const sang = A.state().story6a.flags.jeetuCalled; await B.talk('jeetu', ['Come with me'], { at: [-58.2, 89.2] }); return { ...B.report(\"Jeetu joined\"), calledBySong: sang, party: A.state().party };})()"
  },
  {
   "name": "hospital-tara-blood",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-55,84],[-55,78],[-41.5,78],[-41.5,84]]); await B.talk('tara', ['B-positive'], { at: [-41.5, 87.4] }); return B.report(\"blood given\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-55,84],[-55,78],[-41.5,78],[-41.5,84],[-41.5,86]]); const first = A.state().rays; if (first < 5) {                                  /* Tara will not take blood from someone who is shaking: the sun shaft behind the hospital is ten metres away */ await B.go([[-44.5,90],[-45,93],[-45,96]]); await B.healUp(); await B.go([[-45,93],[-44.5,90],[-41.5,86]]); } await B.talk('tara', ['B-positive'], { at: [-41.5, 88.4] }); return { raysOnArrival: first, ...B.report(\"blood given\"), bloodGiven: !!G.flags.bloodGiven };})()"
  },
  {
   "name": "depot-sun-heal",
@@ -62,7 +62,7 @@
  {
   "name": "ledger-as-jeetu",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-100,-40],[-80,-40],[-79,-45],[-80,-49.5],[-90,-50],[-70,-50]]); await B.tab(); const asJeetu = G.party.active; const ok = await B.read('ledger-boring'); await B.tab(); return { ok, asJeetu, ...B.report(\"ledger read as Jeetu\"), clues: [...G.fragments.clues] };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-100,-40],[-80,-40],[-79,-45],[-80,-49.5],[-90,-50]]); A.look(-90, 4); B.tap('KeyV'); await B.idle(0.8); await B.sleep(2500); const third = { view: G.view.mode, calls: A.state().render.calls, setuFollowing: G.setu.following, jeetuFollowing: !!G.party.jeetu }; B.tap('KeyV'); await B.idle(0.6); await B.go([[-70,-50]]); await B.tab(); const asJeetu = G.party.active; const ok = await B.read('ledger-boring'); await B.tab(); return { ok, asJeetu, thirdPersonUnderground: third, ...B.report(\"ledger read as Jeetu\"), clues: [...G.fragments.clues] };})()"
  },
  {
   "name": "exit-and-heal",
@@ -72,7 +72,7 @@
  {
   "name": "tara-warns-the-city",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-52,43],[-52,60],[-45,66],[-45,71.5],[-45,76],[-41.5,78],[-41.5,84]]); await B.talk('tara', ['Show her the evidence'], { at: [-41.5, 87.4] }); await B.watch(6); return { ...B.report(\"Tara warns the city\"), cityWarned: !!G.flags.cityWarned, via: G.flags.cityWarnedVia };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-52,43],[-52,60],[-45,66],[-45,71.5],[-45,76],[-41.5,78],[-41.5,84]]); await B.talk('tara', ['Show her the evidence'], { at: [-41.5, 88.4] }); await B.watch(6); return { ...B.report(\"Tara warns the city\"), cityWarned: !!G.flags.cityWarned, via: G.flags.cityWarnedVia };})()"
  },
  {
   "name": "to-the-pier-gate",
@@ -87,6 +87,11 @@
  {
   "name": "bridge-walk",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[172,-33],[190,-30],[205,-30]]); return B.report(\"on the Sunrise Bridge\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[172,-33],[190,-30],[203,-30]]); return B.report(\"on the Sunrise Bridge\");})()"
+ },
+ {
+  "name": "reunion-ending-1",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const t0 = G.time; await B.go([[211,-30]]); await B.watch(150, () => G.endings.current); const e = G.endings.current; return { ending: e && e.type, title: e && e.title, scene: G.cinematics.last, clock: G.clock.hhmm, cityWarned: !!G.flags.cityWarned, setuFound: !!G.flags.setuFound, rays: G.player.rays, minRays: B.minRays, setuHealth: Math.round(G.setu.health), health: A.state().health.stats, detentions: A.state().hazards.detentions, dogBites: G.hazards.dogs.stats.bites, bot: B.stats, stats: A.state().ending };})()"
  }
 ]

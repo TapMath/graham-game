@@ -1,0 +1,57 @@
+[
+ {
+  "name": "setup",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.set('manual', true); A.set('invulnerable', true); A.do('hazardsClear'); A.setTime(7); A.teleport(-75, 0, -20, 0); B.d.step(1); return { clock: G.clock.hhmm, hazards: A.state().hazards.total };})()"
+ },
+ {
+  "name": "sing-does-not-go-through-floors",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.teleport(-117, -8, 22, 0); A.look(0, 0); const under = A.do('spawnDrone', { altitude: 20, ahead: 4, span: 6 }); B.d.step(0.5); A.do('singEmit'); B.d.step(0.3); const dU = G.hazards.drones.drones.find((d) => d.id === under); A.teleport(-75, 0, -20, 0); A.look(0, 0); const near = A.do('spawnDrone', { altitude: 12, ahead: 5, span: 6 }); B.d.step(0.5); A.do('singEmit'); B.d.step(0.3); const far = A.do('spawnDrone', { altitude: 12, ahead: 38, span: 2 }); B.d.step(0.5); A.do('singEmit'); B.d.step(0.3); const st = (id) => G.hazards.drones.drones.find((d) => d.id === id).state; ok(dU.state === 'patrol', 'an L1 drone 20 m above ignores a song from the tunnels: ' + dU.state); ok(st(near) !== 'patrol', 'a drone one level up and 5 m off hears it (investigates, or has already spotted her): ' + st(near)); ok(st(far) === 'patrol', 'a drone 38 m away on another level does not: ' + st(far)); return { underground: dU.state, nextLevelNear: st(near), nextLevelFar: st(far) };})()"
+ },
+ {
+  "name": "visions-wait-for-a-calm-moment",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('hazardsClear'); A.do('hazardsClear', 'drones'); G.hazards.grace = 0; A.teleport(-75, 0, 0, 0); A.look(90, 0); const V = G.visionSystem; V.lastT = -99; V.queue.length = 0; B.d.step(3); const calm0 = V.available(); A.do('spawnDogs', 3, 8, 'chase'); B.d.step(0.5); const chased = V.available(); A.do('hazardsClear'); B.d.step(0.5); const justAfter = V.available(); B.d.step(2.6); const later = V.available(); A.do('jeetuJoin'); B.d.step(0.5); await B.tab(); const asJeetu = V.available(); A.do('setuSetHealth', 49); B.d.step(3.5); const queued = V.queue.length, activeAsJeetu = V.active; await B.tab(); ok(calm0 && !chased && !justAfter && later, 'available when calm (' + calm0 + '), not while chased (' + chased + '), not 0.5 s after (' + justAfter + '), again after 3 s (' + later + ')'); ok(!asJeetu && !activeAsJeetu && queued === 1, 'never as Jeetu; a breath vision waits in the queue: ' + queued); return { calm0, chased, justAfter, later, asJeetu, queued, activeAsJeetu, party: G.party.active };})()"
+ },
+ {
+  "name": "drone-cone-close",
+  "wait": 500,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('hazardsClear'); A.do('hazardGrace', 0); A.teleport(-75, 0, -20, 0); A.look(0, 35); A.do('spawnDrone', { altitude: 5, ahead: 3, span: 3, speed: 0.5 }); B.d.step(0.6); await B.sleep(2500); return { calls: A.state().render.calls, note: 'the patrol cone and its pool are muted at close range (screenshot)' };})()"
+ },
+ {
+  "name": "chalk-faces-the-reader",
+  "wait": 500,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('hazardsClear'); A.do('trail', 'triageTents', { tp: false }); const mk = G.trail.marks.get('triageTents'), w = mk.words.position, res = []; for (const ang of [0, 90, 180, 270]) { const x = w.x + Math.sin(ang * Math.PI / 180) * 2.3, z = w.z + Math.cos(ang * Math.PI / 180) * 2.3; A.teleport(x, 0, z, ang); A.look(ang, -36); B.d.step(0.3); const up = new G.camera.position.constructor(0, 1, 0).applyQuaternion(mk.words.quaternion);       /* the top edge of the words, in the world */ const away = { x: w.x - x, z: w.z - z }, l = Math.hypot(away.x, away.z); const dot = (up.x * away.x + up.z * away.z) / l; res.push([ang, +dot.toFixed(2)]); ok(dot > 0.95, 'the words read upright from the ' + ang + ' degree side: ' + dot.toFixed(2)); } A.teleport(w.x, 0, w.z + 2.3, 0); A.look(0, -36); B.d.step(0.3); await B.sleep(2200); return { res };})()"
+ },
+ {
+  "name": "jeetu-hands-the-conversation-to-mithi",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.teleport(-41.5, 0, 86.5, 0); B.d.step(0.5); await B.tab(); const before = G.party.active; A.do('talk', 'tara'); const after = G.party.active, open = G.dialogue.isOpen; await B.dialogue([]); ok(before === 'jeetu' && after === 'mithi' && open, 'talking while Jeetu is played swaps to Mithi: ' + before + ' -> ' + after); return { before, after, open };})()"
+ },
+ {
+  "name": "night-shrine-heals",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.set('hazards', false); A.setTime(23); A.teleport(-66.3, 0, -81.8, 0); A.set('invulnerable', false); A.set('rays', 3); B.d.step(0.5); const status = A.state().health.status; B.d.step(10.5); const near = G.player.rays; A.teleport(-60, 0, -70, 0); A.set('rays', 3); B.d.step(10); const away = G.player.rays; ok(status === 'healing' && near >= 5 && away === 3, 'diyas heal at night, nowhere else does: ' + status + ' ' + near + ' ' + away); A.set('hazards', true); A.set('invulnerable', true); A.setTime(7); return { status, raysAtShrine: near, raysAway: away, shafts: G.world.sunShafts.intensity };})()"
+ },
+ {
+  "name": "dog-pack-aggression",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const out = {}; const trial = (label, away, keys, secs, dist = 9) => { A.do('hazardsClear'); A.do('hazardGrace', 0); A.teleport(-100, 0, 0, 0); A.look(90, 0); A.set('rays', 12); G.hazards.grace = 0; A.do('spawnDogs', 3, dist, 'chase'); B.d.step(0.2); const b0 = G.hazards.dogs.stats.bites; if (away) A.look(-90, 0); if (keys) B.d.run(keys, secs); else B.d.step(secs); out[label] = G.hazards.dogs.stats.bites - b0; }; trial('stand_6s', false, null, 6); trial('walk_away_6s', true, 'KeyW', 6); trial('sprint_away_5s', true, ['KeyW', 'ShiftLeft'], 5); trial('sprint_away_from_4m', true, ['KeyW', 'ShiftLeft'], 5, 4); A.do('hazardsClear'); A.do('hazardGrace', 0); A.teleport(-100, 0, 0, 0); A.look(90, 0); G.hazards.grace = 0; A.do('spawnDogs', 3, 9, 'chase'); B.d.step(1); B.d.run('KeyQ', 0.12); const b1 = G.hazards.dogs.stats.bites; B.d.step(8); out.sung_at_1s = G.hazards.dogs.stats.bites - b1; ok(out.stand_6s >= 1 && out.stand_6s <= 4, 'three dogs on a player who stands still: at most about one bite every 1.8 s: ' + out.stand_6s); ok(out.sprint_away_5s === 0 && out.sprint_away_from_4m === 0, 'sprinting outruns a pack (they top out at 6.3 m/s, sprint is 7)'); ok(out.sung_at_1s === 0, 'a song calms the pack'); return out;})()"
+ },
+ {
+  "name": "underground-draw-calls",
+  "wait": 600,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('hazardsClear'); A.do('hazardGrace', 0); A.do('jeetuJoin'); A.do('setuFind'); A.set('view', 'third'); if (G.party.active !== 'mithi') await B.tab(); const spots = [[-125, -8, -28, -90], [-80, -8, -48, 0], [-113, -8, 22, 0], [40, -8, 66, 0], [45, -8, -26, 0], [-20, -8, 76, 0], [-30, -8, -40, -90]]; let max = 0; const rows = []; for (const [x, y, z, yaw] of spots) { A.teleport(x, y, z, yaw); A.do('setuTeleportToPlayer', 3); B.d.step(1); await B.sleep(1800); await B.sleep(1200); const c = A.state().render.calls; rows.push([x, z, c]); max = Math.max(max, c); } A.set('view', 'first'); ok(max <= 140, 'worst case underground, third person, Jeetu and Setu following: ' + max + ' draw calls'); return { max, rows, party: G.party.active };})()"
+ },
+ {
+  "name": "reunion-length",
+  "wait": 300,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('cine', 'reunion', { type: 1, waiting: true }); await B.watch(100, () => G.endings.current); const waiting = G.cinematics.last.t; A.do('endingReset'); await B.sleep(100); return { waitingVariantSeconds: waiting };})()"
+ },
+ {
+  "name": "ripple-near-the-eye",
+  "wait": 500,
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.do('endingReset'); A.set('hazards', false); A.do('hazardsClear'); A.teleport(-38, 0, -20, 0); A.look(0, 0); A.do('ripple', 'neutral', 0, -1.4, 0.9); B.d.step(0.5); await B.sleep(1500); return { note: 'a ring right at the eye is thinned and capped, no square-edged wash (screenshot)' };})()"
+ }
+]

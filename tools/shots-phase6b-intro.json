@@ -31,7 +31,7 @@
  },
  {
   "name": "intro-doorway-hum",
-  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "eval": "window.__grahan.do('cineAdvance',1.8).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
   "wait": 1800
  },
  {
@@ -46,17 +46,17 @@
  },
  {
   "name": "intro-white",
-  "eval": "window.__grahan.do('cineAdvance',2.1999999999999993).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "eval": "window.__grahan.do('cineAdvance',2.4).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
   "wait": 1800
  },
  {
   "name": "intro-silence",
-  "eval": "window.__grahan.do('cineAdvance',4.800000000000001).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "eval": "window.__grahan.do('cineAdvance',5.0).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
   "wait": 1800
  },
  {
   "name": "intro-title",
-  "eval": "window.__grahan.do('cineAdvance',5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
   "wait": 1800
  },
  {
