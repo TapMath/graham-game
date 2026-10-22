@@ -24,7 +24,7 @@ import { Slabs } from './slabs.js';
 import { Smog } from './smog.js';
 import { Flood } from './flood.js';
 
-const DETAIN = Object.freeze({ fadeOut: 0.5, release: 0.8, fadeIn: 1.2, done: 2.1, hours: 1, grace: 6 });
+const DETAIN = Object.freeze({ fadeOut: 0.5, release: 0.8, fadeIn: 1.2, done: 2.1, hours: 1, grace: 9 });
 const RELEASE_LINES = ['Thank you for your cooperation. Sunlight is a privilege, not a right. Have a pleasant day.', 'You have been processed. Please proceed to the nearest permitted corridor.'];
 const _su = { x: 0, y: 0, z: 0, moving: false, kind: 'setu' };
 

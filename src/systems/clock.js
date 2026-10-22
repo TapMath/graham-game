@@ -4,8 +4,8 @@
 //   game.clock.t            absolute game hours: 5.667 at the start .. 30.0 at the end (24 = midnight)
 //   game.clock.hour         0..24 hour of day            .day  1 | 2           .hhmm  'HH:MM'
 //   game.clock.start / end  5.667 / 30
-//   game.clock.hoursPerSec  game hours per simulated second (default 1 game hour = 1.25 real minutes,
-//                           i.e. about 30 real minutes; ?minutes=N sets the total real length)
+//   game.clock.hoursPerSec  game hours per simulated second (default 1 game hour = 1.5 real minutes,
+//                           i.e. about 36 real minutes (Phase 7b; it was 30); ?minutes=N sets the total real length)
 //   game.clock.hoursLeft    hours until the flood (06:00 day 2)
 //   game.clock.advance(h, reason)   time penalty (vendors, detention): jumps forward; emits 'clock:advanced'
 //   game.clock.setTime(hour)        debug jump (0..24 hour of day, or an absolute value > 24); emits 'clock:set'

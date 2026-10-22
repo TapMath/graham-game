@@ -1,8 +1,8 @@
 // Flooding (PLAN 6, 1b). The breach lets the sea into the tunnels:
 //
 //   * UNDERGROUND: one dark water plane over the whole U network rises from the sump (-10.9) over the run, slowly at first
-//     (seeping) then faster; it reaches the U floor (-8) at about 21:00-23:00 (seeded severity +-15 %) and stands about 4 m
-//     deep in the tunnels by the end. Before that only the sump around the breach is deep. `world.breachWater.setLevel(y)` is kept in sync with it.
+//     (seeping) then faster; Phase 7b: it reaches the U floor (-8) at about 00:00-02:00 (seeded severity +-15 %; it was 21:00-23:00,
+//     which met the clinic window) and stands 3-5 m deep in the tunnels by the end. Before that only the sump around the breach is deep. `world.breachWater.setLevel(y)` is kept in sync with it.
 //   * GROUND: from `breachKnown` + 18 h (or from 02:00 regardless) water creeps up in four low areas of G (the south
 //     promenade, the west quay strip, the courtyard, the building-site basin), each with its own seeded start, rate and cap.
 //   * Wading: over 0.35 m slows you a little, over 1 m is DEEP: movement x0.42, 1 ray lost every 5 s, splash sounds and the
@@ -14,7 +14,7 @@ import * as THREE from 'three';
 import { clamp, hdist, smoothstep, pointInRect } from './util.js';
 
 export const FLOOD_TUNING = Object.freeze({
-  sumpY: -10.9, uRange: 6.7, uPower: 2.0, gDelay: 18, gRegardless: 26, deep: 1.0, shallow: 0.35, deepSpeed: 0.42, drainSeconds: 5,
+  sumpY: -10.9, uRange: 6.7, uPower: 3.6, gDelay: 18, gRegardless: 26, deep: 1.0, shallow: 0.35, deepSpeed: 0.42, drainSeconds: 5,
 });
 
 function rippleCanvas(size, seed, kind) {

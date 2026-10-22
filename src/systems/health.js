@@ -11,7 +11,7 @@
 // Rules: start 7 rays. Away from sunlight the player loses 1 ray per 25 s underground, 40 s on the ground,
 // 70 s on the walkways, nothing on the flyovers and above; smog multiplies that by 3. Standing in a lit sun
 // shaft heals 1 ray per 2.5 s (and pauses the drain). At night the shafts are off; under an L3 solar lamp
-// healing runs at half rate (1 per 5 s). Falls (`player:fall`.damage) and the void/sea (`player:void`.cost)
+// healing runs at half rate (1 per 5 s). Phase 7b: so do the diyas at the street shrines on G and L1 (14 + 2 of them). Falls (`player:fall`.damage) and the void/sea (`player:void`.cost)
 // cost rays. 0 rays = death.
 //
 // Events: 'health:changed' {rays, delta, source, max}  on every change (also heal/damage),
@@ -23,6 +23,8 @@ export const HEALTH = Object.freeze({
   smogMul: 3,
   sunSeconds: 2.5,           // seconds per ray in a lit shaft
   lampFactor: 0.5,           // solar lamps at night: half rate
+  diyaFactor: 0.5,           // Phase 7b: the diyas at a street shrine give back the same, at night (the festival of lights)
+  diyaRadius: 2.6,           // metres from the pool of light in front of the shrine
   shaftOn: 0.3,              // shaft intensity above which a shaft heals
 });
 
@@ -104,12 +106,24 @@ export class HealthSystem {
     this.game.events.emit('player:died', { cause });
   }
 
+  /** True within a couple of metres of the diyas of a street shrine (the pool of light in front of the niche). */
+  nearShrine(pos) {
+    const spots = this.game.world?.map?.shrineSpots;
+    if (!spots) return false;
+    for (const s of spots) {
+      if (Math.abs(pos.y - s.y) > 2) continue;
+      if (Math.hypot(pos.x - s.x, pos.z - (s.z + 1.2)) < HEALTH.diyaRadius) return true;
+    }
+    return false;
+  }
+
   /** Healing rate in rays/second at `pos` right now (0 if none). */
   sunRate(pos) {
     const w = this.game.world;
     if (!w?.sunShafts) return { rate: 0, source: null };
     if (w.sunShafts.intensity >= HEALTH.shaftOn && w.isInSunlight(pos)) return { rate: 1 / HEALTH.sunSeconds, source: 'sun' };
     if (w.sunShafts.intensity < HEALTH.shaftOn && w.isNearSolarLamp?.(pos)) return { rate: HEALTH.lampFactor / HEALTH.sunSeconds, source: 'lamp' };
+    if (w.sunShafts.intensity < HEALTH.shaftOn && this.nearShrine(pos)) return { rate: HEALTH.diyaFactor / HEALTH.sunSeconds, source: 'diya' };
     return { rate: 0, source: null };
   }
 

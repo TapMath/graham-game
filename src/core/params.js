@@ -1,7 +1,7 @@
 // URL parameters: seed, minutes, debug, autostart, mute, arena.
-// `minutes` = total real-time length of the run (05:40 day 1 to 06:00 day 2). Default: 1 game hour = 1.25 real minutes.
+// `minutes` = total real-time length of the run (05:40 day 1 to 06:00 day 2). Default: 1 game hour = 1.5 real minutes.
 export const GAME_HOURS = 24 + 20 / 60;                 // 05:40 -> 06:00 next day
-export const DEFAULT_MINUTES = GAME_HOURS * 1.25;       // about 30.4 real minutes
+export const DEFAULT_MINUTES = GAME_HOURS * 1.5;        // about 36.5 real minutes (Phase 7b: was 1.25 per hour, 30.4 minutes)
 export function parseParams(search = '') {
   const q = new URLSearchParams(search);
   const flag = (k) => q.has(k) && q.get(k) !== '0' && q.get(k) !== 'false';

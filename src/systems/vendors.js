@@ -1,7 +1,7 @@
 // D-shot vendors (PLAN section 2, 6). Four of the six `world.vendorSpots` are open on a given seed. Each sells
 // one kind of illegal health jab, rolled per vendor per run:
 //
-//   offer = { potency: 2..6 rays, hours: 0.5..3 (the price: time cut from the flood clock while they "fetch it"),
+//   offer = { potency: 2..6 rays, hours: 0.5..2 (the price: time cut from the flood clock while they "fetch it"),
 //             risk: 0..0.35 (chance the shot is cut/contaminated), line: flavour text hinting at honesty }
 //
 // Accepting: the screen fades, `clock.advance(hours)` (Setu's breath keeps draining for that time), then either
@@ -17,7 +17,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildCharacter, characterMaterial, npcSpec, SKIN } from '../characters/humanoid.js';
 
-export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.5, 2, 2.5, 3], riskMax: 0.35, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25 });
+export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], riskMax: 0.3, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25 });
 
 const LINES = {
   clean: [

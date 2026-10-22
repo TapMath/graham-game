@@ -115,9 +115,36 @@ export class VisionSystem {
 
   reset() { this.queue.length = 0; this.lastT = -99; if (this.active) this._finish(); }
 
+  /**
+   * Phase 7b: second sight never takes her out of a fight. False while a hazard is on her (a chasing dog, an approaching or
+   * grabbing wanderer, a drone or camera on her trail, a guard who has seen her, a cracking slab, deep water), and for 2 s
+   * after it lets go; and false whenever the player is not Mithi (Jeetu has no second sight).
+   */
+  calm() {
+    const g = this.game, p = g.player.pos;
+    if (g.party && g.party.active !== 'mithi') return false;
+    let danger = !!g.hazards?.detaining || !!g.cinematics?.current;
+    if (!danger && g.hazards?.enabled) {
+      for (const e of g.hazards.list()) {
+        const dx = e.pos.x - p.x, dz = e.pos.z - p.z, d = Math.hypot(dx, dz), dy = Math.abs(e.pos.y - p.y);
+        if (e.kind === 'dog') { if (e.alert > 0 && d < 30 && dy < 3) danger = true; }
+        else if (e.kind === 'deranged') { if (e.alert >= 0.6 && d < 20 && dy < 3) danger = true; }
+        else if (e.kind === 'drone') { if (e.alert > 0 && d < 40 && dy < 26) danger = true; }
+        else if (e.kind === 'camera') { if (e.alert > 0 && d < 25) danger = true; }
+        else if (e.kind === 'guard') { if (e.alert > 0 && d < 20 && dy < 4) danger = true; }
+        else if (e.kind === 'slab') { if (d < 14) danger = true; }
+        if (danger) break;
+      }
+      if (!danger && g.hazards.flood?.depthAt?.(p) > 0.35) danger = true;
+    }
+    if (danger) this._calmAt = g.time + 2;
+    return !danger && g.time >= (this._calmAt ?? 0);
+  }
+
   available() {
     const g = this.game, s = g.setu;
     if (this.active || g.modal || g.mode !== 'playing') return false;
+    if (!this.calm()) return false;
     if (!s || s.dead || s.found || s.following) return false;
     if (g.canSee && g.canSee() === true) return false;
     return !g.clock || g.clock.t - this.lastT >= this.COOLDOWN_HOURS;
@@ -196,7 +223,7 @@ export class VisionSystem {
   update(dt, game) {
     if (!this.active) {
       // queued breath visions wait for a free moment
-      if (this.queue.length && game.time >= this.queue[0].at && !game.modal && game.mode === 'playing') this.start(this.queue.shift().opts);
+      if (this.queue.length && game.time >= this.queue[0].at && !game.modal && game.mode === 'playing' && this.calm()) this.start(this.queue.shift().opts);
       return;
     }
     const age = game.time - this.t0;

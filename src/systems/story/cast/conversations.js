@@ -2,6 +2,7 @@
 // Each entry is `(game, ctx) => spec` for `game.dialogue.open`. ctx = { actor, idx, n (times talked before), d (the director) }.
 // Mithi's own lines are sensory: sound, smell, heat, never sight. Everyone who knows something about Setu answers from where
 // he REALLY is on his timeline (`setuStage`), so what they say always points the right way.
+import { COSTS } from '../costs.js';
 export const STAGES = ['liftWreck', 'catacombs', 'boringSite', 'clinic', 'ventExit', 'triageTents', 'bridge'];
 
 /** 0..6 = Setu's current timeline window; -1 once he has been found (he is with you). */
@@ -133,7 +134,7 @@ export const CONVERSATIONS = {
     }
     // blood not yet given
     const first = n === 0;
-    const canGive = rays >= 4;
+    const canGive = rays >= COSTS.blood.min;
     return {
       lines: first ? [
         N('A voice you know from a thousand radio jingles: smooth, tired, kind. It stops the corridor around it.'),
@@ -141,7 +142,7 @@ export const CONVERSATIONS = {
         'My husband was driving on the top level when it came down. He needs blood. B-positive. They have none. The nurses say you are B-positive.',
       ] : ['Please. He is breathing through a machine, and the machine is hungry. B-positive. Only that.'],
       choices: [
-        { label: 'I am B-positive. Take mine.', note: '-2 rays, a quarter hour', enabled: canGive, why: 'You are too weak to give blood. Find some light first.', onChoose: () => d.giveBlood() },
+        { label: 'I am B-positive. Take mine.', note: `-${COSTS.blood.rays} rays, a quarter hour`, enabled: canGive, why: 'You are too weak to give blood. Find some light first.', onChoose: () => d.giveBlood() },
         { label: 'My brother is missing. I cannot stop now.', onChoose: () => ({ lines: ['Then go. I understand. I would do the same.', 'If you change your mind, I will be here.'], choices: evid ? [warn, bye('Thank you.')] : [bye('Thank you.')] }) },
         ...(f.jeetuJoined || f.jeetuTalked ? [] : [{ label: 'Have you seen a boy called Jeetu?', onChoose: () => ({ lines: ['The one with the bandaged arm? East ward, by the wall. I asked the nurses to watch him. Go to him, child.'], choices: [bye('Thank you.', () => d.learn('jeetuBed'))] }) }]),
       ],
@@ -179,8 +180,8 @@ export const CONVERSATIONS = {
         'Setu is missing? Mithi... Listen. Get me out, and I will go to the Metro gate and make so much noise those guards will forget their own names. You walk past. Do not run. Do not sing.',
       ] : ['Mithi. The offer stands. Out of here, to the Metro gate, shouting.'],
       choices: [
-        { label: 'Pay his bail, in light.', note: '-3 rays', enabled: game.player.rays >= 5, why: 'You cannot spare that much light.', onChoose: () => d.payBail('rays') },
-        { label: 'Pay his bail, in time.', note: '+2 hours of forms', onChoose: () => d.payBail('time') },
+        { label: 'Pay his bail, in light.', note: `-${COSTS.bail.rays} rays`, enabled: game.player.rays >= COSTS.bail.min, why: 'You cannot spare that much light.', onChoose: () => d.payBail('rays') },
+        { label: 'Pay his bail, in time.', note: `+${COSTS.bail.hours} hours of forms`, onChoose: () => d.payBail('time') },
         bye('Not yet, Gautam.'),
       ],
     };
@@ -312,8 +313,8 @@ export const CONVERSATIONS = {
         'Two rays of yours, or one hour carrying our water cans. Or no torch. Your choice, didi.',
       ],
       choices: [
-        { label: 'Take two rays of light.', note: '-2 rays', enabled: game.player.rays >= 4, why: 'You cannot spare the light.', onChoose: () => d.buyTorch('rays') },
-        { label: 'Carry the water cans.', note: '+1 hour', onChoose: () => d.buyTorch('time') },
+        { label: 'Take two rays of light.', note: `-${COSTS.torch.rays} rays`, enabled: game.player.rays >= COSTS.torch.min, why: 'You cannot spare the light.', onChoose: () => d.buyTorch('rays') },
+        { label: 'Carry the water cans.', note: `+${COSTS.torch.hours} hour`, onChoose: () => d.buyTorch('time') },
         bye('Not now.'),
       ],
     };

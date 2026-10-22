@@ -372,6 +372,22 @@ export class CitySystem {
     }
   }
 
+  /**
+   * Phase 7b (draw-call budget): from the tunnels the towers cannot be seen, but their window-wall chunks still cost a call each.
+   * Deep underground (feet below -5, back on above -3) the tower chunks (`city:building*`, `city:glass*`) are hidden.
+   */
+  _undergroundCull(game, p) {
+    if (!this._cullables) {
+      this._cullables = [];
+      game.scene.traverse((o) => { if (o.isMesh && /^city:(building|glass)/.test(o.name)) this._cullables.push(o); });
+      this._under = false;
+    }
+    const under = p.pos.y < (this._under ? -3.0 : -5.0);
+    if (under === this._under) return;
+    this._under = under;
+    for (const m of this._cullables) m.visible = !under;
+  }
+
   update(dt, game) {
     this.gates.update(dt);
     this.sun.update(dt);
@@ -379,6 +395,7 @@ export class CitySystem {
     const fx = this.fx;
     fx.ads.update(dt); fx.rain.update(dt); fx.searchlights.update(dt); fx.diyaFlicker.update(dt);
     const p = game.player;
+    if (p) this._undergroundCull(game, p);
     if (p) {
       this._seaCool -= dt;
       if (p.pos.y < this.map.seaLevel - 0.7 && this.sea.inSea(p.pos) && this._seaCool <= 0) {

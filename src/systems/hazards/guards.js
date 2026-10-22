@@ -6,12 +6,12 @@
 //   run in view, sing near them (sing:start within 40 m), or linger (slow, in view) for 3 s -> "You're not staff!", then DETAINED.
 // Phase 6 can call `game.hazards.guards.distract(seconds)` (Gautam's bail) to make them look away.
 import * as THREE from 'three';
-import { SIM_RADIUS, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, angleDiff } from './util.js';
+import { SIM_RADIUS, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, angleDiff, singHeard } from './util.js';
 import { Crowd } from './models.js';
 import { rimMaterial } from './render.js';
 import { NPC_PRESETS } from '../../characters/humanoid.js';
 
-export const GUARD_TUNING = Object.freeze({ half: 0.36, range: 12, peripheral: 3.6, watchSeconds: 3, lingerSeconds: 3, blownSeconds: 1.0, singRadius: 40, alertSeconds: 12, warnGap: 5 });
+export const GUARD_TUNING = Object.freeze({ half: 0.36, range: 12, peripheral: 3.6, watchSeconds: 3.5, lingerSeconds: 3, blownSeconds: 1.0, singRadius: 40, alertSeconds: 12, warnGap: 5 });
 
 export class Guards {
   constructor(h) { this.h = h; this.guards = []; this.distracted = 0; this.stats = { warnings: 0, detained: 0, blown: 0 }; }
@@ -50,7 +50,7 @@ export class Guards {
   onSing(pos) {
     const T = GUARD_TUNING;
     for (const g of this.guards) {
-      if (hdist(g, pos) > T.singRadius || Math.abs(g.y - pos.y) > 12) continue;
+      if (!singHeard(this.h.game, { x: g.x, y: g.y + 1.2, z: g.z }, pos, T.singRadius)) continue;
       if (this.distracted > 0) continue;
       g.alertT = T.alertSeconds; g.alertAt = { x: pos.x, z: pos.z };
       this.h.sound('guard-shout', g, 0.55);

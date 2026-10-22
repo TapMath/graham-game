@@ -67,7 +67,7 @@ export function defineChain(game, d) {
     when: () => joined() && !has('torch'), done: () => has('torch') });
   O.define({ id: 'bail', optional: true, order: 130, text: 'Gautam is in a cell at the police station: pay his bail and he will distract the Metro guards.',
     when: () => f().metGautam && !f().gautamFree, done: () => f().gautamFree });
-  O.define({ id: 'blood', optional: true, order: 140, text: 'Tara\'s husband needs B-positive blood: give blood (2 rays) and she will help you later.',
+  O.define({ id: 'blood', optional: true, order: 140, text: 'Tara\'s husband needs B-positive blood: give blood (3 rays) and she will help you later.',
     when: () => f().metTara && !f().bloodGiven, done: () => f().bloodGiven });
   void STAGES;
 }

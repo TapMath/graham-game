@@ -174,15 +174,22 @@ export class Beams {
     if (ax > -0.5 && ax < L + 0.5) {
       const rr = Math.hypot(wx - ax * dx, wy - ax * dy, wz - ax * dz), R = Math.max(0.05, Math.tan(half) * Math.max(ax, 0));
       const t = Math.min(1, Math.max(0, (rr - R * 1.0) / (R * 0.8))), k = 1 - t * t * (3 - 2 * t);
-      mul *= 1 - 0.93 * k;
+      mul *= 1 - 0.96 * k;
     }
+    // Phase 7b: a cone seen from close by (a drone overhead, a torch in your face) was a wall of saturated colour: thin it out
+    const apex = Math.hypot(wx, wy, wz);
+    mul *= 0.35 + 0.65 * Math.min(1, Math.max(0, (apex - 1.5) / 9));
     this.cones._push(_m, r * mul, g * mul, b * mul);
     if (hit && dy < -0.2 && pool > 0 && this.pools.n < this.cap) {
       const stretch = Math.min(2.6, 1 / Math.max(0.35, -dy));
       _q.setFromAxisAngle(_up, Math.atan2(dx, dz));
       _p.set(hit.point.x, hit.point.y + 0.05, hit.point.z); _s.set(rad * 2.4, 1, rad * 2.4 * stretch);
       _m.compose(_p, _q, _s);
-      this.pools._push(_m, r * 2.4 * pool, g * 2.4 * pool, b * 2.4 * pool);
+      // the pool where it lands: strongest from a distance, soft and capped when the camera is on or beside it
+      const hp = hit.point, pd = Math.hypot(cam.x - hp.x, cam.y - hp.y, cam.z - hp.z);
+      const pf = 0.2 + 0.8 * Math.min(1, Math.max(0, (pd - 2.5) / 8));
+      const k2 = 1.9 * pool * pf, cap = 0.5;
+      this.pools._push(_m, Math.min(cap, r * k2), Math.min(cap, g * k2), Math.min(cap, b * k2));
     }
     return L;
   }

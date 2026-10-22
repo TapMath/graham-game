@@ -456,8 +456,8 @@ const story = {
 };
 // Setu's day (PLAN 1b step 5): game hours from 06:00 day 1 (24 = midnight, 28 = 04:00 day 2); apply seeded jitter of about +-1 h
 const setuTimeline = [
-  { id: 'liftWreck', level: 'U', x: 55.5, y: -8, z: -24, from: 5.67, to: 9 },
-  { id: 'catacombs', level: 'U', x: -97.5, y: -8, z: 12, from: 9, to: 14 },
+  { id: 'liftWreck', level: 'U', x: 55.5, y: -8, z: -24, from: 5.67, to: 9.5, jitter: 0.5 },
+  { id: 'catacombs', level: 'U', x: -97.5, y: -8, z: 12, from: 9.5, to: 14 },
   { id: 'boringSite', level: 'U', x: -80, y: -8, z: -49.5, from: 14, to: 18 },
   { id: 'clinic', level: 'U', x: -21, y: -8, z: 77, from: 18, to: 23 },
   { id: 'ventExit', level: 'G', x: -15, y: 0, z: 89.8, from: 23, to: 23.5 },

@@ -123,7 +123,7 @@ function boot() {
     requestAnimationFrame(frame);
     const dt = Math.min((now - last) / 1000, MAX_CATCHUP);
     last = now;
-    if (game.mode === 'playing') {
+    if (game.mode === 'playing' && !game.debug?.manual) {   // debug.manual: tests drive the simulation themselves (run/step/walk)
       acc += dt;
       while (acc >= STEP) { game.update(STEP); acc -= STEP; }
     } else acc = 0;

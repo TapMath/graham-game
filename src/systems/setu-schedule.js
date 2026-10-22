@@ -5,15 +5,15 @@
 // `buildSchedule` jitters the window boundaries by a seeded +-1 h (the vent exit is a short fixed 0.5 h hop
 // right after the clinic) and keeps them ordered.
 //
-// Breath: health 100 -> 0 (BREATH.perHour % per game hour at normal air). Tuned so that a Setu who is never
-// found dies at about 03:00 (the doctor's visit at the clinic window start gives +BREATH.doctorBoost).
+// Breath: health 100 -> 0 (BREATH.perHour % per game hour at normal air). Tuned (Phase 7b) so that a Setu who is never
+// found dies at about 05:00 (the doctor's visit at the clinic window start gives +BREATH.doctorBoost).
 export const BREATH = Object.freeze({
-  perHour: 5.34,          // % lost per game hour in ordinary air
+  perHour: 5.0,           // % lost per game hour in ordinary air (Phase 7b: 5.34 -> 5.0, a never-found Setu now dies at about 05:00, not 03:00)
   tunnelMul: 1.25,       // stale tunnel air (underground)
   smogMul: 2.5,
   dustMul: 1.8,
   ventMul: 0.2,          // standing by an air vent
-  doctorBoost: 35,       // the underground doctor's inhaler
+  doctorBoost: 38,       // the underground doctor's inhaler
   foundMul: 1 / 3,       // after the pill and inhaler: a third of the rate
   jitter: 1.0,           // +- hours on the window boundaries
 });
@@ -27,7 +27,7 @@ export function buildSchedule(timeline, rng, jitter = BREATH.jitter) {
   for (let i = 0; i < n - 1; i++) {
     let b;
     if (timeline[i].id === 'ventExit') b = out[i].from + (timeline[i].to - timeline[i].from);   // the vent hop keeps its 0.5 h
-    else b = timeline[i].to + rng.range(-jitter, jitter);
+    else { const j = timeline[i].jitter ?? jitter; b = timeline[i].to + rng.range(-j, j); }
     b = Math.max(b, prev + 0.5);
     out[i].to = b; out[i + 1].from = b; prev = b;
   }

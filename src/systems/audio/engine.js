@@ -47,6 +47,16 @@ function makeImpulse(ctx, seconds = 2.8, decay = 3.2) {
   return buf;
 }
 
+/**
+ * The Phase 7b mix, as trims on top of the bus volumes (measured at the master meter, post-compressor, one bus at a time; see
+ * tools/audio-mix.mjs). Before: the music (RMS -24 dBFS) sat 6 dB ABOVE the ambience (-30), and far events (a bark at 14 m, the
+ * mouth organ) were masked by it. Now the music is x0.35 (-9 dB: about -33 dBFS RMS), the ambience unchanged, event one-shots x1.4
+ * (+3 dB), the sung voice x1.25 (+2 dB; peak about -6) and the PA's chime and hiss x1.8 (+5 dB), with the
+ * music and ambience ducked while it speaks. Cinematic sounds (story/sfx.js) go in through `selfIn` and loops through their own
+ * gain, so neither is touched.
+ */
+export const MIX = Object.freeze({ music: 0.35, amb: 1.0, event: 1.4, voice: 1.25, pa: 1.8 });
+
 export class AudioSystem {
   init(game) {
     this.game = game;
@@ -125,9 +135,14 @@ export class AudioSystem {
     this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 2048; this.comp.connect(this.analyser);      // a meter for tests: state().audio.level
     this._meter = new Float32Array(2048);
     this.buses = { music: g(this.volumes.music), sfx: g(this.volumes.sfx), voice: g(this.volumes.voice), amb: g(this.volumes.amb) };
-    this.musicDuck = g(1);
-    this.buses.music.connect(this.musicDuck); this.musicDuck.connect(this.pre);
-    for (const k of ['sfx', 'voice', 'amb']) this.buses[k].connect(this.pre);
+    this.musicDuck = g(1); this.ambDuck = g(1);
+    // Phase 7b mix trims: fixed, inside the user-facing bus volumes (so the settings sliders keep their meaning). Measured at the
+    // master meter (tools/audio-mix.mjs) so that music sits under the ambience, the ambience under the events, and the voice and
+    // the PA clearly above everything.
+    this.musicTrim = g(MIX.music); this.ambTrim = g(MIX.amb);
+    this.buses.music.connect(this.musicTrim); this.musicTrim.connect(this.musicDuck); this.musicDuck.connect(this.pre);
+    this.buses.amb.connect(this.ambTrim); this.ambTrim.connect(this.ambDuck); this.ambDuck.connect(this.pre);
+    for (const k of ['sfx', 'voice']) this.buses[k].connect(this.pre);
     // shared reverb
     this.reverb = ctx.createConvolver(); this.reverb.buffer = makeImpulse(ctx);
     this.reverbOut = g(0.55); this.reverb.connect(this.reverbOut); this.reverbOut.connect(this.pre);
@@ -135,7 +150,8 @@ export class AudioSystem {
     // non-spatial chain for the player's own sounds (footsteps, breath, voice)
     this.selfIn = g(1); this.selfIn.connect(this.buses.sfx);
     const selfSend = g(0.18); this.selfIn.connect(selfSend); selfSend.connect(this.reverbIn);
-    this.voiceIn = g(1); this.voiceIn.connect(this.buses.voice);
+    this.voiceIn = g(MIX.voice); this.voiceIn.connect(this.buses.voice);
+    this.paIn = g(MIX.pa); this.paIn.connect(this.voiceIn);
     const vSend = g(0.4); this.voiceIn.connect(vSend); vSend.connect(this.reverbIn);
 
     this.ambience = new Ambience(this);
@@ -163,13 +179,18 @@ export class AudioSystem {
     this.muted = !!m;
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volumes.master, this.ctx.currentTime, 0.05);
   }
-  /** Dip the music bed to (1 - amount) for `seconds`. */
-  duck(amount = 0.6, seconds = 3) {
+  /** Dip the music bed to (1 - amount) for `seconds` (and, with `amb`, the ambience to (1 - amb)). */
+  duck(amount = 0.6, seconds = 3, amb = 0) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.musicDuck.gain.cancelScheduledValues(t);
     this.musicDuck.gain.setTargetAtTime(1 - amount, t, 0.2);
     this.musicDuck.gain.setTargetAtTime(1, t + seconds, 0.8);
+    if (amb > 0) {
+      this.ambDuck.gain.cancelScheduledValues(t);
+      this.ambDuck.gain.setTargetAtTime(1 - amb, t, 0.25);
+      this.ambDuck.gain.setTargetAtTime(1, t + seconds, 0.9);
+    }
   }
 
   // ------------------------------------------------------------------ listener
@@ -282,7 +303,7 @@ export class AudioSystem {
     const ctx = this.ctx;
     let chain = null, dest;
     const vg = ctx.createGain();
-    vg.gain.value = spec.gain * (0.35 + 0.65 * loud) * (o.gain ?? 1);
+    vg.gain.value = spec.gain * (0.35 + 0.65 * loud) * (o.gain ?? 1) * (kind.startsWith('pa-') ? 1 : MIX.event);
     if (pos) {
       chain = this._acquire();
       if (!chain) {                                   // all chains busy: steal the quietest, farthest spatial voice if this one matters more
@@ -295,7 +316,7 @@ export class AudioSystem {
       this._setPos(chain.pan, pos);
       this._shape(chain, pos, dist);
       dest = chain.lp;
-    } else dest = kind.startsWith('pa-') ? this.voiceIn : this.selfIn;
+    } else dest = kind.startsWith('pa-') ? this.paIn : this.selfIn;
     vg.connect(dest);
     rec.chain = chain; rec.vg = vg; rec.endCtx = ctx.currentTime + (spec.dur || 1) + 0.5;   // set before the recipe runs, so a throw can release them
     const t = ctx.currentTime + 0.012;

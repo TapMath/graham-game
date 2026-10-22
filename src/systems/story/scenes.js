@@ -87,53 +87,53 @@ async function reunion(cx, o) {
   g.audio?.play('breath', null);
   sfx?.wind(40, 0.16);
   cx.stamp(lateDawn ? '05:10' : '04:50', 'the bridge that joins the two islands');
-  await cx.wait(3.4);
+  await cx.wait(2.4);
   cx.stamp('', '', false);
-  cx.black(0, 2.2);
+  cx.black(0, 1.8);
 
   // ---- 1: the long walk onto the bridge (wide, high)
   cx.mark('walk');
-  skyTo(5.0, 12);
-  cx.cam({ p: [157, 42, -33.5], l: [205, 40.2, -30], fov: 48, dur: 6.5, e: 'soft' });
+  skyTo(5.0, 10);
+  cx.cam({ p: [157, 42, -33.5], l: [205, 40.2, -30], fov: 48, dur: 5.0, e: 'soft' });
   cx.walk(M, 171.5, BR.z, 1.35);
   if (J) cx.walk(J, 169.4, BR.z + 1.5, 1.5);
   if (!waiting) cx.walk(S, 170.0, BR.z - 1.5, 1.35);
-  await cx.wait(3.0);
-  cx.cap('Where the road runs out and the sea begins.', { kind: 'scrawl', ttl: 3.4 });
-  await cx.wait(3.6);
+  await cx.wait(2.2);
+  cx.cap('Where the road runs out and the sea begins.', { kind: 'scrawl', ttl: 2.8 });
+  await cx.wait(2.6);
 
   if (waiting) {
     // ---- 2: behind her shoulder: "Didi, there's no one"
     cx.mark('noone');
-    cx.camPath((k) => ({ p: [M.pos.x - 4.4, 39.55, M.pos.z + 0.9 - k * 0.2], l: [M.pos.x + 14, 39.7, M.pos.z - 0.1], fov: 50 - k * 4 }), 4.6, 'inout');
-    await cx.wait(1.8);
+    cx.camPath((k) => ({ p: [M.pos.x - 4.4, 39.55, M.pos.z + 0.9 - k * 0.2], l: [M.pos.x + 14, 39.7, M.pos.z - 0.1], fov: 50 - k * 4 }), 3.8, 'inout');
+    await cx.wait(1.2);
     if (J) { cx.walk(J, M.pos.x + 3.4, BR.z + 0.9, 2.6); }
-    await cx.wait(1.4);
+    await cx.wait(0.9);
     cx.faceTo(M, 211, BR.z);
-    if (J) { cx.faceTo(J, 211, BR.z); await cx.say('Didi... there\'s no one.', { who: 'Jeetu', ttl: 3.2 }); } else await cx.say('Setu?', { who: 'Mithi', ttl: 2.4 });
+    if (J) { cx.faceTo(J, 211, BR.z); await cx.say('Didi... there\'s no one.', { who: 'Jeetu', ttl: 2.4 }); } else await cx.say('Setu?', { who: 'Mithi', ttl: 2.0 });
     // her face, front-on, the pre-dawn glow behind the lens
-    cx.cam({ p: [M.pos.x + 0.5, 39.5, M.pos.z + 2.4], l: [M.pos.x + 0.1, 39.5, M.pos.z], fov: 34, dur: 2.6, e: 'inout' });
+    cx.cam({ p: [M.pos.x + 0.5, 39.5, M.pos.z + 2.4], l: [M.pos.x + 0.1, 39.5, M.pos.z], fov: 34, dur: 2.0, e: 'inout' });
+    await cx.wait(0.8);
+    await cx.say('He is here. I can feel it.', { who: 'Mithi', ttl: 2.6 });
+    if (J) await cx.say('Didi, the bridge is empty. Come. Let\'s go home.', { who: 'Jeetu', ttl: 2.4 }); else await cx.wait(1.4);
+    cx.cap('She stands in the wind with her hand open, listening to the sea.', { kind: 'scrawl', ttl: 3 });
     await cx.wait(1.4);
-    await cx.say('He is here. I can feel it.', { who: 'Mithi', ttl: 3.4 });
-    if (J) await cx.say('Didi, the bridge is empty. Come. Let\'s go home.', { who: 'Jeetu', ttl: 3.4 }); else await cx.wait(2);
-    cx.cap('She stands in the wind with her hand open, listening to the sea.', { kind: 'scrawl', ttl: 4 });
-    await cx.wait(2.6);
     // ---- 3: she walks; the mouth organ
     cx.mark('organ');
-    cx.cam({ p: [M.pos.x - 3.4, 39.2, M.pos.z + 1.3], l: [M.pos.x + 12, 39.6, M.pos.z], fov: 46, dur: 2.2, e: 'inout' });
+    cx.cam({ p: [M.pos.x - 3.4, 39.2, M.pos.z + 1.3], l: [M.pos.x + 12, 39.6, M.pos.z], fov: 46, dur: 1.8, e: 'inout' });
     cx.walk(M, 180, BR.z, 1.0);
     g.audio?.play('caneTap', null);
-    await cx.wait(2.8);
+    await cx.wait(2.0);
     skyTo(5.45, 4);
     emit(g, 'mouthorgan', 212.2, 39.2, -24.2, 0.8);
     cx.shake(0.04, 0.6);
     await cx.wait(0.6);
-    if (J) { cx.cam({ p: [J.pos.x + 2.0, 39.45, J.pos.z + 0.2], l: [J.pos.x, 39.3, J.pos.z], fov: 36, dur: 0.9, e: 'out' }); cx.cap('♪', { kind: 'scrawl', ttl: 2 }); await cx.wait(1.2); }
+    if (J) { cx.cam({ p: [J.pos.x + 2.0, 39.45, J.pos.z + 0.2], l: [J.pos.x, 39.3, J.pos.z], fov: 36, dur: 0.9, e: 'out' }); cx.cap('♪', { kind: 'scrawl', ttl: 1.6 }); await cx.wait(0.8); }
     // whip to the far end
-    cx.cam({ p: [M.pos.x - 1.2, 39.6, M.pos.z + 0.6], l: [212.5, 39.5, -24.6], fov: 36, dur: 1.1, e: 'inout' });
-    await cx.wait(1.5);
+    cx.cam({ p: [M.pos.x - 1.2, 39.6, M.pos.z + 0.6], l: [212.5, 39.5, -24.6], fov: 36, dur: 0.9, e: 'inout' });
+    await cx.wait(1.0);
     S.visible = true; cx.walk(S, 203, -26.4, 3.4, { face: true });
-    await cx.say('♪  a mouth organ, small and out of breath', { kind: 'scrawl', ttl: 3.2 });
+    await cx.say('♪  a mouth organ, small and out of breath', { kind: 'scrawl', ttl: 2.0 });
     // ---- 4: Setu steps out of the shadows and runs
     cx.mark('run');
     cx.cap('DIDI!', { who: 'Setu', ttl: 2.4 });
@@ -141,10 +141,10 @@ async function reunion(cx, o) {
     skyTo(5.78, 7);
     const run = cx.walk(S, 192.2, BR.z + 0.1, 6.3);
     cx.camPath((k) => ({ p: [M.pos.x - 2.0, 38.9, M.pos.z + 0.55], l: [S.pos.x, 39.2, S.pos.z], fov: 40 - k * 6 }), 2.2, 'inout');
-    await cx.wait(0.8);
+    await cx.wait(0.6);
     cx.faceTo(M, S.pos.x, S.pos.z);
-    cx.cap('Setu?', { who: 'Mithi', ttl: 1.2 });
-    await cx.wait(0.8);
+    cx.cap('Setu?', { who: 'Mithi', ttl: 1.0 });
+    await cx.wait(0.6);
     const mrun = cx.walk(M, 190.9, BR.z, 5.6);
     // side-on tracking shot of the run
     cx.camPath((k) => {
@@ -157,19 +157,19 @@ async function reunion(cx, o) {
     await cx.wait(0.1);
   } else {
     // ---- they arrive together: the long walk to the end of the bridge
-    cx.camPath((k) => ({ p: [M.pos.x - 4.6, 39.4, M.pos.z + 1.7], l: [M.pos.x + 14, 39.8, M.pos.z - 0.2], fov: 50 }), 6, 'inout');
-    cx.walk(M, 189.2, BR.z, 1.5); cx.walk(S, 190.4, BR.z - 1.0, 1.5); if (J) cx.walk(J, 187.4, BR.z + 1.1, 1.6);
-    skyTo(5.5, 8);
-    await cx.wait(2.2);
-    await cx.say('Didi... how long till the sun?', { who: 'Setu', ttl: 3 });
-    await cx.say('Soon, Setu. Soon.', { who: 'Mithi', ttl: 2.6 });
-    await cx.wait(1.4);
-    cx.cap('They stand at the middle of the bridge, and the night begins to thin.', { kind: 'scrawl', ttl: 4 });
-    skyTo(5.8, 5);
-    cx.cam({ p: [M.pos.x - 3.2, 39.0, M.pos.z + 2.4], l: [M.pos.x + 6, 39.5, M.pos.z], fov: 42, dur: 5, e: 'inout' });
-    await cx.wait(4.5);
+    cx.camPath((k) => ({ p: [M.pos.x - 4.6, 39.4, M.pos.z + 1.7], l: [M.pos.x + 14, 39.8, M.pos.z - 0.2], fov: 50 }), 5, 'inout');
+    cx.walk(M, 189.2, BR.z, 1.8); cx.walk(S, 190.4, BR.z - 1.0, 1.8); if (J) cx.walk(J, 187.4, BR.z + 1.1, 1.9);
+    skyTo(5.5, 6);
+    await cx.wait(1.6);
+    await cx.say('Didi... how long till the sun?', { who: 'Setu', ttl: 2.6 });
+    await cx.say('Soon, Setu. Soon.', { who: 'Mithi', ttl: 2.2 });
+    await cx.wait(0.8);
+    cx.cap('They stand at the middle of the bridge, and the night begins to thin.', { kind: 'scrawl', ttl: 3.4 });
+    skyTo(5.8, 4);
+    cx.cam({ p: [M.pos.x - 3.2, 39.0, M.pos.z + 2.4], l: [M.pos.x + 6, 39.5, M.pos.z], fov: 42, dur: 4, e: 'inout' });
+    await cx.wait(3.4);
     cx.faceTo(S, M.pos.x, M.pos.z); cx.faceTo(M, S.pos.x, S.pos.z);
-    await cx.wait(0.4);
+    await cx.wait(0.3);
   }
 
   // ---- 5: the meeting, the embrace (or the held hand), and the sun
@@ -177,7 +177,7 @@ async function reunion(cx, o) {
   cx.mark('card');
   // ---- the card: gold-white out, then the ending screen (the layer stays up under the ending's own fade)
   cx.setWhiteColor(type === 1 ? '#f6e3b0' : '#e8cfa0');
-  await cx.white(1, 2.2);
+  await cx.white(1, 1.8);
   o.keepLayers = true;
   cx.always(() => { g.clock.setTime(30); });
   cx.clearProps();
@@ -197,53 +197,92 @@ async function finale(cx, { M, S, J, sun, sea, seaColor0, warned, waiting, skyTo
   cx.camPath((k) => {
     const ph = k * 1.0;
     return { p: [C.x - r * Math.sin(ph), 39.75 - k * 0.8, C.z + r * Math.cos(ph)], l: [C.x + 0.4, 39.2 + k * 0.5, C.z], fov: 44 - k * 5 };
-  }, 8.2, 'inout');
-  await cx.wait(2.2);
-  cx.cap(waiting ? 'You came. You came. I knew you would.' : 'I knew you would take me.', { who: 'Setu', ttl: 2.6 });
-  await cx.wait(2.4);
-  cx.cap('Setu. Setu. Setu.', { who: 'Mithi', ttl: 2.4 });
+  }, 6.4, 'inout');
+  await cx.wait(1.6);
+  cx.cap(waiting ? 'You came. You came. I knew you would.' : 'I knew you would take me.', { who: 'Setu', ttl: 2.2 });
+  await cx.wait(1.8);
+  cx.cap('Setu. Setu. Setu.', { who: 'Mithi', ttl: 2.0 });
   // the sun breaks through
   cx.mark('sunbreak');
-  cx.tween(0, 1, 6.5, (v) => { sun.el = -1 + v * 9.5; sun.size = 44 + v * 70; sun.vis = Math.min(1, v * 3); sun.glow = Math.min(1, v * 1.4); }, 'inout');
-  skyTo(6.28, 8.5);
-  cx.do(() => sfx?.swell(14, 0.2, 174.6));
+  cx.tween(0, 1, 5.2, (v) => { sun.el = -1 + v * 9.5; sun.size = 44 + v * 70; sun.vis = Math.min(1, v * 3); sun.glow = Math.min(1, v * 1.4); }, 'inout');
+  skyTo(6.28, 7);
+  cx.do(() => sfx?.swell(12, 0.2, 174.6));
   cx.bloom(0.0, 0);
-  await cx.wait(2.4);
-  cx.bloom(0.7, 2.6);
   await cx.wait(1.8);
+  cx.bloom(0.7, 2.2);
+  await cx.wait(1.4);
   // all of them turn to the east, side by side; Jeetu runs up
   cx.mark('sunrise');
   cx.do(() => { S.pos.x = M.pos.x + 0.3; });
   cx.walk(S, M.pos.x + 0.15, BR.z - 1.05, 1.4);
   if (hasJeetu && J) cx.walk(J, M.pos.x - 0.1, BR.z + 1.15, 5.8);
-  cx.camPath((k) => ({ p: [C.x - 6.1 + k * 1.8, 38.75 + k * 0.12, C.z + 1.4 - k * 0.6], l: [C.x + 30, 41.2, C.z + 3.5], fov: 44 }), 9, 'inout');
-  await cx.wait(1.6);
+  cx.camPath((k) => ({ p: [C.x - 6.1 + k * 1.8, 38.75 + k * 0.12, C.z + 1.4 - k * 0.6], l: [C.x + 30, 41.2, C.z + 3.5], fov: 44 }), 7, 'inout');
+  await cx.wait(1.2);
   cx.faceTo(M, 300, BR.z); cx.faceTo(S, 300, BR.z);
-  if (hasJeetu && J) { cx.faceTo(J, 300, BR.z); cx.cap('Look, Setu... SUNRISE!', { who: 'Jeetu', ttl: 3.6 }); }
-  else cx.cap('Look, Setu. Sunrise.', { who: 'Mithi', ttl: 3.6 });
+  if (hasJeetu && J) { cx.faceTo(J, 300, BR.z); cx.cap('Look, Setu... SUNRISE!', { who: 'Jeetu', ttl: 2.8 }); }
+  else cx.cap('Look, Setu. Sunrise.', { who: 'Mithi', ttl: 2.8 });
   // the world takes its colour: the sea turns gold-rose and her grey perception lifts
   cx.do(() => { if (sea) cx.tween(0, 1, 5, (v) => { sea.color.copy(seaColor0).lerp(new THREE.Color(0xe39a62), v * 0.85); }, 'inout'); });
   if (g.senses) { const p0 = g.senses.perceive; cx.tween(p0, 0, 6, (v) => { g.senses.perceive = v; }, 'inout'); }
-  cx.bloom(0.42, 3.0);
-  await cx.wait(3.6);
-  cx.cap('Didi... is that it? Is that the sun?', { who: 'Setu', ttl: 4.0 });
-  await cx.wait(4.0);
-  cx.cap('I can feel it, Setu. It\'s warm. It is the warmest thing in the world.', { who: 'Mithi', ttl: 4.6 });
-  await cx.wait(2.4);
+  cx.bloom(0.42, 2.4);
+  await cx.wait(2.8);
+  cx.cap('Didi... is that it? Is that the sun?', { who: 'Setu', ttl: 3.2 });
+  await cx.wait(3.2);
+  cx.cap('I can feel it, Setu. It\'s warm. It is the warmest thing in the world.', { who: 'Mithi', ttl: 3.8 });
+  await cx.wait(1.8);
   // lift away: three small figures on the bridge against the gold
   cx.mark('crane');
-  cx.camPath((k) => ({ p: [C.x - 4.3 - k * 8.7, 38.9 + k * 8.5, C.z + 0.8 + k * 21], l: [C.x + 36 - k * 28, 40.8 - k * 0.8, C.z - 3 + k * 3], fov: 44 + k * 4 }), 11, 'inout');
-  await cx.wait(3.6);
+  cx.camPath((k) => ({ p: [C.x - 4.3 - k * 8.7, 38.9 + k * 8.5, C.z + 0.8 + k * 21], l: [C.x + 36 - k * 28, 40.8 - k * 0.8, C.z - 3 + k * 3], fov: 44 + k * 4 }), 8.4, 'inout');
+  await cx.wait(2.4);
   if (warned) {
-    cx.cap('Far behind them every siren in the city is singing the same warning. Millions are walking to higher ground.', { kind: 'scrawl', ttl: 6.4 });
+    cx.cap('Far behind them every siren in the city is singing the same warning. Millions are walking to higher ground.', { kind: 'scrawl', ttl: 5 });
     cx.do(() => { sfx?.siren(9, { gain: 0.16 }); setTimeout(() => sfx?.siren(8, { gain: 0.1 }), 900); });
   } else {
-    cx.cap('Far behind them, under the towers, the sea finds the last of the tunnels. Nobody was told.', { kind: 'scrawl', ttl: 6.4 });
+    cx.cap('Far behind them, under the towers, the sea finds the last of the tunnels. Nobody was told.', { kind: 'scrawl', ttl: 5 });
     cx.do(() => { sfx?.rumble(9, 0.35); g.events.emit('sound:emit', { x: g.player.pos.x - 120, y: 0, z: g.player.pos.z, kind: 'water-rush', loudness: 0.7 }); });
   }
-  await cx.wait(6.8);
-  cx.cap(warned ? 'Millions were evacuated in time.' : 'The light came anyway.', { ttl: 3.6, kind: 'say' });
-  await cx.wait(3.6);
+  await cx.wait(4.4);
+  cx.cap(warned ? 'Millions were evacuated in time.' : 'The light came anyway.', { ttl: 2.8, kind: 'say' });
+  await cx.wait(2.8);
+}
+
+/**
+ * The web of roads over the slum street: five stacked decks (concrete, ribbed undersides, lane lamps hung along both edges) on
+ * pillars, as temporary props for the opening. `list[0]` is the lowest. Each deck is a group so the fall can tilt it.
+ */
+function buildDecks(cx, x, zNear, len) {
+  const concrete = new THREE.MeshLambertMaterial({ color: 0x55585d, emissive: 0x2c2822 });
+  const rib = new THREE.MeshLambertMaterial({ color: 0x3c3e42, emissive: 0x211e19 });
+  const lamp = new THREE.MeshBasicMaterial({ color: 0xffbe6a });
+  const ys = [5.2, 10.6, 16.0, 21.4, 26.8], landY = [0.6, 1.8, 3.0, 4.2, 5.4];
+  const zc = zNear - len / 2, W = 11, m4 = new THREE.Matrix4();
+  const lampGeo = new THREE.BoxGeometry(0.55, 0.2, 0.55);
+  const list = ys.map((y, i) => {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(W, 1.1, len), concrete));
+    for (const sx of [-1, 1]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.1, len), rib); rail.position.set(sx * (W / 2 - 0.1), 1.1, 0); g.add(rail); }   // barriers on top
+    const n = Math.floor(len / 5);
+    for (let k = 0; k < Math.floor(len / 8); k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, 0.6, 0.9), rib); r.position.set(0, -0.85, -len / 2 + 4 + k * 8); g.add(r); }   // ribs under the deck
+    const lamps = new THREE.InstancedMesh(lampGeo, lamp, n * 3);                                                                                          // lane lamps hung under the deck: two edges and the middle
+    for (let k = 0; k < n; k++) [-1, 0, 1].forEach((sx, j) => { m4.makeTranslation(sx * (W / 2 - 0.9), -0.72, -len / 2 + 2.5 + k * 5 + j * 1.2); lamps.setMatrixAt(k * 3 + j, m4); });
+    lamps.frustumCulled = false; g.add(lamps);
+    g.position.set(x, y, zc);
+    cx.prop(g);
+    return { g, y, landY: landY[i], v: 0, done: false, tilt: (Math.random() - 0.5) * 0.7, roll: (Math.random() - 0.5) * 0.5, basey: y };
+  });
+  // pillars: one instanced mesh of fat columns from the street to the top deck
+  const pil = new THREE.InstancedMesh(new THREE.BoxGeometry(1.3, ys[ys.length - 1], 1.3), concrete, 8);
+  for (let i = 0; i < 8; i++) { m4.makeTranslation(x + (i % 2 ? 4.2 : -4.2), ys[ys.length - 1] / 2, zNear - 5 - Math.floor(i / 2) * 15); pil.setMatrixAt(i, m4); }
+  pil.frustumCulled = false; cx.prop(pil);
+  const out = { list, pillars: pil, tremble(amp, secs) {
+    const t0 = cx.t;
+    const f = cx.frame(() => {
+      const u = cx.t - t0;
+      if (u > secs) { cx.unframe(f); list.forEach((d) => { if (!d.done) d.g.position.x = x; }); return; }
+      list.forEach((d, i) => { if (!d.done) d.g.position.x = x + Math.sin(u * 47 + i * 1.7) * amp; });
+    });
+  } };
+  return out;
 }
 
 // =====================================================================================================  OPENING
@@ -315,75 +354,78 @@ async function opening(cx) {
   cx.cap('The blanket is cold. His shoes are gone.', { kind: 'scrawl', ttl: 2.8 });
   await cx.wait(2.7);
 
-  // ---- 3: she steps out into the rain
+  // ---- 3: she steps out into the rain, and looks up at the web of roads over the street
+  // Phase 7b: the collapse used to be five plain boxes falling out of frame into fog, so nothing read. Now the five levels are in
+  // view first (lit lane lamps along their undersides, ribs, pillars), the camera is tilted up at them, and they come down in
+  // sequence, lowest first, each one slamming onto the last, with the camera under the near edge.
   cx.mark('street');
   cx.hemiBoost = 1.6;
   cx.cam({ p: [-91.4, 1.55, -78.0], l: [-85, 1.4, -78], fov: 70, dur: 1.5, e: 'inout' });
   g.audio?.play('footstep', null);
+  const CX = -75, Z0 = -92, LEN = 62;                       // the street x = -75 (between the blocks), the roads run north along it, starting 12 m ahead
+  const decks = buildDecks(cx, CX, Z0, LEN);
   await cx.wait(1.3);
   cx.hemiBoost = 1;
-  cx.cam({ p: [-84.2, 1.6, -76.5], l: [-76, 3.0, -52], fov: 72, dur: 2.2, e: 'inout' });
+  cx.cam({ p: [-79.6, 1.6, -80.2], l: [CX - 1, 2.6, Z0 - 30], fov: 72, dur: 1.8, e: 'inout' });
   cx.cap('SETU!', { who: 'Mithi', ttl: 1.4 });
-  await cx.wait(2.0);
-  cx.cap('Rain on the pillars. And under her feet, a hum.', { kind: 'scrawl', ttl: 3 });
+  await cx.wait(1.7);
+  cx.cap('Rain on the pillars. Over the street, five levels of road. And under her feet, a hum.', { kind: 'scrawl', ttl: 3.4 });
   sfx?.rumble(8, 0.3);
-  cx.shake(0.14, 3);
-  await cx.wait(2.8);
-  cx.cam({ p: [-84.2, 1.6, -76.5], l: [-77, 14, -44], fov: 74, dur: 1.6, e: 'in' });
-  cx.shake(0.5, 2);
-  await cx.wait(1.6);
+  cx.shake(0.12, 3);
+  cx.cam({ p: [-78.8, 1.6, -80.2], l: [CX + 1, 19, Z0 - 26], fov: 76, dur: 2.6, e: 'inout' });        // the camera tilts up the stack
+  decks.tremble(0.02, 2.6);
+  await cx.wait(2.2);
+  cx.cap('Concrete ticks. Dust sifts down.', { kind: 'scrawl', ttl: 2.0 });
+  cx.do(() => { g.hazards?.dust?.(CX, 4, Z0 - 8, 8, 5, { size: 5, up: -0.4, life: 2.4, color: [0.3, 0.28, 0.25] }); });
+  decks.tremble(0.07, 1.8);
+  cx.shake(0.45, 1.8);
+  await cx.wait(1.7);
 
   // ---- 4: the five levels fall
   cx.mark('collapse');
-  cx.do(() => { g.hazards?.dust?.(-84, 24, -66, 10, 6, { size: 4, up: -0.5, life: 3.5, color: [0.35, 0.32, 0.28] }); });
   sfx?.roar(8, 0.95);
   g.screenfx?.glitch(300);
-  cx.shake(1.6, 8);
+  cx.shake(1.5, 8);
   cx.setWhiteColor('#cfc6b2');
-  const slabs = [];
-  // five slabs, one per level, come down into the street ahead of her (temporary: the real rubble is at the plaza)
-  const levels = [[58, -75, -50, 18, 6], [50, -68, -44, 8, 18], [42, -82, -42, 19, 5.5], [36, -73, -37, 20, 6], [28, -77, -46, 14, 12]];
-  levels.forEach(([y, x, z, w, d], i) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.0, d), new THREE.MeshLambertMaterial({ color: 0x41454a, emissive: 0x15171a }));
-    m.position.set(x, y, z); m.rotation.set((Math.random() - 0.5) * 0.5, Math.random() * 1.2, (Math.random() - 0.5) * 0.4);
-    cx.prop(m); slabs.push({ m, v: 0, delay: 0.1 + i * 0.45, done: false, landY: 0.6 + (i % 3) * 0.7, spin: (Math.random() - 0.5) * 0.9 });
-  });
+  decks.pillars.visible = false;
   const debris = [];
-  for (let i = 0; i < 30; i++) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(rnd(0.5, 2.2), rnd(0.3, 0.9), rnd(0.5, 2.2)), new THREE.MeshLambertMaterial({ color: 0x5a5a56, emissive: 0x15140f }));
-    m.position.set(-76 + rnd(-9, 9), rnd(30, 70), -42 + rnd(-10, 10)); cx.prop(m);
-    debris.push({ m, v: rnd(-8, 0), delay: rnd(0, 3), done: false, sp: new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)) });
+  for (let i = 0; i < 26; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(rnd(0.4, 1.8), rnd(0.3, 0.8), rnd(0.4, 1.8)), new THREE.MeshLambertMaterial({ color: 0x5a5a56, emissive: 0x15140f }));
+    m.position.set(CX + rnd(-4.5, 4.5), rnd(6, 30), Z0 - 4 - rnd(0, 36)); cx.prop(m);
+    debris.push({ m, v: rnd(-6, 0), delay: rnd(0, 2.4), done: false, sp: new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)) });
   }
-  const t0f = cx.t;
+  const t0f = cx.t, N = decks.list.length;
   const fall = cx.frame((dt) => {
     const t = cx.t - t0f;
-    for (const s of slabs) {
-      if (s.done || t < s.delay) continue;
-      s.v += 26 * dt; s.m.position.y -= s.v * dt; s.m.rotation.x += s.spin * dt * 0.4; s.m.rotation.z += s.spin * dt * 0.3;
-      if (s.m.position.y <= s.landY) {
-        s.m.position.y = s.landY; s.done = true;
-        cx.shake(1.8, 2.5); sfx?.crash(0.9);
-        g.hazards?.dust?.(s.m.position.x, 1.2, s.m.position.z, 18, 10, { size: 14, up: 3.4, life: 6, color: [0.85, 0.79, 0.66] });
-        g.screenfx?.flash('#e6dcc4', 260, 0.25);
+    decks.list.forEach((d, i) => {                          // i = 0 is the lowest: its supports go first
+      if (d.done || t < 0.5 + i * 0.5) return;
+      d.v += 17 * dt; d.g.position.y -= d.v * dt;
+      d.g.rotation.x += d.tilt * dt * 0.18; d.g.rotation.z += d.roll * dt * 0.12;
+      if (d.g.position.y <= d.landY) {
+        d.g.position.y = d.landY; d.done = true;
+        const k = 1 - i / N;
+        cx.shake(1.6 + k * 0.4, 2.2); sfx?.crash(0.7 + k * 0.3);
+        g.hazards?.dust?.(CX, 1.2 + d.landY, d.g.position.z + 24, 16, 9, { size: 14, up: 3.4, life: 6, color: [0.85, 0.79, 0.66] });
+        g.screenfx?.flash('#e6dcc4', 240, 0.22);
+        if (i === 0) cx.cap('The whole sky comes down.', { kind: 'scrawl', ttl: 2.4 });
       }
-    }
+    });
     for (const d of debris) {
       if (d.done || t < d.delay) continue;
       d.v += 24 * dt; d.m.position.y -= d.v * dt; d.m.rotation.x += d.sp.x * dt * 3; d.m.rotation.z += d.sp.z * dt * 3;
       if (d.m.position.y < 0.5) { d.m.position.y = 0.5; d.done = true; if (Math.random() < 0.4) g.hazards?.dust?.(d.m.position.x, 0.6, d.m.position.z, 4, 3, { size: 5, up: 2, life: 4, color: [0.42, 0.38, 0.32] }); }
     }
   });
-  // the camera swings to the falling sky, then the dust wall rolls in
-  cx.cam({ p: [-84.6, 1.7, -76.8], l: [-76, 12, -42], fov: 78, dur: 1.0, e: 'out' });
-  await cx.wait(1.8);
-  cx.cap('The whole sky comes down.', { kind: 'scrawl', ttl: 2.4 });
+  // the camera whips up and back as the near edges come down, then the dust wall rolls over her
+  cx.cam({ p: [-78.8, 1.7, -80.2], l: [CX, 15, Z0 - 20], fov: 80, dur: 1.2, e: 'out' });
+  await cx.wait(2.6);
+  cx.cam({ p: [-78.8, 1.5, -80.2], l: [CX - 0.5, 5.0, Z0 - 12], fov: 74, dur: 2.2, e: 'inout' });
   await cx.wait(1.6);
-  cx.white(0.6, 2.0);
-  cx.cam({ p: [-84.6, 1.7, -76.8], l: [-74, 5, -46], fov: 76, dur: 2.6, e: 'inout' });
-  await cx.wait(2.0);
+  cx.white(0.6, 1.6);
+  await cx.wait(1.2);
   g.audio?.duck?.(0.9, 6);
-  cx.white(1.0, 1.2);
-  await cx.wait(1.4);
+  cx.white(1.0, 1.1);
+  await cx.wait(1.2);
   cx.unframe(fall);
 
   // ---- 5: silence, then car alarms

@@ -15,6 +15,7 @@
 // story:learn {topic}.
 import { CONVERSATIONS, setuStage, STAGES } from './cast/conversations.js';
 import { defineChain } from './chain.js';
+import { COSTS } from './costs.js';
 
 const GAUTAM_WALK = [[15, -83.2], [15, -79.2], [18, -76.4], [18, -71]];
 const DIG_SECONDS = 3.2;
@@ -125,6 +126,11 @@ export class Director {
     if (g.modal || !g.dialogue) return false;
     const key = a.id, make = CONVERSATIONS[key];
     if (!make) return false;
+    // Phase 7b: every card is written from Mithi's side (what she hears, what a hand feels like), so when Jeetu is the one
+    // being played he steps back and she takes the lead: the controller swaps to her, with his line in the feed.
+    if (g.party?.active === 'jeetu' && a.id !== 'jeetu') {
+      if (g.party.switchTo('mithi')) g.messages?.say('"Didi, you talk to them. They will listen to you." Jeetu steps back, and the lead is yours.', { kind: 'clue', speaker: 'Jeetu', ttl: 5 });
+    }
     const n = this.counts.get(key + ':' + i) ?? 0;
     const spec = make(g, { actor: a, idx: i, n, d: this });
     this.counts.set(key + ':' + i, n + 1);
@@ -260,12 +266,12 @@ export class Director {
 
   giveBlood() {
     const g = this.game, f = g.flags;
-    if (g.player.rays < 4) return { lines: ['You are shaking. I cannot take it from you. Find some light first.'], choices: [{ label: 'I will be back.' }] };
-    g.health?.damage(2, 'blood');
+    if (g.player.rays < COSTS.blood.min) return { lines: ['You are shaking. I cannot take it from you. Find some light first.'], choices: [{ label: 'I will be back.' }] };
+    g.health?.damage(COSTS.blood.rays, 'blood');
     f.bloodGiven = true; f.taraFavour = true;
     this.stats.blood = true;
     this.taraCallAt = g.clock.t + 1.3;
-    this._fadePay(0.25, 'blood');
+    this._fadePay(COSTS.blood.hours, 'blood');
     g.events.emit('story:blood-given', {});
     return {
       lines: [
@@ -299,7 +305,7 @@ export class Director {
 
   payBail(mode) {
     const g = this.game, f = g.flags;
-    if (mode === 'rays') g.health?.damage(3, 'bail'); else this._fadePay(2, 'bail');
+    if (mode === 'rays') g.health?.damage(COSTS.bail.rays, 'bail'); else this._fadePay(COSTS.bail.hours, 'bail');
     this.stats.bailMode = mode;
     f.gautamFree = true;
     const ga = g.cast.get('gautam'); if (ga) ga.role = 'FREE';
@@ -315,7 +321,7 @@ export class Director {
 
   buyTorch(mode) {
     const g = this.game;
-    if (mode === 'rays') g.health?.damage(2, 'torch'); else this._fadePay(1, 'torch');
+    if (mode === 'rays') g.health?.damage(COSTS.torch.rays, 'torch'); else this._fadePay(COSTS.torch.hours, 'torch');
     g.items.add('torch');
     this.stats.torchVia = mode;
     g.events.emit('story:torch', { via: mode });

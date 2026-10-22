@@ -1,6 +1,7 @@
 // Feral dogs (PLAN 6, 1b). Packs of 2-4 on G and U, seeded per run (which zones, pack sizes, how fierce).
 //
-//   wander -> notice (hearing or sight, worse in rain) -> chase -> bite (-1 ray, knockback, 1.5 s cooldown)
+//   wander -> notice (hearing or sight, worse in rain) -> chase -> bite (-1 ray, knockback, 2.4 s cooldown per dog, at least
+//   1.8 s between any two bites on Mithi: Phase 7b, a pack of three used to bite about once a second)
 //
 // They cannot climb: a dog only ever stands on ground within 0.3 m of its home level (G = 0, U = -8), so stairs,
 // ramps and lifts are an escape; one that loses its target above it paces and whines, then gives up.
@@ -17,7 +18,7 @@ const _m = new THREE.Matrix4(), _b = new THREE.Matrix4(), _l = new THREE.Matrix4
 const _c = new THREE.Color();
 
 export const DOG_TUNING = Object.freeze({
-  wanderSpeed: 1.5, chaseSpeed: 5.8, biteRange: 1.2, biteCooldown: 1.5, biteGap: 1.0, knock: 7.5,
+  wanderSpeed: 1.5, chaseSpeed: 5.5, biteRange: 1.2, biteCooldown: 2.4, biteGap: 1.8, knock: 9,
   hearWalk: 10, hearSprint: 19, hearIdle: 4, sight: 17, sightHalf: 1.3, calmRadius: 20, calmSeconds: 25, loseSeconds: 5.5,
 });
 
@@ -39,10 +40,10 @@ export class Dogs {
   populate() {
     const zones = this.h.game.world.hazardZones.dogs, rng = this.rng;
     const order = rng.shuffle(zones);
-    const n = rng.int(5, 7);
+    const n = rng.int(5, 6);
     this.fierce = rng.range(0.9, 1.2);                       // run-wide: speed and senses
     for (const z of order.slice(0, n)) {
-      const size = rng.int(2, 4), homeY = z.level === 'U' ? -8 : 0;
+      const size = rng.int(2, 3), homeY = z.level === 'U' ? -8 : 0;
       this.addPack(z.x, z.z, z.r, homeY, size, { zone: z, fierce: this.fierce * rng.range(0.92, 1.08) });
     }
   }
@@ -275,7 +276,7 @@ export class Dogs {
     const h = this.h, T = DOG_TUNING, game = h.game;
     dog.cd = T.biteCooldown; dog.recoil = 0.4;
     if (tg.kind === 'setu' && game.setu?.following) {
-      game.setu.hurt(10, 'dog'); this.stats.setuBites++;
+      game.setu.hurt(8, 'dog'); this.stats.setuBites++;
       h.sound('bite', dog, 0.9); h.say('Setu cries out. A dog has him by the sleeve.', 'story', 5);
       return;
     }

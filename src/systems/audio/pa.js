@@ -107,7 +107,7 @@ export class PASystem {
     let mode = 'caption';
     const audio = g.audio;
     const canSound = !!audio && audio.running() && this.voiceEnabled && !audio.muted;
-    if (audio) { audio.play('pa-chime', null); audio.duck(0.55, est + 3); }
+    if (audio) { audio.play('pa-chime', null); audio.duck(0.6, est + 2.5, 0.4); }
     if (this._ss && this.voicesReady && this.voiceEnabled && !(audio && audio.muted)) {
       mode = 'speech';
       setTimeout(() => this._speak(text, rate), 1250);
@@ -130,7 +130,7 @@ export class PASystem {
     try {
       const u = new SpeechSynthesisUtterance(text);
       if (this.voice) { u.voice = this.voice; u.lang = this.voice.lang; } else u.lang = 'en-GB';
-      u.rate = rate; u.pitch = 0.72; u.volume = clamp(0.8 * (this.game.audio?.volumes?.voice ?? 1) * (this.game.audio?.volumes?.master ?? 1), 0, 1);
+      u.rate = rate; u.pitch = 0.72; u.volume = clamp(1.0 * (this.game.audio?.volumes?.voice ?? 1) * (this.game.audio?.volumes?.master ?? 1), 0, 1);
       u.onend = () => { this.speaking = false; this.game.audio?.play('pa-squelch', null); };
       u.onerror = () => { this.speaking = false; };
       this._ss.cancel();
@@ -146,7 +146,7 @@ export class PASystem {
       const n = noiseSrc(ctx, 'white'), bp = filt(ctx, 'bandpass', 1900, 0.5), hp = filt(ctx, 'highpass', 500, 0.7), g = gainNode(ctx, 0);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.15); g.gain.setValueAtTime(0.05, t + seconds - 0.3); g.gain.setTargetAtTime(0, t + seconds - 0.3, 0.1);
       for (let k = 0; k < Math.floor(seconds * 3); k++) { const c = t + rand(0.2, seconds - 0.3); g.gain.setValueAtTime(0.05, c - 0.001); g.gain.linearRampToValueAtTime(0.14, c); g.gain.setTargetAtTime(0.05, c, 0.012); }
-      n.connect(bp); bp.connect(hp); hp.connect(g); g.connect(a.voiceIn);
+      n.connect(bp); bp.connect(hp); hp.connect(g); g.connect(a.paIn ?? a.voiceIn);
       n.start(t, n.__off); n.stop(t + seconds + 0.4);
       setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, (seconds + 1) * 1000);
     } catch { /* ok */ }

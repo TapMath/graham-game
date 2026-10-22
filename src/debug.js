@@ -32,6 +32,7 @@
 // vendorOpen(id), vendorRoll(id, {potency,hours,risk}), dialogChoose(id), ending(type), endingReset, clockAdvance(hours),
 // damage(n), heal(n), hudGlitch. state() gains clock, health, setu, vendors, view, hud, objective, dialog, ending, messages.
 import { STEP } from './game.js';
+import { Bot } from './debug-bot.js';
 
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
@@ -42,6 +43,8 @@ export class DebugApi {
     this.setters = new Map();
     this.actions = new Map();
     this.log = [];
+    this.bot = new Bot(this);
+    this.manual = false;       // true: the live loop stops stepping the simulation; only run/step/walk/press advance it (deterministic playthroughs)
     this._frames = [];
     game.events.on('*', (data, type) => {
       this.log.push({ t: r3(game.time), type, data });
@@ -51,6 +54,7 @@ export class DebugApi {
     this.addSetter('freeze', (g, v) => { g.player.frozen = !!v; });
     this.addSetter('speed', (g, v) => { g.player.speedScale = v; });
     this.addAction('pause', (g, on) => { g.setMode(on ? 'ending' : 'playing'); return g.mode; });   // tests: freeze the simulation for a screenshot ('ending' hides the pause overlay)
+    this.addSetter('manual', (g, v) => { this.manual = !!v; });
     this.addSetter('hour', (g, v) => { g.flags.debugHour = v; g.events.emit('debug:setTime', { hour: v }); });
   }
 
@@ -173,6 +177,49 @@ export class DebugApi {
     return { ok: true, log };
   }
 
+  /**
+   * Phase 7b: what the last frame's draw calls were made of. Walks the scene the way the renderer does (visible chain, frustum
+   * culling) and counts one call per mesh (one per material of a multi-material mesh). Returns {total, groups:[[label,count]]}.
+   */
+  drawBreakdown() {
+    const g = this.game, cam = g.camera;
+    cam.updateMatrixWorld(); const THREE_Frustum = this._frustum ??= null;
+    const proj = cam.projectionMatrix.clone().multiply(cam.matrixWorldInverse), f = [];
+    // frustum planes from the view-projection matrix (Gribb-Hartmann)
+    const e = proj.elements, plane = (a, b, c, d) => { const l = Math.hypot(a, b, c); return [a / l, b / l, c / l, d / l]; };
+    f.push(plane(e[3] + e[0], e[7] + e[4], e[11] + e[8], e[15] + e[12]), plane(e[3] - e[0], e[7] - e[4], e[11] - e[8], e[15] - e[12]),
+      plane(e[3] + e[1], e[7] + e[5], e[11] + e[9], e[15] + e[13]), plane(e[3] - e[1], e[7] - e[5], e[11] - e[9], e[15] - e[13]),
+      plane(e[3] + e[2], e[7] + e[6], e[11] + e[10], e[15] + e[14]), plane(e[3] - e[2], e[7] - e[6], e[11] - e[10], e[15] - e[14]));
+    void THREE_Frustum;
+    const inFrustum = (o) => {
+      if (o.frustumCulled === false) return true;
+      const geo = o.geometry; if (!geo) return true;
+      if (!geo.boundingSphere) geo.computeBoundingSphere();
+      const bs = geo.boundingSphere; if (!bs) return true;
+      const c = bs.center.clone().applyMatrix4(o.matrixWorld), sc = o.matrixWorld.getMaxScaleOnAxis(), r = bs.radius * sc;
+      for (const p of f) if (p[0] * c.x + p[1] * c.y + p[2] * c.z + p[3] < -r) return false;
+      return true;
+    };
+    const groups = new Map(); let total = 0;
+    const walk = (o, label) => {
+      if (!o.visible) return;
+      const here = o.name && !o.isMesh ? o.name : label;
+      if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && inFrustum(o)) {
+        if (o.isInstancedMesh && o.count === 0) { /* nothing drawn */ }
+        else {
+          const n = Array.isArray(o.material) ? o.material.length : 1;
+          total += n;
+          const key = (o.name || here || o.type) + (o.name ? '' : ' [' + (o.material?.name || o.geometry?.type || o.type) + ']');
+          groups.set(key, (groups.get(key) ?? 0) + n);
+        }
+      }
+      for (const c of o.children) walk(c, here);
+    };
+    walk(g.scene, '');
+    const arr = [...groups].sort((a, b) => b[1] - a[1]);
+    return { total, rendered: g.renderStats().calls, groups: arr.slice(0, 40) };
+  }
+
   events(type) {
     const l = type ? this.log.filter((e) => e.type === type) : this.log;
     return l.slice(-50);
@@ -195,12 +242,12 @@ export class DebugApi {
   api() {
     const d = this;
     return {
-      game: d.game, debug: d,
+      game: d.game, debug: d, bot: d.bot,
       state: () => d.state(), teleport: (...a) => d.teleport(...a), look: (...a) => d.look(...a),
       setTime: (h) => d.setTime(h), set: (k, v) => d.set(k, v), do: (...a) => d.do(...a),
       press: (...a) => d.press(...a), hold: (c) => d.hold(c), release: (c) => d.release(c),
       run: (...a) => d.run(...a), step: (s) => d.step(s), walk: (...a) => d.walk(...a),
-      events: (t) => d.events(t), clearEvents: () => d.clearEvents(),
+      drawBreakdown: () => d.drawBreakdown(), events: (t) => d.events(t), clearEvents: () => d.clearEvents(),
       ray: (...a) => d.ray(...a), fps: () => d.fps(),
     };
   }

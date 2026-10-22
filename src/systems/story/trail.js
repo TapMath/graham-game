@@ -11,6 +11,8 @@
 import * as THREE from 'three';
 import { HALO_VS, HALO_FS } from './fragments.js';
 
+const _yq = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0);
+
 const TRAIL = {
   liftWreck: {
     chalk: ['1  2  3', '.... 31 ->'], arrowTo: 'catacombs',
@@ -50,35 +52,49 @@ const TRAIL = {
   },
 };
 
+// Phase 7b: the chalk used to be ONE decal with the arrow baked in, laid along the way to the next stage, so from the other side the
+// words were upside down (and read as mirrored). Now the words are a decal that turns on the floor to face whoever is looking at them
+// (see update()), and the arrow is its own decal that keeps pointing the way Setu went.
+function chalkRand(seed) { let s = seed; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
+const CHALK_FONT = "italic 84px 'Bradley Hand','Segoe Print','Chalkboard SE','Comic Neue','Purisa','Comic Sans MS',cursive";
 function chalkTexture(lines) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256;
   const g = c.getContext('2d');
   g.clearRect(0, 0, 512, 256);
   g.lineCap = 'round'; g.lineJoin = 'round';
-  let seed = 7 + lines.join('').length;
-  const r = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-  const scribble = (x0, y0, x1, y1, w) => {
-    for (let k = 0; k < 3; k++) {
-      g.strokeStyle = `rgba(245,243,232,${0.45 + r() * 0.4})`; g.lineWidth = w * (0.6 + r() * 0.6);
-      g.beginPath(); g.moveTo(x0 + (r() - 0.5) * 3, y0 + (r() - 0.5) * 3); g.lineTo(x1 + (r() - 0.5) * 3, y1 + (r() - 0.5) * 3); g.stroke();
-    }
-  };
+  const r = chalkRand(7 + lines.join('').length);
   g.fillStyle = 'rgba(246,244,234,.92)';
-  g.font = "italic 76px 'Bradley Hand','Segoe Print','Chalkboard SE','Comic Neue','Purisa','Comic Sans MS',cursive";
-  g.textBaseline = 'middle';
-  lines.forEach((ln, i) => {
-    const y = 70 + i * 100;
-    g.save(); g.translate(26, y); g.rotate((r() - 0.5) * 0.08);
-    g.globalAlpha = 0.9; g.fillText(ln.replace('->', ''), 0, 0);
+  g.font = CHALK_FONT;
+  g.textBaseline = 'middle'; g.textAlign = 'center';
+  const rows = lines.map((l) => l.replace('->', '').trim());
+  const gap = 256 / (rows.length + 1);
+  rows.forEach((ln, i) => {
+    g.save(); g.translate(256, gap * (i + 1)); g.rotate((r() - 0.5) * 0.08);
+    g.globalAlpha = 0.9; g.fillText(ln, 0, 0, 470);
     g.restore();
-    if (ln.includes('->')) {                                    // an arrow, scratched with the chalk
-      const w = g.measureText(ln.replace('->', '')).width + 40, ax = Math.min(470, 30 + w);
-      scribble(ax - 70, y, ax, y, 7); scribble(ax, y, ax - 22, y - 20, 7); scribble(ax, y, ax - 22, y + 20, 7);
-    }
   });
   // chalk grain: knock holes out of the strokes
   g.globalCompositeOperation = 'destination-out';
   for (let i = 0; i < 1400; i++) { g.fillStyle = `rgba(0,0,0,${0.25 + r() * 0.5})`; g.fillRect(r() * 512, r() * 256, 1 + r() * 3, 1 + r() * 2); }
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 2;
+  return tex;
+}
+
+/** A scratched chalk arrow pointing along +X of the decal. */
+function arrowTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  const r = chalkRand(91);
+  const scribble = (x0, y0, x1, y1, w) => {
+    for (let k = 0; k < 3; k++) {
+      g.strokeStyle = `rgba(245,243,232,${0.5 + r() * 0.4})`; g.lineWidth = w * (0.6 + r() * 0.6);
+      g.beginPath(); g.moveTo(x0 + (r() - 0.5) * 3, y0 + (r() - 0.5) * 3); g.lineTo(x1 + (r() - 0.5) * 3, y1 + (r() - 0.5) * 3); g.stroke();
+    }
+  };
+  scribble(20, 64, 230, 64, 9); scribble(230, 64, 184, 24, 9); scribble(230, 64, 184, 104, 9);
+  g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 500; i++) { g.fillStyle = `rgba(0,0,0,${0.25 + r() * 0.5})`; g.fillRect(r() * 256, r() * 128, 1 + r() * 3, 1 + r() * 2); }
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 2;
   return tex;
 }
@@ -120,13 +136,20 @@ export class TrailSystem {
     const ang = Math.atan2(next.z - spot.z, next.x - spot.x);          // direction to the next stage (the arrow points along +X of the decal)
     const ux = Math.cos(ang), uz = Math.sin(ang);
     const mk = { id, spawned: true, found: false, barked: false, meshes: [], item: null };
-    // chalk decal on the floor, a metre toward the next stage
-    const tex = chalkTexture(def.chalk);
-    const decal = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.85), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-    decal.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, 'XYZ')).premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -ang));
-    const dpos = this._place(spot, ang, 1.7, 0.45);
-    decal.position.set(dpos.x, spot.y + 0.035, dpos.z);
-    this.group.add(decal); mk.meshes.push(decal);
+    // chalk on the floor: the words (they turn to face the reader) and, a little further toward the next stage, the arrow
+    const decalMat = (map) => new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    const flat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, 'XYZ'));
+    const words = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), decalMat(chalkTexture(def.chalk)));
+    const dpos = this._place(spot, ang, 1.5, 0.5);
+    words.quaternion.copy(flat); words.position.set(dpos.x, spot.y + 0.035, dpos.z);
+    words.userData.flat = flat;
+    this.group.add(words); mk.meshes.push(words);
+    const arrow = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), decalMat(this.arrowTex ?? (this.arrowTex = arrowTexture())));
+    arrow.quaternion.copy(flat).premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -ang));
+    const apos = this._place(spot, ang, 2.9, 0.1);
+    arrow.position.set(apos.x, spot.y + 0.034, apos.z);
+    this.group.add(arrow); mk.meshes.push(arrow);
+    mk.words = words;
     // the found object: a tiny thing on the floor with a glow
     const o = def.object, ipos = this._place(spot, ang + Math.PI, 1.0, 0.3), ox = ipos.x, oz = ipos.z;
     const geo = id === 'ventExit' || id === 'triageTents' ? new THREE.BoxGeometry(0.1, 0.5, 0.1) : new THREE.CylinderGeometry(0.07, 0.07, 0.07, 10);
@@ -189,7 +212,7 @@ export class TrailSystem {
     g.sfx?.paper(0.25);
     if (first) {
       this.found++; g.flags.trailFound = this.found;
-      mk.meshes[1].visible = false;                       // you took it
+      mk.meshes[2].visible = false;                       // you took it
       g.interactables.remove('trail:' + id);
       this._rebuildHalo();
       g.events.emit('trail:found', { id, name: def.object.name });
@@ -213,6 +236,15 @@ export class TrailSystem {
 
   update(dt, game) {
     this.haloMat.uniforms.uTime.value = game.time;
+    // the words lie on the floor with their top edge away from you, wherever you stand
+    const cp = game.camera.position;
+    for (const mk of this.marks.values()) {
+      const w = mk.words; if (!w) continue;
+      const dx = cp.x - w.position.x, dz = cp.z - w.position.z;
+      if (dx * dx + dz * dz > 900) continue;
+      _yq.setFromAxisAngle(_yAxis, Math.atan2(dx, dz));
+      w.quaternion.copy(_yq).multiply(w.userData.flat);
+    }
   }
 
   reset() {

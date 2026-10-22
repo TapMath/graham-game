@@ -1,17 +1,17 @@
 // Police drones and surveillance cameras (PLAN 6, 1b).
 //
 // Drones patrol the L1/L2 waypoint routes with a visible spotlight cone and a pool of light where it lands. Held in the
-// beam for 1.2 s means DETAINED (see HazardSystem.detain). Singing within 40 m ("unregistered singing") makes the nearest
+// beam for 1.6 s means DETAINED (see HazardSystem.detain). Singing within 40 m ("unregistered singing") makes the nearest
 // drones fly over to investigate. Cameras sit at the health gates and sweep a narrow cone; one that sees the player calls
 // the nearest drone. Everything is drawn instanced: one InstancedMesh for drones, one for camera heads, plus the shared
 // beams and glows.
 import * as THREE from 'three';
-import { SIM_RADIUS, LEVEL_Y, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, pointInRect } from './util.js';
+import { SIM_RADIUS, LEVEL_Y, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, pointInRect, singHeard } from './util.js';
 import { droneGeometry, cameraGeometry } from './models.js';
 import { rimMaterial } from './render.js';
 
 export const DRONE_TUNING = Object.freeze({
-  detainSeconds: 1.2, spotRange: 17, spotHalf: 0.4, patrolSpeed: 3.6, investigateSpeed: 6.6, singRadius: 40, holdSeconds: 8,
+  detainSeconds: 1.6, spotRange: 15, spotHalf: 0.4, patrolSpeed: 3.6, investigateSpeed: 6.6, singRadius: 40, holdSeconds: 8,
   camRange: 14, camSee: 0.6, camCooldown: 8,
 });
 
@@ -36,7 +36,7 @@ export class Drones {
     this.fleetSpeed = rng.range(0.85, 1.25);
     this.fleetRange = rng.range(0.9, 1.15);
     for (const route of zones.drones) {
-      const n = route.loop === true ? rng.int(1, 2) : rng.chance(0.4) ? 2 : 1;
+      const n = route.loop === true ? rng.int(1, 2) : rng.chance(0.25) ? 2 : 1;
       for (let i = 0; i < n; i++) this.addDrone(route, i, n);
     }
     for (const c of zones.cameras) this.addCamera(c);
@@ -175,7 +175,7 @@ export class Drones {
     const f = 1 - clamp((dist - 60) / 50, 0, 0.9);
     h.vis.glows.add(d.x, d.y + 0.16, d.z, hot ? 0.9 : 0.6, 1.4 * blink * f, 0.08 * f, 0.05 * f);
     h.vis.glows.add(d.x, d.y - 0.18, d.z, 0.5, 0.9 * f, 0.95 * f, 1.0 * f);
-    const col = hot ? [0.5, 0.1, 0.07] : d.state === 'investigate' ? [0.42, 0.3, 0.1] : [0.2, 0.3, 0.38];
+    const col = hot ? [0.4, 0.14, 0.09] : d.state === 'investigate' ? [0.36, 0.27, 0.1] : [0.2, 0.3, 0.38];
     h.vis.beams.add(d.x, d.y - 0.15, d.z, d.bx, d.by, d.bz, d.half, d.range, col[0] * f, col[1] * f, col[2] * f);
   }
 
@@ -253,19 +253,20 @@ export class Drones {
   }
 
   onSing(pos) {
-    const T = DRONE_TUNING;
+    const T = DRONE_TUNING, game = this.h.game;
     for (const d of this.drones) {
       if (d.asleep && dist3(d, this.h.pp) > SIM_RADIUS) continue;
-      if (hdist(d, pos) > T.singRadius || Math.abs(d.y - pos.y) > 40) continue;
+      if (!singHeard(game, d, pos, T.singRadius)) continue;
       this.investigate(d, pos.x, pos.z, 'sing');
     }
+    let heardByCam = false;
     for (const c of this.cams) {
-      if (hdist(c, pos) > T.singRadius || Math.abs(c.y - pos.y) > 12) continue;
+      if (!singHeard(game, c, pos, T.singRadius)) continue;
       c.look = { x: pos.x, z: pos.z, t: 4 };
-      c.alert = 3;
+      c.alert = 3; heardByCam = true;
       this.h.sound('camera-alert', c, 0.6);
     }
-    if (this.cams.some((c) => hdist(c, pos) <= T.singRadius && Math.abs(c.y - pos.y) <= 12)) this.callNearest(pos.x, pos.y, pos.z);
+    if (heardByCam) this.callNearest(pos.x, pos.y, pos.z);
   }
 
   /** The player was detained: everything stands down. */

@@ -81,3 +81,18 @@ export function weatherMul(game, y) {
 }
 
 export function pointInRect(x, z, r, margin = 0) { return x >= r.x0 - margin && x <= r.x1 + margin && z >= r.z0 - margin && z <= r.z1 + margin; }
+
+/**
+ * Can a song at `pos` be heard by `src` (a drone, camera or guard) within `range` metres? Phase 7b: sound does not go through
+ * floors. Two levels apart (or more than 16 m of height) is never heard; the next level up or down hears it at 55 % of the range;
+ * and beyond half of that range there must be a line of sight (a wall muffles it).
+ */
+export function singHeard(game, src, pos, range) {
+  const dy = Math.abs(src.y - pos.y), lv = Math.abs(levelIndex(src.y) - levelIndex(pos.y));
+  if (lv >= 2 || dy > 16) return false;
+  const r = (lv === 1 || dy > 5) ? range * 0.55 : range;
+  const d = hdist(src, pos);
+  if (d > r) return false;
+  if (d > r * 0.5 && !lineOfSight(game, src.x, src.y, src.z, pos.x, pos.y + 1.4, pos.z, 0.6)) return false;
+  return true;
+}
