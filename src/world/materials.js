@@ -1,7 +1,90 @@
 // Shared materials and procedural textures (no external files).
 // All world meshes use these so the Sing shader patch (Phase 5) can hook every material in one
 // place: iterate `materials.all` and patch onBeforeCompile.
+//
+// The senses patch (Phase 5): `createSenseUniforms()` makes ONE set of shared uniforms (echolocation pulse and
+// Mithi's perception grade); `patchSenseMaterial(mat, uniforms)` chains an `onBeforeCompile` onto any lit/unlit
+// mesh material, preserving whatever hook it already had. Every material in `materials.all` is patched when
+// it is created; the senses system (`game.senses.patchMaterial(mat)`) patches the rest of the scene.
 import * as THREE from 'three';
+
+/** Shared uniforms of the senses patch. One object, referenced by every patched material. */
+export function createSenseUniforms() {
+  return {
+    uPulseOrigin: { value: new THREE.Vector3(0, -1000, 0) },
+    uPulseRadius: { value: 0 },          // metres, the leading edge of the echolocation wave
+    uPulseStrength: { value: 0 },        // 0 = off (the shader skips all of it)
+    uPulseBand: { value: 2.2 },          // half width of the bright band, metres
+    uPulseColor: { value: new THREE.Color(0.62, 0.86, 1.0) },
+    uSenseSat: { value: 1 },             // Mithi's perception: saturation 0..1 (1 = untouched)
+    uSenseDim: { value: 1 },             // and brightness multiplier
+  };
+}
+
+const SENSE_VERT_DECL = 'varying vec3 vSenseW;';
+const SENSE_VERT = `
+{
+  vec4 senseP = vec4( transformed, 1.0 );
+  #ifdef USE_INSTANCING
+  senseP = instanceMatrix * senseP;
+  #endif
+  vSenseW = ( modelMatrix * senseP ).xyz;
+}`;
+const SENSE_FRAG_DECL = `varying vec3 vSenseW;
+uniform vec3 uPulseOrigin; uniform float uPulseRadius; uniform float uPulseStrength; uniform float uPulseBand;
+uniform vec3 uPulseColor; uniform float uSenseSat; uniform float uSenseDim;`;
+// Added after the fog, so the wave lights geometry even where the (short) fog has swallowed it.
+const SENSE_FRAG = `
+{
+  float senseL = dot( gl_FragColor.rgb, vec3( 0.299, 0.587, 0.114 ) );
+  gl_FragColor.rgb = mix( vec3( senseL ), gl_FragColor.rgb, uSenseSat ) * uSenseDim;
+  if ( uPulseStrength > 0.002 ) {
+    float sd = distance( vSenseW, uPulseOrigin );
+    float rel = uPulseRadius - sd;                       // > 0 behind the front
+    float band = uPulseBand;
+    float front = exp( -( rel * rel ) / ( band * band ) );
+    float wake = rel > 0.0 ? exp( -rel / ( band * 9.0 ) ) * 0.55 : 0.0;
+    vec3 sdx = dFdx( vSenseW ), sdy = dFdy( vSenseW );
+    vec3 sn = normalize( cross( sdx, sdy ) + vec3( 1e-9 ) );
+    vec3 sp = vSenseW * 0.5;                             // a 2 m scan grid on the surfaces
+    vec3 sq = 0.5 - abs( fract( sp ) - 0.5 );
+    vec3 saa = fwidth( sp ) * 1.3 + vec3( 1e-4 );
+    vec3 sline = ( 1.0 - smoothstep( vec3( 0.0 ), saa, sq ) ) * ( 1.0 - step( vec3( 0.72 ), abs( sn ) ) );
+    float grid = max( max( sline.x, sline.y ), sline.z );
+    float edge = clamp( length( fwidth( sn ) ) * 2.5, 0.0, 1.0 );
+    float core = exp( -( rel * rel ) / ( band * band * 0.1 ) );     // a thin white-hot line riding the soft band
+    float k = front * ( 0.45 + 0.9 * grid + 1.3 * edge ) + core * ( 0.55 + 0.7 * grid + 0.5 * edge ) + wake * ( 0.45 * grid + 0.9 * edge );
+    k *= uPulseStrength * ( 1.0 - smoothstep( 0.0, 1.0, sd / 90.0 ) * 0.35 );
+    gl_FragColor.rgb += uPulseColor * k;
+  }
+}`;
+
+/**
+ * Chain the senses shader patch onto a material's onBeforeCompile (keeps any hook it already had). Works for
+ * Lambert, Basic, Phong and Standard materials, instanced or not. Additive/glow decals are left alone.
+ */
+export function patchSenseMaterial(mat, uniforms) {
+  if (!mat || mat.userData?.sensePatched) return mat;
+  if (!(mat.isMeshLambertMaterial || mat.isMeshBasicMaterial || mat.isMeshStandardMaterial || mat.isMeshPhongMaterial)) return mat;
+  if (mat.blending === THREE.AdditiveBlending) return mat;
+  mat.userData = mat.userData || {};
+  mat.userData.sensePatched = true;
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = function (shader, renderer) {
+    if (prev) prev.call(this, shader, renderer);
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\n' + SENSE_VERT_DECL)
+      .replace('#include <project_vertex>', '#include <project_vertex>\n' + SENSE_VERT);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\n' + SENSE_FRAG_DECL)
+      .replace('#include <dithering_fragment>', '#include <dithering_fragment>\n' + SENSE_FRAG);
+  };
+  const prevKey = mat.customProgramCacheKey;
+  mat.customProgramCacheKey = function () { return (prevKey ? prevKey.call(this) : '') + '|sense1'; };
+  mat.needsUpdate = true;
+  return mat;
+}
 
 function canvasTexture(size, draw, repeat = true) {
   const c = document.createElement('canvas');
@@ -94,5 +177,7 @@ export function createMaterials() {
   const glassTex = new THREE.CanvasTexture(gc); glassTex.wrapS = glassTex.wrapT = THREE.RepeatWrapping; glassTex.colorSpace = THREE.SRGBColorSpace;
   const glass = new THREE.MeshBasicMaterial({ map: glassTex, color: 0xcccccc, vertexColors: true });
   const all = [lit, emissive, building, buildingLow, buildingMid, pool, glass];
-  return { lit, emissive, building, buildingLow, buildingMid, pool, glass, all, textures: { concrete } };
+  const sense = createSenseUniforms();
+  for (const m of all) patchSenseMaterial(m, sense);
+  return { lit, emissive, building, buildingLow, buildingMid, pool, glass, all, sense, textures: { concrete } };
 }

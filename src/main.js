@@ -16,6 +16,14 @@ import { EndingSystem } from './systems/endings.js';
 import { ObjectiveSystem } from './systems/objective.js';
 import { ViewSystem } from './systems/view.js';
 import { HazardSystem } from './systems/hazards/index.js';
+import { AudioSystem } from './systems/audio/engine.js';
+import { PASystem } from './systems/audio/pa.js';
+import { RippleSystem } from './systems/senses/ripples.js';
+import { SensesSystem } from './systems/senses/senses.js';
+import { Sing } from './systems/senses/sing.js';
+import { SetuVoice } from './systems/senses/organ.js';
+import { VisionSystem } from './systems/senses/vision.js';
+import { guarded } from './systems/senses/guard.js';
 import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
@@ -56,6 +64,16 @@ function boot() {
   game.addSystem('objective', new ObjectiveSystem());
   game.addSystem('view', new ViewSystem());
   if (!params.arena) game.addSystem('hazards', new HazardSystem());   // Phase 4 perils (after the view so the camera shake lands on the final camera)
+  // Phase 5 senses and sound. After the view (the listener and the vision camera follow it), before the HUD.
+  // `senses` grades the atmosphere the sky just set, so it must come after the sky; `ripples` hides Phase 3's Setu glow
+  // after `setu` updated.
+  game.addSystem('audio', guarded(new AudioSystem(), 'audio'));
+  game.addSystem('ripples', guarded(new RippleSystem(), 'ripples'));
+  game.addSystem('senses', guarded(new SensesSystem(), 'senses'));
+  game.addSystem('sing', guarded(new Sing(), 'sing'));
+  game.addSystem('setuVoice', guarded(new SetuVoice(), 'setuVoice'));
+  game.addSystem('visionSystem', guarded(new VisionSystem(), 'visionSystem'));
+  game.addSystem('pa', guarded(new PASystem(), 'pa'));
   game.addSystem('hud', new HudSystem());
   game.addSystem('debughud', new DebugHudSystem());
   game.addSystem('overlay', new OverlaySystem());
