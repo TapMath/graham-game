@@ -183,7 +183,7 @@ export class PartySystem {
     }
     // Jeetu's talk spot follows him
     const it = J.spots?.[0]?.item;
-    if (it) { const jp = J.pos; it.pos.x = jp.x; it.pos.y = jp.y; it.pos.z = jp.z; it.radius = 1.5; }   // he stands 1.9 m away: pickups beside you win unless you step up to him
+    if (it) { const jp = J.pos; it.pos.x = jp.x; it.pos.y = jp.y; it.pos.z = jp.z; it.radius = 1.5; it.priority = -1; }   // he stands 1.9 m away: pickups beside you win unless you step up to him
     this._senses(game);
     this._speed(game);
     this._torch(game);

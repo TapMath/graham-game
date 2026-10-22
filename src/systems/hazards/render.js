@@ -178,7 +178,7 @@ export class Beams {
     }
     // Phase 7b: a cone seen from close by (a drone overhead, a torch in your face) was a wall of saturated colour: thin it out
     const apex = Math.hypot(wx, wy, wz);
-    mul *= 0.35 + 0.65 * Math.min(1, Math.max(0, (apex - 1.5) / 9));
+    mul *= 0.28 + 0.72 * Math.min(1, Math.max(0, (apex - 2) / 16));
     this.cones._push(_m, r * mul, g * mul, b * mul);
     if (hit && dy < -0.2 && pool > 0 && this.pools.n < this.cap) {
       const stretch = Math.min(2.6, 1 / Math.max(0.35, -dy));

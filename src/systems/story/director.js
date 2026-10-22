@@ -468,7 +468,7 @@ export class Director {
     const keys = ['oldManFreed', 'knowsHospital', 'jeetuCalled', 'jeetuJoined', 'metTara', 'bloodGiven', 'taraFavour', 'bridgePermit', 'metGautam', 'gautamFree', 'gautamAtMetro', 'reachedBelow', 'setuLead', 'jacket', 'torch', 'cityWarned', 'breachKnown', 'hasEvidence', 'inHospital'];
     const flags = {}; for (const k of keys) flags[k] = f[k] ?? false;
     return {
-      party: g.party?.snapshot(), items: g.items?.list(), objectives: g.objectives && { primary: g.objectives.primary && { id: g.objectives.primary.id, text: g.objectives.primary.text }, optional: g.objectives.optional.map((o) => ({ id: o.id, text: o.text })), done: [...g.objectives.doneIds] },
+      party: g.party?.snapshot?.(), items: g.items?.list?.(), objectives: g.objectives?.primary !== undefined && { primary: g.objectives.primary && { id: g.objectives.primary.id, text: g.objectives.primary.text }, optional: g.objectives.optional.map((o) => ({ id: o.id, text: o.text })), done: [...g.objectives.doneIds] },
       flags, dig: +this.dig.toFixed(2), setuStage: setuStage(g), stageName: STAGES[setuStage(g)] ?? 'found', stats: { ...this.stats },
       gautam: { walking: !!this.walk, distracting: !!this.gautamDistracting(), until: this.gautamUntil > 0 ? +this.gautamUntil.toFixed(2) : null }, talks: this.stats.talks,
       cast: g.cast ? [...g.cast.actors.values()].map((a) => a.id) : [],

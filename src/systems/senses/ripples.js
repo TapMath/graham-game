@@ -33,12 +33,16 @@ void main() {
   float age = (uTime - aData.x) / aData.y;
   if (age < 0.0 || age > 1.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); vCol = vec4(0.0); vAge = 1.0; vUv = vec2(0.0); vW = 0.1; return; }
   float r = max(aData.z * (1.0 - (1.0 - age) * (1.0 - age)), 0.04);
+  // Phase 7b: seen from close by (the speaker you are talking to, the old man under the rubble) a ring a few metres wide filled
+  // the screen as a hard-edged square wash. Keep its apparent size under about 27 degrees and let it thin out right next to the eye.
+  float dc = distance(aCenter, cameraPosition);
+  r = min(r, dc * 0.5 + 0.25);
   vec3 right, up;
   if (aData.w > 0.5) { right = vec3(1.0, 0.0, 0.0); up = vec3(0.0, 0.0, 1.0); }
   else { right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); up = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]); }
   vec3 wp = aCenter + (right * position.x + up * position.y) * r;
   gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0);
-  vUv = position.xy; vCol = aColor; vAge = age;
+  vUv = position.xy; vCol = aColor; vCol.a *= mix(0.3, 1.0, smoothstep(0.8, 3.5, dc)); vAge = age;
   vW = clamp(clamp(r * 0.07, 0.12, 0.5) / r, 0.02, 0.4) * (1.0 - 0.35 * age);   // ring thickness is in metres, not a fraction of the radius
 }`;
 const FRAG = /* glsl */`

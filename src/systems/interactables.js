@@ -9,6 +9,7 @@
 //     prompt: 'Call lift' | (game, item) => string,
 //     enabled: true | (game, item) => bool,
 //     onInteract: (game, item) => {},
+//     priority: 0,                    // optional: the nearest of the highest priority wins (a follower's talk spot is -1)
 //   });
 //   game.interactables.remove(id); .nearest(pos?) ; .focus ; .list()
 //
@@ -44,13 +45,14 @@ export class InteractableSystem {
   /** Nearest enabled item in range of `pos` (default: the player's feet), or null. */
   nearest(pos = this.game.player?.pos) {
     if (!pos) return null;
-    let best = null, bd = Infinity;
+    let best = null, bd = Infinity, bp = -Infinity;
     for (const it of this.items.values()) {
       const dx = pos.x - it.pos.x, dz = pos.z - it.pos.z, dy = pos.y - it.pos.y;
       if (dy < -1.2 || dy > it.height) continue;
-      const d = Math.hypot(dx, dz);
-      if (d > it.radius || d >= bd || !this.isEnabled(it)) continue;
-      best = it; bd = d;
+      const d = Math.hypot(dx, dz), pr = it.priority ?? 0;
+      if (d > it.radius || !this.isEnabled(it)) continue;
+      if (pr < bp || (pr === bp && d >= bd)) continue;      // Phase 7b: a higher `priority` wins whatever the distance (Jeetu at your elbow must not steal Tara's E)
+      best = it; bd = d; bp = pr;
     }
     return best;
   }

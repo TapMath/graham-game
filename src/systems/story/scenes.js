@@ -98,9 +98,9 @@ async function reunion(cx, o) {
   cx.walk(M, 171.5, BR.z, 1.35);
   if (J) cx.walk(J, 169.4, BR.z + 1.5, 1.5);
   if (!waiting) cx.walk(S, 170.0, BR.z - 1.5, 1.35);
+  await cx.wait(1.8);
+  cx.cap('Where the road runs out and the sea begins.', { kind: 'scrawl', ttl: 2.6 });
   await cx.wait(2.2);
-  cx.cap('Where the road runs out and the sea begins.', { kind: 'scrawl', ttl: 2.8 });
-  await cx.wait(2.6);
 
   if (waiting) {
     // ---- 2: behind her shoulder: "Didi, there's no one"
@@ -114,16 +114,16 @@ async function reunion(cx, o) {
     // her face, front-on, the pre-dawn glow behind the lens
     cx.cam({ p: [M.pos.x + 0.5, 39.5, M.pos.z + 2.4], l: [M.pos.x + 0.1, 39.5, M.pos.z], fov: 34, dur: 2.0, e: 'inout' });
     await cx.wait(0.8);
-    await cx.say('He is here. I can feel it.', { who: 'Mithi', ttl: 2.6 });
-    if (J) await cx.say('Didi, the bridge is empty. Come. Let\'s go home.', { who: 'Jeetu', ttl: 2.4 }); else await cx.wait(1.4);
-    cx.cap('She stands in the wind with her hand open, listening to the sea.', { kind: 'scrawl', ttl: 3 });
-    await cx.wait(1.4);
+    await cx.say('He is here. I can feel it.', { who: 'Mithi', ttl: 2.3 });
+    if (J) await cx.say('Didi, the bridge is empty. Come. Let\'s go home.', { who: 'Jeetu', ttl: 2.1 }); else await cx.wait(1.2);
+    cx.cap('She stands in the wind with her hand open, listening to the sea.', { kind: 'scrawl', ttl: 2.6 });
+    await cx.wait(1.1);
     // ---- 3: she walks; the mouth organ
     cx.mark('organ');
     cx.cam({ p: [M.pos.x - 3.4, 39.2, M.pos.z + 1.3], l: [M.pos.x + 12, 39.6, M.pos.z], fov: 46, dur: 1.8, e: 'inout' });
     cx.walk(M, 180, BR.z, 1.0);
     g.audio?.play('caneTap', null);
-    await cx.wait(2.0);
+    await cx.wait(1.6);
     skyTo(5.45, 4);
     emit(g, 'mouthorgan', 212.2, 39.2, -24.2, 0.8);
     cx.shake(0.04, 0.6);
@@ -217,7 +217,7 @@ async function finale(cx, { M, S, J, sun, sea, seaColor0, warned, waiting, skyTo
   cx.walk(S, M.pos.x + 0.15, BR.z - 1.05, 1.4);
   if (hasJeetu && J) cx.walk(J, M.pos.x - 0.1, BR.z + 1.15, 5.8);
   cx.camPath((k) => ({ p: [C.x - 6.1 + k * 1.8, 38.75 + k * 0.12, C.z + 1.4 - k * 0.6], l: [C.x + 30, 41.2, C.z + 3.5], fov: 44 }), 7, 'inout');
-  await cx.wait(1.2);
+  await cx.wait(1.0);
   cx.faceTo(M, 300, BR.z); cx.faceTo(S, 300, BR.z);
   if (hasJeetu && J) { cx.faceTo(J, 300, BR.z); cx.cap('Look, Setu... SUNRISE!', { who: 'Jeetu', ttl: 2.8 }); }
   else cx.cap('Look, Setu. Sunrise.', { who: 'Mithi', ttl: 2.8 });
@@ -232,8 +232,8 @@ async function finale(cx, { M, S, J, sun, sea, seaColor0, warned, waiting, skyTo
   await cx.wait(1.8);
   // lift away: three small figures on the bridge against the gold
   cx.mark('crane');
-  cx.camPath((k) => ({ p: [C.x - 4.3 - k * 8.7, 38.9 + k * 8.5, C.z + 0.8 + k * 21], l: [C.x + 36 - k * 28, 40.8 - k * 0.8, C.z - 3 + k * 3], fov: 44 + k * 4 }), 8.4, 'inout');
-  await cx.wait(2.4);
+  cx.camPath((k) => ({ p: [C.x - 4.3 - k * 8.7, 38.9 + k * 8.5, C.z + 0.8 + k * 21], l: [C.x + 36 - k * 28, 40.8 - k * 0.8, C.z - 3 + k * 3], fov: 44 + k * 4 }), 7.6, 'inout');
+  await cx.wait(2.0);
   if (warned) {
     cx.cap('Far behind them every siren in the city is singing the same warning. Millions are walking to higher ground.', { kind: 'scrawl', ttl: 5 });
     cx.do(() => { sfx?.siren(9, { gain: 0.16 }); setTimeout(() => sfx?.siren(8, { gain: 0.1 }), 900); });

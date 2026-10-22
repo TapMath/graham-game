@@ -23,6 +23,10 @@
 //                              {step:s} (advance s seconds), {say:'tag'} (log the position). Returns {ok, log[]}.
 //   ray(origin, dir, max)      physics raycast, handy for line-of-sight checks
 //   fps()                      measured frames per second (not meaningful in headless SwiftShader)
+//   drawBreakdown()            (Phase 7b) what the last frame's draw calls were made of: {total, rendered, groups:[[label, n], ...]}
+//   set('manual', true)        (Phase 7b) the live loop stops stepping the simulation; only run/step/walk/press and the bot advance it,
+//                              so a scripted playthrough is deterministic
+//   bot                        (Phase 7b, src/debug-bot.js) real-input playthrough helpers: go/goTo/talk/dialogue/use/read/idle/watch/tab/sing
 //
 // Phase 3 setters (set(key, value)):  rays (via the health system, emits health:changed), invulnerable (no damage, no
 // darkness drain), view ('first'|'third'), jacket (Mithi's blue Metro jacket), viewOrbit (degrees, third-person test aid),
@@ -183,14 +187,13 @@ export class DebugApi {
    */
   drawBreakdown() {
     const g = this.game, cam = g.camera;
-    cam.updateMatrixWorld(); const THREE_Frustum = this._frustum ??= null;
+    cam.updateMatrixWorld();
     const proj = cam.projectionMatrix.clone().multiply(cam.matrixWorldInverse), f = [];
     // frustum planes from the view-projection matrix (Gribb-Hartmann)
     const e = proj.elements, plane = (a, b, c, d) => { const l = Math.hypot(a, b, c); return [a / l, b / l, c / l, d / l]; };
     f.push(plane(e[3] + e[0], e[7] + e[4], e[11] + e[8], e[15] + e[12]), plane(e[3] - e[0], e[7] - e[4], e[11] - e[8], e[15] - e[12]),
       plane(e[3] + e[1], e[7] + e[5], e[11] + e[9], e[15] + e[13]), plane(e[3] - e[1], e[7] - e[5], e[11] - e[9], e[15] - e[13]),
       plane(e[3] + e[2], e[7] + e[6], e[11] + e[10], e[15] + e[14]), plane(e[3] - e[2], e[7] - e[6], e[11] - e[10], e[15] - e[14]));
-    void THREE_Frustum;
     const inFrustum = (o) => {
       if (o.frustumCulled === false) return true;
       const geo = o.geometry; if (!geo) return true;

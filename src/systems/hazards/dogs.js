@@ -18,7 +18,7 @@ const _m = new THREE.Matrix4(), _b = new THREE.Matrix4(), _l = new THREE.Matrix4
 const _c = new THREE.Color();
 
 export const DOG_TUNING = Object.freeze({
-  wanderSpeed: 1.5, chaseSpeed: 5.5, biteRange: 1.2, biteCooldown: 2.4, biteGap: 1.8, knock: 9,
+  wanderSpeed: 1.5, chaseSpeed: 5.5, chaseMax: 6.3, biteRange: 1.2, biteCooldown: 2.4, biteGap: 1.8, knock: 9,
   hearWalk: 10, hearSprint: 19, hearIdle: 4, sight: 17, sightHalf: 1.3, calmRadius: 20, calmSeconds: 25, loseSeconds: 5.5,
 });
 
@@ -181,7 +181,7 @@ export class Dogs {
         const dh = Math.hypot(tg.x - dog.x, tg.z - dog.z), dy = tg.y - dog.y;
         if (Math.abs(dy) > 1.9 && dh < 9) {           // target is up (or down) a level: cannot follow
           dog.frustT += dt;
-          if (dh > 2.2) speedNow = this.move(dog, tg.x, tg.z, T.chaseSpeed * dog.pack.fierce, dt) / dt;
+          if (dh > 2.2) speedNow = this.move(dog, tg.x, tg.z, Math.min(T.chaseMax, T.chaseSpeed * dog.pack.fierce), dt) / dt;
           if (dog.barkT <= 0) { dog.barkT = this.rng.range(1.4, 2.4); h.sound('bark', dog, 0.8); }
           if (dog.frustT > 6) { this.stats.escaped++; this.setState(dog, 'search'); dog.target = null; }
           break;
@@ -194,7 +194,7 @@ export class Dogs {
           const f = yawDir(dog.yaw); speedNow = this.move(dog, dog.x - f.x * 2, dog.z - f.z * 2, 2.2, dt, 0) / dt;
         } else {
           if (dog.stuck > 0.5 && dog.sideT <= 0) { dog.side = this.rng.chance(0.5) ? 1 : -1; dog.sideT = 0.8; dog.stuck = 0; }
-          speedNow = this.move(dog, tg.x, tg.z, T.chaseSpeed * dog.pack.fierce, dt, 12) / dt;
+          speedNow = this.move(dog, tg.x, tg.z, Math.min(T.chaseMax, T.chaseSpeed * dog.pack.fierce), dt, 12) / dt;
         }
         if (dog.barkT <= 0 && dh < 14) { dog.barkT = this.rng.range(2.2, 3.8); h.sound(this.rng.chance(0.6) ? 'bark' : 'growl', dog, 0.75); }
         break;

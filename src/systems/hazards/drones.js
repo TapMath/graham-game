@@ -175,7 +175,7 @@ export class Drones {
     const f = 1 - clamp((dist - 60) / 50, 0, 0.9);
     h.vis.glows.add(d.x, d.y + 0.16, d.z, hot ? 0.9 : 0.6, 1.4 * blink * f, 0.08 * f, 0.05 * f);
     h.vis.glows.add(d.x, d.y - 0.18, d.z, 0.5, 0.9 * f, 0.95 * f, 1.0 * f);
-    const col = hot ? [0.4, 0.14, 0.09] : d.state === 'investigate' ? [0.36, 0.27, 0.1] : [0.2, 0.3, 0.38];
+    const col = hot ? [0.34, 0.12, 0.08] : d.state === 'investigate' ? [0.28, 0.2, 0.08] : [0.12, 0.19, 0.24];
     h.vis.beams.add(d.x, d.y - 0.15, d.z, d.bx, d.by, d.bz, d.half, d.range, col[0] * f, col[1] * f, col[2] * f);
   }
 

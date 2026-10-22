@@ -30,6 +30,8 @@ export class Bot {
     this.stats = { sings: 0, detours: 0, stalls: 0, visionsWaited: 0, detentionsWaited: 0, sprints: 0 };
     this.lastSingAt = -99;
     this.quiet = false;
+    this.minRays = 12;                                           // the lowest she got, for the transcript
+    dbg.game.events.on('health:changed', ({ rays }) => { if (rays < this.minRays) this.minRays = rays; });
   }
 
   get p() { return this.g.player; }
@@ -169,6 +171,7 @@ export class Bot {
         let idx = -1;
         if (typeof want === 'number') idx = want;
         else if (typeof want === 'string') idx = list.findIndex((c) => c.label.toLowerCase().includes(want.toLowerCase()));
+        if (want != null && (idx < 0 || !list[idx] || list[idx].enabled === false)) this.note(`WANTED "${want}" but it is missing or disabled; taking the first enabled answer`);
         if (idx < 0 || !list[idx] || list[idx].enabled === false) idx = list.findIndex((c) => c.enabled !== false);
         this.log.push(`  > ${list[idx]?.label}`);
         this._lastLine = -1;
@@ -195,8 +198,12 @@ export class Bot {
     const it = this.g.interactables.get('talk:' + id) ?? this.g.interactables.list().find((i) => i.id.startsWith('talk:' + id));
     const tx = it ? it.pos.x : wp.x, tz = it ? it.pos.z : wp.z;
     if (via) await this.go(via);
-    if (at) await this.goTo(at[0], at[1], { tol: 0.8 });
+    if (at) await this.goTo(at[0], at[1], { tol: 0.5 });
     else await this.goTo(tx, tz, { tol: Math.max(1.4, (it?.radius ?? 2.5) - 1.0) });
+    if (it) {                                                  // within reach? (the stand point is a hint, the interactable's radius is the rule)
+      const p = this.p.pos;
+      if (Math.hypot(p.x - it.pos.x, p.z - it.pos.z) > it.radius - 0.25) await this.goTo(it.pos.x, it.pos.z, { tol: Math.max(0.6, it.radius - 1.0) });
+    }
     this.face(tx, tz);
     for (let k = 0; k < 3 && !this.g.dialogue.isOpen; k++) { this.tap('KeyE'); await Promise.resolve(); if (!this.g.dialogue.isOpen) await this.idle(0.4); }
     if (!this.g.dialogue.isOpen) { this.note(`E did not open ${id} here: ${this.where()}`); return false; }
