@@ -5,7 +5,8 @@
 //   top-centre the clock HH:MM (+ day), the flood countdown (hidden until `flags.breachKnown`, see setFloodVisible), the objective line
 //   top-right  Setu's breath: heartbeat trace + bar. Hidden until the first Setu story line (or until he is found)
 //   bottom     gate requirement card when near a bio-scanner, interaction prompt (game.interactables.focus)
-//   bottom-left message feed (game.messages.say)
+//   bottom-left message feed (game.messages.say): sound captions, story lines, clues, system notes and the PA in ONE stack, kept
+//              short (at most 4 lines, 3 on small screens), one caption and one PA line at a time, repeats merged ("x2")
 //   whole screen: red/blue low-health vignette, damage/heal flashes, glitch (from game.screenfx)
 //
 // API: game.hud.setFloodVisible(bool), game.hud.showSetu(bool), game.hud.el (root), game.hud.setThreshold(n|null) marks a ray
@@ -55,7 +56,7 @@ export class HudSystem {
             <div class="day">DAY <span>1</span> OF 2</div>
             <div class="flood" hidden>FLOOD IN <b>24h 20m</b><span class="scrawl rot-b">until the water</span></div>
           </div>
-          <div class="hud-objective"><div class="lbl">OBJECTIVE</div><p></p>${SQUIGGLE}</div>
+          <div class="hud-objective"><div class="lbl"><span>OBJECTIVE</span><button type="button" class="opt-chip" hidden></button></div><p></p>${SQUIGGLE}</div>
         </div>
         <div class="hud-setu" hidden>
           <div class="lbl"><s>SUBJECT 0471</s><span class="scrawl rot-b">Setu</span></div>
@@ -80,6 +81,13 @@ export class HudSystem {
     this.promptEl = q('.prompt'); this.promptText = q('.prompt span');
     this.feed = q('.hud-feed');
     this.crosshair = document.getElementById('crosshair');
+    this.center = q('.hud-center'); this.optChip = q('.opt-chip');
+    // optional objectives: a quiet list on big screens, folded behind a chip on small ones (CSS decides, see styles.css)
+    this.optChip.addEventListener('pointerdown', (e) => e.stopPropagation());
+    this.optChip.addEventListener('click', () => { this.center.classList.toggle('opt-open'); this._chip(); });
+    this._optN = 0;
+    // on touch the prompt is a tap target for E
+    this.promptEl.addEventListener('pointerdown', (e) => { if (document.body.classList.contains('touch')) { e.preventDefault(); game.input.tap('KeyE', 80); } });
 
     this.floodVisible = false; this.setuVisible = false;
     this._rays = -1; this._lit = new Array(RAYS).fill(true);
@@ -90,6 +98,7 @@ export class HudSystem {
 
     const ev = game.events;
     ev.on('message', (m) => this._addMessage(m));
+    ev.on('objective:changed', (d) => { if (d && Array.isArray(d.shown)) { this._optN = Math.max(0, d.shown.length - (d.shown.some((o) => !o.optional) ? 1 : 0)); if (!this._optN) this.center.classList.remove('opt-open'); this._chip(); this.objWrap.hidden = !this._objText && !this._optN; } });
     ev.on('setu:story', () => this.showSetu(true));
     ev.on('setu:found', () => this.showSetu(true));
     ev.on('health:damage', () => { game.screenfx.flash('#ff3a2a', 380, 0.34); this._kick('hurt'); });
@@ -102,6 +111,12 @@ export class HudSystem {
     }));
     game.debug?.addAction('hudGlitch', () => { game.screenfx.glitch(400); return true; });
     this.setRays(game.player.rays, true);
+  }
+
+  _chip() {
+    const n = this._optN, open = this.center.classList.contains('opt-open');
+    this.optChip.hidden = n === 0;
+    this.optChip.textContent = open ? 'hide optional' : `+${n} optional`;
   }
 
   setFloodVisible(v) { this.floodVisible = !!v; this.floodEl.hidden = !v; }
@@ -141,15 +156,39 @@ export class HudSystem {
     this.gateCard.classList.add('denied'); setTimeout(() => this.gateCard.classList.remove('denied'), 1500);
   }
 
+  /** One stack for everything: a new caption replaces the previous caption, a new PA line replaces the previous PA line, an
+   *  identical line just bumps a counter, and the feed never grows past MAX lines (3 on small screens). */
   _addMessage(m) {
+    const text = m.kind === 'caption' ? `[ ${m.text} ]` : m.text;
+    const exp = performance.now() + m.ttl * 1000;
+    const feed = this.feed;
+    const same = [...feed.children].reverse().find((c) => !c.classList.contains('gone') && c.dataset.text === text && c.dataset.kind === m.kind);
+    if (same) {
+      same.dataset.exp = String(exp);
+      const n = Number(same.dataset.n || 1) + 1; same.dataset.n = String(n);
+      let r = same.querySelector('.rep'); if (!r) { r = document.createElement('span'); r.className = 'rep'; same.appendChild(r); }
+      r.textContent = `x${n}`;
+      return;
+    }
+    if (m.kind === 'caption' || m.kind === 'pa') {
+      for (const c of [...feed.children]) if (c.dataset.kind === m.kind) this._drop(c);
+    }
     const d = document.createElement('div');
     d.className = 'msg ' + m.kind;
-    d.textContent = m.kind === 'caption' ? `[ ${m.text} ]` : m.text;
-    d.dataset.exp = String(performance.now() + m.ttl * 1000);
-    this.feed.appendChild(d);
+    d.textContent = text;
+    d.dataset.exp = String(exp); d.dataset.text = text; d.dataset.kind = m.kind;
+    feed.appendChild(d);
     requestAnimationFrame(() => d.classList.add('in'));
-    while (this.feed.children.length > 5) this.feed.firstChild.remove();
+    const max = window.matchMedia('(max-width: 700px), (max-height: 520px)').matches ? 3 : 4;
+    const live = [...feed.children].filter((c) => !c.classList.contains('gone'));
+    // when full, drop the oldest line that is not a story line, else the oldest
+    for (let i = 0; live.length - i > max; i++) {
+      const victim = live.find((c) => c !== d && c.dataset.kind !== 'story') ?? live[0];
+      this._drop(victim); live.splice(live.indexOf(victim), 1); i--;
+    }
   }
+
+  _drop(el) { if (el.classList.contains('gone')) return; el.classList.add('gone'); setTimeout(() => el.remove(), 600); }
 
   _nearestGate() {
     const g = this.game, p = g.player, gates = g.world.gates ?? [];
@@ -244,7 +283,7 @@ export class HudSystem {
 
     // ---- objective
     const ot = game.objective ? game.objective.text : '';
-    if (ot !== this._objText) { this._objText = ot; this.objEl.textContent = ot; this.objWrap.classList.remove('flip'); void this.objWrap.offsetWidth; this.objWrap.classList.add('flip'); }
+    if (ot !== this._objText) { this._objText = ot; this.objEl.textContent = ot; this.objWrap.classList.toggle('empty', !ot); this.objWrap.hidden = !ot && !this._optN; this.objWrap.classList.remove('flip'); void this.objWrap.offsetWidth; this.objWrap.classList.add('flip'); }
 
     // ---- gate card and sun threshold marker
     const gt = game.modal ? null : this._nearestGate();
@@ -267,6 +306,7 @@ export class HudSystem {
     const ptxt = !game.modal && f ? f.promptText : '';
     if (ptxt !== this._prompt) { this._prompt = ptxt; this.promptEl.hidden = !ptxt; this.promptText.textContent = ptxt; }
     this.crosshair.style.display = game.modal ? 'none' : '';
+    const modal = !!game.modal; if (modal !== this._modal) { this._modal = modal; document.body.classList.toggle('modal-open', modal); }   // cards and dialogues dim the feed
 
     // ---- feed expiry (real time)
     if (now - this._lastFeed > 250) {

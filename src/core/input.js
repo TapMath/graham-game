@@ -3,7 +3,24 @@
 // Keys are tracked by KeyboardEvent.code. Keyboard works with or without pointer lock, so
 // headless tests can drive the game with real KeyboardEvents or with input.setKey().
 // Gameplay code asks about *actions* (see ACTIONS), not raw keys, so rebinding and the
-// Phase 6 touch controls only need to call setKey()/addLook().
+// touch controls (src/ui/touch.js) only need to call setKey()/addLook()/setStick().
+//
+// Touch (Phase 7a): `setStick(x, y)` feeds an analog move vector (x right, y forward, both -1..1) that moveAxis() adds to the
+// keyboard; `lookTouch(dx, dy)` turns a finger drag (CSS pixels) into look using `touchSensitivity` (rad per pixel, scaled by the
+// touch-sensitivity setting); `virtualKey(code, down)` / `tap(code)` fire real KeyboardEvents on window, so systems that listen
+// for key events (Tab for Jeetu, Enter and Esc in cards and cutscenes, E and the digits in dialogue) work from touch buttons too.
+// `isTouchDevice()` is the one place that decides whether the touch layer is wanted (`?touch=1` forces it, `?touch=0` forbids it).
+
+export function isTouchDevice(search = (typeof location !== 'undefined' ? location.search : '')) {
+  try {
+    const q = new URLSearchParams(search);
+    if (q.has('touch')) return q.get('touch') !== '0' && q.get('touch') !== 'false';
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+    return coarse && (navigator.maxTouchPoints > 0 || 'ontouchstart' in window);
+  } catch { return false; }
+}
+
+const KEY_NAMES = { Space: ' ', Tab: 'Tab', Enter: 'Enter', Escape: 'Escape', KeyE: 'e', KeyQ: 'q', KeyV: 'v', ShiftLeft: 'Shift' };
 
 export const ACTIONS = {
   forward: ['KeyW'],
@@ -34,6 +51,8 @@ export class Input {
     this.locked = false;
     this.sensitivity = 0.0022; // rad per pixel
     this.invertY = false;
+    this.touchSensitivity = 0.0042;   // rad per CSS pixel of finger drag (the setting scales this)
+    this.stick = { x: 0, y: 0, active: false };   // virtual stick, see setStick()
     this._attach();
   }
 
@@ -67,7 +86,7 @@ export class Input {
     }
   }
 
-  releaseAll() { this.keys.clear(); }
+  releaseAll() { this.keys.clear(); this.stick.x = 0; this.stick.y = 0; this.stick.active = false; }
 
   isDown(code) { return this.keys.has(code); }
 
@@ -83,11 +102,41 @@ export class Input {
     return false;
   }
 
-  /** Movement intent in [-1, 1]: x = strafe right, y = forward. Not normalised. */
+  /** Movement intent in [-1, 1]: x = strafe right, y = forward. Not normalised. The virtual stick adds to the keys. */
   moveAxis(out = { x: 0, y: 0 }) {
     out.x = (this.action('right') ? 1 : 0) - (this.action('left') ? 1 : 0);
     out.y = (this.action('forward') ? 1 : 0) - (this.action('back') ? 1 : 0);
+    if (this.stick.active) {
+      out.x = Math.max(-1, Math.min(1, out.x + this.stick.x));
+      out.y = Math.max(-1, Math.min(1, out.y + this.stick.y));
+    }
     return out;
+  }
+
+  /** Virtual stick (touch): x right, y forward, each -1..1. `sprint` also holds Shift (the stick is pushed to its edge). */
+  setStick(x, y, sprint = false) {
+    const s = this.stick;
+    s.x = x; s.y = y; s.active = x !== 0 || y !== 0;
+    this.setKey('ShiftLeft', !!(sprint && s.active));
+  }
+
+  /** A finger drag in CSS pixels, converted to the same radians-per-pixel scale the mouse uses. */
+  lookTouch(dx, dy) {
+    const k = this.touchSensitivity / this.sensitivity;
+    this.addLook(dx * k, dy * k);
+  }
+
+  /** Press or release a key as a real KeyboardEvent (reaches window listeners and this class). */
+  virtualKey(code, down) {
+    try {
+      window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, key: KEY_NAMES[code] ?? code, bubbles: true, cancelable: true }));
+    } catch { this.setKey(code, down); }
+  }
+
+  /** A quick press and release (the key is held for one frame so edge-triggered actions see it). */
+  tap(code, ms = 60) {
+    this.virtualKey(code, true);
+    setTimeout(() => this.virtualKey(code, false), ms);
   }
 
   /** Add look movement in pixels (mouse or touch drag). */

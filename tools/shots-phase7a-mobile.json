@@ -1,0 +1,648 @@
+[
+ {
+  "name": "m-title-land",
+  "reload": "seed=1&touch=1",
+  "autostart": false,
+  "reloadWait": 4500,
+  "wait": 1500,
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; const ui=A.state().ui; ok(ui.screen==='title' && ui.touch, 'title shows with the touch class: '+JSON.stringify(ui)); ok(qa('#ov-menu .mbtn').every(b=>b.getBoundingClientRect().height>=40), 'tap targets are tall enough'); ok(document.documentElement.scrollWidth<=innerWidth, 'no horizontal scroll'); ({vw:innerWidth, vh:innerHeight, dpr:devicePixelRatio, ui})"
+ },
+ {
+  "name": "m-howto-land",
+  "tap": "#ov-menu [data-act=howto]",
+  "wait": 800,
+  "eval": "const cs=qa('.htp-card'); ok(cs[1].classList.contains('htp-touch') && cs[2].classList.contains('htp-keys'), 'the touch card comes first on a touch device'); 1"
+ },
+ {
+  "name": "m-howto-land-2",
+  "eval": "q('.panel-scroll').scrollTop=520; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-howto-land-back",
+  "tap": ".back",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-settings-land",
+  "tap": "#ov-menu [data-act=settings]",
+  "wait": 800,
+  "eval": "ok(!!q('.set-row[data-key=touchSens]'), 'touch sensitivity shows on touch devices'); const el=q('.set-row[data-key=touchSens] input'); el.value=1.6; el.dispatchEvent(new Event('input',{bubbles:true})); ok(G.settings.get('touchSens')===1.6 && Math.abs(G.input.touchSensitivity-0.0042*1.6)<1e-9, 'touch sensitivity applied'); el.value=1; el.dispatchEvent(new Event('input',{bubbles:true})); 1"
+ },
+ {
+  "name": "m-settings-land-2",
+  "eval": "q('.panel-scroll').scrollTop=99999; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-settings-land-back",
+  "tap": ".back",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-begin-land",
+  "tap": "#ov-menu [data-act=begin]",
+  "wait": 2500,
+  "eval": "(async()=>{ for (let i=0;i<120 && !G.cinematics.active;i++) await new Promise(r=>setTimeout(r,250)); await new Promise(r=>setTimeout(r,500)); ok(G.mode==='playing', 'tapping Begin starts play'); ok(G.cinematics.active, 'opening cutscene on first play'); ok(document.body.classList.contains('touch-cine') && getComputedStyle(q('#t-skip')).display==='block', 'a Skip button shows during cutscenes on touch'); ok(!A.state().touch.shown, 'the stick and buttons are hidden during the cutscene'); return {mode:G.mode, cine:G.cinematics.current.name}; })()"
+ },
+ {
+  "name": "m-skip-land",
+  "tap": "#t-skip",
+  "wait": 300,
+  "eval": "(async()=>{ for (let i=0;i<480 && (G.cinematics.active || G.modal || G.visionSystem.active);i++) await new Promise(r=>setTimeout(r,250)); ok(!G.cinematics.active && !G.modal, 'tapping Skip ends the cutscene'); return 1; })()",
+  "shot": false
+ },
+ {
+  "name": "m-touch-setup",
+  "wait": 800,
+  "eval": "ok(G.mode==='playing' && !G.modal, 'playing'); ok(A.state().touch.shown && A.state().touch.enabled, 'touch controls are shown'); A.set('invulnerable',true); A.set('hazards',false); A.setTime(12); A.set('view','first'); A.teleport(-100,0,0,-90); A.step(0.3); window.P0=JSON.parse(JSON.stringify(A.state())); ({touch:A.state().touch, yaw:P0.yaw, pos:P0.pos})"
+ },
+ {
+  "name": "m-stick-down",
+  "touch": [
+   {
+    "t": "start",
+    "id": 1,
+    "x": 100,
+    "y": 300,
+    "wait": 150
+   },
+   {
+    "t": "move",
+    "id": 1,
+    "x": 100,
+    "y": 240,
+    "wait": 300
+   }
+  ],
+  "wait": 300,
+  "eval": "const t=A.state().touch; ok(t.stick.y>0.9 && t.stick.sprint, 'pushing the stick to its edge sprints: '+JSON.stringify(t.stick)); t"
+ },
+ {
+  "name": "m-stick-run",
+  "wait": 300,
+  "eval": "const a=A.state(); A.step(1.2); const p=A.state(); const d=Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z); ok(d>4, 'the left stick moved Mithi '+d.toFixed(2)+' m'); ok(G.player.sprinting, 'sprinting'); ({moved:+d.toFixed(2), from:a.pos, to:p.pos})"
+ },
+ {
+  "name": "m-stick-walk",
+  "touch": [
+   {
+    "t": "move",
+    "id": 1,
+    "x": 100,
+    "y": 262,
+    "wait": 300
+   }
+  ],
+  "wait": 200,
+  "eval": "const t=A.state().touch; ok(t.stick.y>0.3 && t.stick.y<0.9 && !t.stick.sprint, 'a half push walks: '+JSON.stringify(t.stick)); A.teleport(-100,0,0,-90); A.step(0.2); const a=A.state(); A.step(1.0); const p=A.state(); const d=Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z); ok(d>2 && d<5, 'walking speed: '+d.toFixed(2)); ({walked:+d.toFixed(2)})",
+  "shot": false
+ },
+ {
+  "name": "m-stick-release",
+  "touch": [
+   {
+    "t": "end",
+    "id": 1,
+    "wait": 250
+   }
+  ],
+  "wait": 200,
+  "eval": "const t=A.state().touch; ok(t.stick.x===0 && t.stick.y===0 && !t.stick.sprint && t.pointers===0, 'releasing the stick stops: '+JSON.stringify(t)); const a=A.state(); A.step(0.8); const p=A.state(); ok(Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z)<1, 'and Mithi comes to a stop'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-look-drag",
+  "touch": [
+   {
+    "t": "start",
+    "id": 2,
+    "x": 600,
+    "y": 120,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 660,
+    "y": 120,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 720,
+    "y": 135,
+    "wait": 150
+   }
+  ],
+  "wait": 200,
+  "eval": "A.step(0.1); ok(Math.abs(G.player.yaw - (P0.yaw*Math.PI/180))>0.2, 'a right-side drag turned the view: yaw '+G.player.yaw.toFixed(2)+' (was '+(P0.yaw*Math.PI/180).toFixed(2)+')'); ok(G.player.pitch<-0.002, 'dragging down looks down: '+G.player.pitch.toFixed(3)); ({yaw:G.player.yaw, pitch:G.player.pitch, touch:A.state().touch})"
+ },
+ {
+  "name": "m-both-thumbs",
+  "touch": [
+   {
+    "t": "start",
+    "id": 1,
+    "x": 110,
+    "y": 290,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 1,
+    "x": 110,
+    "y": 235,
+    "wait": 200
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 500,
+    "y": 150,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 440,
+    "y": 150,
+    "wait": 200
+   }
+  ],
+  "wait": 200,
+  "eval": "const a=A.state(); A.step(0.8); const p=A.state(); ok(Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z)>2, 'the stick still moves while the other thumb looks'); ok(A.state().touch.looks>3, 'and the look drag registered: '+A.state().touch.looks); A.state().touch"
+ },
+ {
+  "name": "m-both-release",
+  "touch": [
+   {
+    "t": "end",
+    "id": 1,
+    "wait": 100
+   },
+   {
+    "t": "end",
+    "id": 2,
+    "wait": 200
+   }
+  ],
+  "wait": 200,
+  "eval": "ok(A.state().touch.pointers===0, 'both thumbs up'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-use-hold",
+  "touch": [
+   {
+    "t": "start",
+    "id": 3,
+    "x": 700,
+    "y": 330,
+    "wait": 250
+   }
+  ],
+  "wait": 100,
+  "eval": "const r=q('.t-use').getBoundingClientRect(); ok(G.input.isDown('KeyE') && A.state().touch.held.includes('KeyE'), 'holding the E button holds E (for digging): '+JSON.stringify(A.state().touch.held)+' btn@'+Math.round(r.left)+','+Math.round(r.top)); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-use-release",
+  "touch": [
+   {
+    "t": "end",
+    "id": 3,
+    "wait": 150
+   }
+  ],
+  "wait": 100,
+  "eval": "ok(!G.input.isDown('KeyE'), 'E released'); A.clearEvents(); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-sing",
+  "touch": [
+   {
+    "t": "start",
+    "id": 4,
+    "x": 790,
+    "y": 240,
+    "wait": 150
+   }
+  ],
+  "wait": 100,
+  "eval": "ok(A.state().touch.held.includes('KeyQ') && G.input.isDown('KeyQ'), 'the sing button holds Q (hold for second sight)'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-sing-up",
+  "touch": [
+   {
+    "t": "end",
+    "id": 4,
+    "wait": 150
+   }
+  ],
+  "wait": 100,
+  "eval": "ok(!G.input.isDown('KeyQ'), 'Q released'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-jump",
+  "touch": [
+   {
+    "t": "start",
+    "id": 5,
+    "x": 790,
+    "y": 340,
+    "wait": 120
+   }
+  ],
+  "wait": 100,
+  "eval": "ok(A.state().touch.held.includes('Space'), 'the jump button holds Space'); A.step(0.3); ok(A.events('player:jump').length>=1, 'and Mithi jumps'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-btn-jump-up",
+  "touch": [
+   {
+    "t": "end",
+    "id": 5,
+    "wait": 100
+   }
+  ],
+  "wait": 100,
+  "shot": false
+ },
+ {
+  "name": "m-pause-btn",
+  "tap": "#t-pause",
+  "wait": 900,
+  "eval": "ok(G.mode==='paused' && A.state().ui.screen==='pause', 'the touch pause button pauses'); ok(!A.state().touch.shown, 'touch layer hidden while paused'); 1"
+ },
+ {
+  "name": "m-pause-resume",
+  "tap": "#ov-pause [data-act=resume]",
+  "wait": 900,
+  "eval": "ok(G.mode==='playing' && A.state().touch.shown, 'resume shows the touch layer again'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-hud-land",
+  "wait": 2500,
+  "eval": "A.set('view','first'); A.set('invulnerable',true); A.set('hazards',false); A.setTime(12); G.setu.setHealth(40); G.hud.showSetu(true); if(!G.party.jeetu) A.do('jeetuJoin'); for (const i of ['torch','jacket','batteries','breachEvidence']) if(!G.items.has(i)) A.do('give',i); G.flags.breachKnown=true; G.hud.setFloodVisible(true); G.objectives.set('demoA','Warn the city: Tara can get it on TV, or the Control Tower on L3',{optional:true}); G.objectives.set('demoB','Get light for Jeetu: the TV remote batteries at home',{optional:true}); for (const m of qa('.hud-feed .msg')) m.remove(); for (const [t,k] of [['The street hums with the weight of rain on tin.','story'],['A dog barks','caption'],['REMAIN CALM. SUNLIGHT IS A PRIVILEGE, NOT A RIGHT.','pa'],['Didi, dogs, left!','clue'],['Taken: Torch.','system']]) G.messages.say(t,{kind:k,ttl:900}); A.step(0.5); G.visionSystem.queue.length=0; const W=innerWidth,H=innerHeight; ok(document.documentElement.scrollWidth<=W && document.body.scrollWidth<=W, 'no horizontal page scroll'); const bad=qa('#hud .hud-top *, #hud .hud-feed, #hud .hud-feed *, #hud .hud-items, #hud .hud-bottom *').filter(e=>{ if(e.closest('[hidden]')) return false; const r=e.getBoundingClientRect(); return r.width>0 && (r.right>W+1 || r.left<-1 || r.bottom>H+1); }).map(e=>e.className+'@'+Math.round(e.getBoundingClientRect().right)); ok(bad.length===0, 'HUD stays inside the screen: '+bad.join()); ({feed:qa('.hud-feed .msg:not(.gone)').length})"
+ },
+ {
+  "name": "m-hud-land-opt",
+  "eval": "const c=q('.opt-chip'); ok(c && !c.hidden && getComputedStyle(c).display!=='none', 'the optional chip is visible: '+(c&&c.outerHTML)); 1",
+  "shot": false
+ },
+ {
+  "name": "m-hud-land-opt2",
+  "tap": ".opt-chip",
+  "wait": 1200,
+  "eval": "ok(q('.hud-center').classList.contains('opt-open') && getComputedStyle(q('.hud-optional')).display!=='none', 'the optional-objective chip opens the list'); 1"
+ },
+ {
+  "name": "m-hud-land-chip-close",
+  "tap": ".opt-chip",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-dialogue-land",
+  "wait": 1500,
+  "eval": "G.dialogue.cps=1e6; A.do('cast','jeetu',2.3); A.do('talk','jeetu'); A.step(0.3); ok(G.dialogue.isOpen, 'conversation open'); ok(!A.state().touch.shown, 'touch layer steps aside for the dialogue'); ({d:A.state().dialogue6a})"
+ },
+ {
+  "name": "m-dialogue-land-choices",
+  "eval": "for (let i=0;i<9 && !(G.dialogue.showChoices);i++){ A.do('dialogueSkip'); A.do('dialogueAdvance'); } ok(qa('.cv-choice').length>=1, 'choices are shown: '+qa('.cv-choice').length); const h=qa('.cv-choice').map(b=>Math.round(b.getBoundingClientRect().height)); ok(h.every(x=>x>=40), 'choices are large tap targets: '+h); const r=q('.cv-card').getBoundingClientRect(); ok(r.bottom<=innerHeight+1 && r.top>=-1, 'the card fits the screen'); ({h, card:[Math.round(r.top),Math.round(r.bottom)]})",
+  "wait": 800
+ },
+ {
+  "name": "m-dialogue-land-tap",
+  "tap": ".cv-choice",
+  "wait": 800,
+  "eval": "A.step(0.2); ok(A.state().dialogue6a===null || A.state().dialogue6a.lines>=1, 'tapping a choice works'); 1"
+ },
+ {
+  "name": "m-dialogue-land-close",
+  "eval": "for (let i=0;i<12 && G.dialogue.isOpen;i++){ if(G.dialogue.showChoices && G.dialogue.current.closable!==false) G.dialogue.close(); else { A.do('dialogueSkip'); A.do('dialogueAdvance'); } } ok(!G.dialogue.isOpen && !G.modal, 'closed'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-fragment-land",
+  "css": "#frag{animation:none !important}",
+  "eval": "A.do('fragment','frag-memo-site',{tp:true,as:'jeetu',instant:true}); A.step(0.2); ok(!q('#frag').hidden, 'fragment card open'); const r=q('.fr-paper').getBoundingClientRect(); ({top:Math.round(r.top), bottom:Math.round(r.bottom), vh:innerHeight})",
+  "wait": 1200
+ },
+ {
+  "name": "m-fragment-land-tap",
+  "tap": "#frag",
+  "wait": 500,
+  "eval": "A.step(0.2); ok(q('#frag').hidden && !G.modal, 'tap closes the card'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-vendor-land",
+  "eval": "A.do('tpVendor', A.state().vendors.active[0].id); A.step(0.3); A.do('vendorOpen', A.state().vendors.active[0].id); A.step(0.2); ok(!q('#dialog').hidden, 'vendor dialog'); const r=q('.dl-card').getBoundingClientRect(); ok(r.bottom<=innerHeight+1 && r.top>=-1, 'card fits: '+Math.round(r.top)+'..'+Math.round(r.bottom)); 1",
+  "wait": 1200
+ },
+ {
+  "name": "m-vendor-land-tap",
+  "tap": ".dl-btn.dl-decline",
+  "wait": 500,
+  "eval": "A.step(0.2); ok(q('#dialog').hidden && !G.modal, 'tap declines'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-safe-land",
+  "css": ":root{--sat:0px;--sar:44px;--sab:21px;--sal:44px}",
+  "wait": 1500,
+  "eval": "A.teleport(-100,0,0,-90); A.step(0.2); const r=q('.t-btns').getBoundingClientRect(); ok(innerWidth-r.right>=44, 'touch buttons keep out of the right-hand notch: '+Math.round(innerWidth-r.right)); const hs=q('.hud-rays').getBoundingClientRect(); ok(hs.left>=44, 'HUD keeps out of the left-hand notch: '+Math.round(hs.left)); 1"
+ },
+ {
+  "name": "m-ending1-land",
+  "eval": "A.set('cityWarned',true); A.do('ending',1); 1",
+  "wait": 5500
+ },
+ {
+  "name": "m-ending3-land",
+  "eval": "A.do('endingReset'); A.do('ending',3); 1",
+  "wait": 4500
+ },
+ {
+  "name": "m-ending4-land",
+  "eval": "A.do('endingReset'); A.do('ending',4); 1",
+  "wait": 4500
+ },
+ {
+  "name": "m-ending4-land-read",
+  "eval": "const c=q('.en-card').getBoundingClientRect(); ({cardTop:Math.round(c.top), cardBottom:Math.round(c.bottom), scrolls:q('#ending').scrollHeight>q('#ending').clientHeight})",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "m-ending-land-scroll",
+  "eval": "q('#ending').scrollTop=9999; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-ending-again-tap",
+  "eval": "const b=q('#en-again').getBoundingClientRect(); ok(b.height>=44, 'the Play again button is a large tap target: '+b.height); ok(b.top>=0 && b.bottom<=innerHeight+1, 'and reachable after scrolling'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-pause-land",
+  "eval": "A.do('endingReset'); A.step(0.3); G.menu.pause(); 1",
+  "wait": 900
+ },
+ {
+  "name": "m-pause-land-howto",
+  "tap": "#ov-pause [data-act=howto]",
+  "wait": 700
+ },
+ {
+  "name": "m-pause-land-back",
+  "tap": ".back",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-portrait",
+  "viewport": [
+   390,
+   844
+  ],
+  "css": ":root{--sat:0px;--sar:0px;--sab:0px;--sal:0px}",
+  "wait": 1500,
+  "eval": "A.do('menu','resume'); A.step(0.3); ok(G.mode==='playing', 'back in play'); A.set('view','first'); A.set('invulnerable',true); A.set('hazards',false); A.setTime(12); G.setu.setHealth(40); G.hud.showSetu(true); if(!G.party.jeetu) A.do('jeetuJoin'); for (const i of ['torch','jacket','batteries','breachEvidence']) if(!G.items.has(i)) A.do('give',i); G.flags.breachKnown=true; G.hud.setFloodVisible(true); G.objectives.set('demoA','Warn the city: Tara can get it on TV, or the Control Tower on L3',{optional:true}); G.objectives.set('demoB','Get light for Jeetu: the TV remote batteries at home',{optional:true}); for (const m of qa('.hud-feed .msg')) m.remove(); for (const [t,k] of [['The street hums with the weight of rain on tin.','story'],['A dog barks','caption'],['REMAIN CALM. SUNLIGHT IS A PRIVILEGE, NOT A RIGHT.','pa'],['Didi, dogs, left!','clue'],['Taken: Torch.','system']]) G.messages.say(t,{kind:k,ttl:900}); A.step(0.5); G.visionSystem.queue.length=0; const W=innerWidth,H=innerHeight; ok(document.documentElement.scrollWidth<=W && document.body.scrollWidth<=W, 'no horizontal page scroll'); const bad=qa('#hud .hud-top *, #hud .hud-feed, #hud .hud-feed *, #hud .hud-items, #hud .hud-bottom *').filter(e=>{ if(e.closest('[hidden]')) return false; const r=e.getBoundingClientRect(); return r.width>0 && (r.right>W+1 || r.left<-1 || r.bottom>H+1); }).map(e=>e.className+'@'+Math.round(e.getBoundingClientRect().right)); ok(bad.length===0, 'HUD stays inside the screen: '+bad.join()); ({vw:innerWidth, vh:innerHeight, feed:qa('.hud-feed .msg:not(.gone)').length})"
+ },
+ {
+  "name": "m-hud-portrait",
+  "wait": 2500,
+  "eval": "A.teleport(-100,0,0,-90); A.step(0.2); 1"
+ },
+ {
+  "name": "m-hud-portrait-chip",
+  "eval": "const c=q('.opt-chip'); ok(c && !c.hidden && getComputedStyle(c).display!=='none', 'the optional chip is visible in portrait: '+(c&&c.outerHTML)+' n='+G.hud._optN); 1",
+  "shot": false
+ },
+ {
+  "name": "m-hud-portrait-opt",
+  "tap": ".opt-chip",
+  "wait": 1200,
+  "eval": "ok(getComputedStyle(q('.hud-optional')).display!=='none', 'optional list opens in portrait'); const W=innerWidth,H=innerHeight; ok(document.documentElement.scrollWidth<=W && document.body.scrollWidth<=W, 'no horizontal page scroll'); const bad=qa('#hud .hud-top *, #hud .hud-feed, #hud .hud-feed *, #hud .hud-items, #hud .hud-bottom *').filter(e=>{ if(e.closest('[hidden]')) return false; const r=e.getBoundingClientRect(); return r.width>0 && (r.right>W+1 || r.left<-1 || r.bottom>H+1); }).map(e=>e.className+'@'+Math.round(e.getBoundingClientRect().right)); ok(bad.length===0, 'HUD stays inside the screen: '+bad.join()); 1"
+ },
+ {
+  "name": "m-hud-portrait-chip-close",
+  "tap": ".opt-chip",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-stick-portrait",
+  "touch": [
+   {
+    "t": "start",
+    "id": 1,
+    "x": 90,
+    "y": 690,
+    "wait": 150
+   },
+   {
+    "t": "move",
+    "id": 1,
+    "x": 90,
+    "y": 628,
+    "wait": 300
+   }
+  ],
+  "wait": 200,
+  "eval": "const a=A.state(); A.step(1.0); const p=A.state(); const d=Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z); ok(d>3, 'the stick works in portrait: '+d.toFixed(2)+' m'); ok(A.state().touch.stick.sprint, 'sprint'); ({moved:+d.toFixed(2)})"
+ },
+ {
+  "name": "m-stick-portrait-up",
+  "touch": [
+   {
+    "t": "end",
+    "id": 1,
+    "wait": 200
+   }
+  ],
+  "wait": 100,
+  "shot": false
+ },
+ {
+  "name": "m-look-portrait",
+  "touch": [
+   {
+    "t": "start",
+    "id": 2,
+    "x": 250,
+    "y": 420,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 300,
+    "y": 420,
+    "wait": 100
+   },
+   {
+    "t": "move",
+    "id": 2,
+    "x": 340,
+    "y": 440,
+    "wait": 150
+   }
+  ],
+  "wait": 200,
+  "eval": "const y0=G.player.yaw; A.step(0.1); ok(Math.abs(G.player.yaw-y0)>0.02 || A.state().touch.looks>0, 'the look drag works in portrait'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-look-portrait-up",
+  "touch": [
+   {
+    "t": "end",
+    "id": 2,
+    "wait": 200
+   }
+  ],
+  "wait": 100,
+  "shot": false
+ },
+ {
+  "name": "m-dialogue-portrait",
+  "eval": "G.dialogue.cps=1e6; A.do('cast','jeetu',2.3); A.do('talk','jeetu'); A.step(0.3); ok(G.dialogue.isOpen, 'dialogue open (mode '+G.mode+', modal '+G.modal+')'); A.do('dialogueSkip'); const r=q('.cv-card').getBoundingClientRect(); ok(r.bottom<=innerHeight+1 && r.top>=-1, 'the card fits: '+Math.round(r.top)+'..'+Math.round(r.bottom)); for (let i=0;i<9 && G.dialogue.isOpen && !G.dialogue.showChoices;i++){ A.do('dialogueAdvance'); A.do('dialogueSkip'); } const r2=q('.cv-card') && q('.cv-card').getBoundingClientRect(); if (r2) ok(r2.bottom<=innerHeight+1 && r2.top>=-1, 'and still fits with the answers: '+Math.round(r2.top)+'..'+Math.round(r2.bottom)); ({open:G.dialogue.isOpen, choices:qa('.cv-choice').length, card:r2 && [Math.round(r2.top),Math.round(r2.bottom)]})",
+  "wait": 1000
+ },
+ {
+  "name": "m-dialogue-portrait-close",
+  "eval": "for (let i=0;i<12 && G.dialogue.isOpen;i++){ if(G.dialogue.showChoices) G.dialogue.close(); else { A.do('dialogueSkip'); A.do('dialogueAdvance'); } } ok(!G.modal,'closed'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-fragment-portrait",
+  "css": "#frag{animation:none !important}",
+  "eval": "A.do('fragment','frag-memo-site',{tp:true,as:'jeetu',instant:true}); A.step(0.2); const r=q('.fr-paper').getBoundingClientRect(); ok(r.top>=-1 && r.bottom<=innerHeight+1, 'paper fits or scrolls: '+Math.round(r.top)+'..'+Math.round(r.bottom)); 1",
+  "wait": 1200
+ },
+ {
+  "name": "m-fragment-portrait-tap",
+  "tap": "#frag",
+  "wait": 500,
+  "eval": "A.step(0.2); ok(q('#frag').hidden, 'closed'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-vendor-portrait",
+  "eval": "A.do('tpVendor', A.state().vendors.active[1].id); A.step(0.3); A.do('vendorOpen', A.state().vendors.active[1].id); A.step(0.2); ok(!q('#dialog').hidden, 'vendor dialog'); 1",
+  "wait": 1200
+ },
+ {
+  "name": "m-vendor-portrait-tap",
+  "tap": ".dl-btn.dl-decline",
+  "wait": 500,
+  "eval": "A.step(0.2); ok(q('#dialog').hidden, 'closed'); 1",
+  "shot": false
+ },
+ {
+  "name": "m-gate-prompt-portrait",
+  "eval": "const gt=G.world.gates.find(g=>g.id==='gate-l2-lift-bazaar')||G.world.gates[0]; A.teleport(gt.x-gt.v[0]*3, gt.y, gt.z-gt.v[1]*3, Math.atan2(-gt.v[0],-gt.v[1])*180/Math.PI+180); A.step(0.5); A.step(0.3); ok(!q('.gate-card').hidden, 'the gate card shows near a gate'); A.state().hud",
+  "wait": 1500
+ },
+ {
+  "name": "m-safe-portrait",
+  "css": ":root{--sat:47px;--sar:0px;--sab:34px;--sal:0px}",
+  "wait": 1500,
+  "eval": "const t=q('#t-pause').getBoundingClientRect(); ok(t.top>=47, 'pause button below the notch: '+Math.round(t.top)); const b=q('.t-btns').getBoundingClientRect(); ok(innerHeight-b.bottom>=34, 'buttons above the home bar: '+Math.round(innerHeight-b.bottom)); ok(q('.hud-top').getBoundingClientRect().height>0, 'hud'); 1"
+ },
+ {
+  "name": "m-ending1-portrait",
+  "eval": "A.set('cityWarned',true); A.do('ending',1); 1",
+  "wait": 5500
+ },
+ {
+  "name": "m-ending-portrait-scroll",
+  "eval": "q('#ending').scrollTop=9999; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-ending3-portrait",
+  "eval": "A.do('endingReset'); A.do('ending',3); q('#ending').scrollTop=0; 1",
+  "wait": 4500
+ },
+ {
+  "name": "m-ending4-portrait",
+  "eval": "A.do('endingReset'); A.do('ending',4); 1",
+  "wait": 4500
+ },
+ {
+  "name": "m-pause-portrait",
+  "eval": "A.do('endingReset'); A.step(0.3); G.menu.pause(); 1",
+  "wait": 900
+ },
+ {
+  "name": "m-pause-portrait-howto",
+  "tap": "#ov-pause [data-act=howto]",
+  "wait": 700
+ },
+ {
+  "name": "m-pause-portrait-howto-2",
+  "eval": "q('.panel-scroll').scrollTop=1100; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-pause-portrait-back",
+  "tap": ".back",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "m-pause-portrait-settings",
+  "tap": "#ov-pause [data-act=settings]",
+  "wait": 700
+ },
+ {
+  "name": "m-pause-portrait-settings-2",
+  "eval": "q('.panel-scroll').scrollTop=700; 1",
+  "wait": 500
+ },
+ {
+  "name": "m-title-portrait",
+  "reload": "seed=1&touch=1",
+  "autostart": false,
+  "reloadWait": 4500,
+  "wait": 1500,
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; ok(A.state().ui.screen==='title', 'title'); ok(document.documentElement.scrollWidth<=innerWidth, 'no horizontal scroll'); const kb=q('#ov-title .kicker').getBoundingClientRect(); ok(kb.height<30, 'the kicker fits on one line'); ({vw:innerWidth, vh:innerHeight})"
+ },
+ {
+  "name": "m-howto-portrait",
+  "tap": "#ov-menu [data-act=howto]",
+  "wait": 800
+ },
+ {
+  "name": "m-settings-portrait",
+  "eval": "q('.back').click(); 1",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "m-settings-portrait-2",
+  "tap": "#ov-menu [data-act=settings]",
+  "wait": 800
+ },
+ {
+  "name": "m-credits-portrait",
+  "eval": "q('.back').click(); q('#ov-menu [data-act=credits]').click(); 1",
+  "wait": 700
+ }
+]
