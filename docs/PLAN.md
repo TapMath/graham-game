@@ -185,6 +185,15 @@ Each phase is done by one agent, in order, and must finish with: smoke test pass
 6. **Story and cast**: the §1b story layer. The NPC cast (Jeetu, Tara, Gautam, Aayat, Kaalu Seth, the contractor, the doctor, guards, nurses, rescuers, tunnel dwellers, the torch boys) as simple low-poly figures with dialogue cards. The objective chain, Setu's timeline and his trail clues, Jeetu joining with **Tab character switching**, the torch and remote batteries, the Metro jacket disguise, Gautam's bail, Tara's blood donation and her permission and broadcast, story fragments and breach discovery, the Control Tower alternative, the opening collapse cutscene, and all four endings with the bridge reunion at sunrise.
 7. **Polish and mobile**: title screen in the deck's style (title "GRAHAN", subtitle "the search for sunrise in 2049 Mumbai", silhouetted skyline, §3b look), how-to-play using safety-card pictograms, pause/settings (volume, mouse sensitivity, invert Y, game length, captions), **touch controls** (left virtual stick, right-side drag-to-look, buttons for jump/sprint/interact/sing/switch/view), responsive HUD, performance pass, a bug sweep across all systems, balancing a full playthrough, and a `README.md`.
 
+### Phase 4 ↔ Phase 5 event contract (they are built in parallel)
+
+- **Sounds from gameplay** (Phase 4 hazards and anything else emit these; Phase 5's audio and ripple system consumes them; with no audio system present they are harmless no-ops):
+  - One-shot: `game.events.emit('sound:emit', { x, y, z, kind, loudness })`, where `loudness` is 0..1. Kinds: `bark`, `growl`, `bite`, `whimper`, `drone`, `drone-alert`, `camera-alert`, `crack`, `collapse`, `mutter`, `grab`, `cough`, `splash`, `water-rush`, `guard-shout`, `footstep`, `mouthorgan`, `vendor-call`.
+  - Continuous: `game.events.emit('sound:loop', { id, kind, loudness, getPos })`, where `getPos()` returns a `THREE.Vector3`-like `{x,y,z}`; stop it with `game.events.emit('sound:loopStop', { id })`. Loop kinds: `drone`, `water`, `smog-wind`, `machine`, `crowd`, `dog-pant`.
+- **Singing.** Phase 5 emits `game.events.emit('sing:start', { x, y, z })` when Mithi actually sings (after its cooldown check), and `sing:end`. Phase 4 hazards react to `sing:start`: dogs and deranged within 20 m are calmed for 25 s; drones, cameras and guards within 40 m are alerted ("unregistered singing"). Until Phase 5 lands, Phase 4 may emit `sing:start` from a debug action to test.
+- **Hazards are visible to the senses system** via `game.hazards.list()` → `[{ id, kind, pos, alert }]`, so Phase 5 can draw sound ripples or echolocation highlights on them.
+- Ownership: Phase 4 owns `src/systems/hazards/**` and the smog/flood code. Phase 5 owns `src/systems/audio/**`, the sing, ripple and vision systems, and the Sing shader patch in `src/world/materials.js`. Both add their own registration lines in `src/main.js`, their own debug entries, their own §10 entry, and their own `tools/shots-phase4.json` / `tools/shots-phase5.json`. Don't edit the other phase's files.
+
 ## 10. Progress log
 
 (Each phase appends a short entry here.)
