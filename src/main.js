@@ -30,6 +30,11 @@ import { ObjectiveBoard } from './systems/story/objectives.js';
 import { CastSystem } from './systems/story/cast/index.js';
 import { Director } from './systems/story/director.js';
 import { PartySystem } from './systems/story/party.js';
+import { BreachSystem } from './systems/story/breach.js';
+import { FragmentSystem } from './systems/story/fragments.js';
+import { TrailSystem } from './systems/story/trail.js';
+import { FireworkSystem } from './systems/story/fireworks.js';
+import { CinematicSystem } from './systems/story/cinematics.js';
 import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
@@ -70,6 +75,15 @@ function boot() {
   game.addSystem('objective', new ObjectiveSystem());
   game.addSystem('view', new ViewSystem());
   if (!params.arena) game.addSystem('hazards', new HazardSystem());   // Phase 4 perils (after the view so the camera shake lands on the final camera)
+  // Phase 6b narrative layer: the breach and the warning (game.story), fragments, Setu's trail, the festival fireworks and the
+  // cinematics. After the hazards, so the cinematic camera has the last word; before audio (its listener follows the camera).
+  if (!params.arena) {
+    game.addSystem('story', guarded(new BreachSystem(), 'story'));
+    game.addSystem('fragments', guarded(new FragmentSystem(), 'fragments'));
+    game.addSystem('trail', guarded(new TrailSystem(), 'trail'));
+    game.addSystem('fireworks', guarded(new FireworkSystem(), 'fireworks'));
+    game.addSystem('cinematics', guarded(new CinematicSystem(), 'cinematics'));
+  }
   // Phase 5 senses and sound. After the view (the listener and the vision camera follow it), before the HUD.
   // `senses` grades the atmosphere the sky just set, so it must come after the sky; `ripples` hides Phase 3's Setu glow
   // after `setu` updated.
