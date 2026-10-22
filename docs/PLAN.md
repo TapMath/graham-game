@@ -194,6 +194,23 @@ Each phase is done by one agent, in order, and must finish with: smoke test pass
 - **Hazards are visible to the senses system** via `game.hazards.list()` → `[{ id, kind, pos, alert }]`, so Phase 5 can draw sound ripples or echolocation highlights on them.
 - Ownership: Phase 4 owns `src/systems/hazards/**` and the smog/flood code. Phase 5 owns `src/systems/audio/**`, the sing, ripple and vision systems, and the Sing shader patch in `src/world/materials.js`. Both add their own registration lines in `src/main.js`, their own debug entries, their own §10 entry, and their own `tools/shots-phase4.json` / `tools/shots-phase5.json`. Don't edit the other phase's files.
 
+### Phase 6a ↔ 6b contract (Phase 6 is split in two and built in parallel)
+
+- **6a, the cast and the objective chain**, owns `src/systems/story/cast/**`, `src/systems/story/objectives.js`, `src/systems/story/dialogue.js`, `src/systems/story/party.js` (Jeetu, Tab switching), `src/systems/story/items.js` (inventory: `jacket`, `torch`, `batteries`, `tvRemote`, `pills`, `breachEvidence`), and the Gautam and Tara subplots. It provides:
+  - `game.dialogue.open({ speaker, portraitColor, lines:[...], choices:[{label, onChoose}] })`, a conversation card (built on Phase 3's dialog);
+  - `game.items.has/add/remove(id)`, which emits `item:added` and `item:removed`;
+  - `game.party.active` (`'mithi'|'jeetu'`) and `game.party.jeetu` (the actor or null);
+  - `game.objectives.set(id, text)` and `game.objectives.complete(id)`, which emit `objective:changed`.
+  
+  Tara's "get it on TV" action requires `game.flags.breachKnown` and `game.items.has('breachEvidence')`, then calls `game.story.warnCity('tara')`.
+- **6b, the narrative layer and cinematics**, owns `src/systems/story/fragments.js`, `src/systems/story/breach.js`, `src/systems/story/trail.js` (Setu's clues: who saw him, where he went), `src/systems/story/cinematics.js` (the opening collapse cutscene, the bridge reunion, ending sequences, fireworks), the Control Tower terminal, and the ending presentations via `game.endings.register`. It provides:
+  - `game.story.warnCity(via)`, which sets `game.flags.cityWarned`, emits `city:warned {via}`, and shows a broadcast/PA moment;
+  - `game.story.markBreachKnown()` (sets `breachKnown`, reveals the flood countdown, emits `breach:known`);
+  - `game.cinematics.play(name, opts)`, which returns a Promise;
+  - breach-clue fragments, of which some need eyes (`needsEyes: true`, readable only while playing as Jeetu, read via `game.party?.active`) and one adds the `breachEvidence` item via `game.items?.add`.
+- Both read each other's APIs defensively (`game.items?.has?.(...)`), because they're merged afterwards. 6a builds the cast models with Phase 3's `buildCharacter`/`NPC_PRESETS`, and 6b's cinematics use whatever NPC actors exist via `game.cast?.get(id)` (provided by 6a), or a fallback character of their own.
+- Shared hot files: each phase adds only its own registration lines to `src/main.js`, its own debug entries, its own §10 entry, and its own `tools/shots-phase6a.json` / `tools/shots-phase6b.json`.
+
 ## 10. Progress log
 
 (Each phase appends a short entry here.)
