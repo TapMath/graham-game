@@ -1,0 +1,257 @@
+[
+ {
+  "name": "p5-setup",
+  "eval": "window.A=__grahan; window.G=A.game; A.set('invulnerable',true); A.setTime(9); A.step(0.3); const s=A.state(); ({audio:s.audio.context, voices:s.audio.voices, started:s.audio.started, patchedMaterials:s.senses.patched, hasUniforms:!!G.materials.sense, ripples:s.ripples.active, sing:!!G.sing, vision:!!G.visionSystem, pa:!!G.pa, senses:typeof G.senses.patchMaterial})",
+  "wait": 800
+ },
+ {
+  "name": "perception-ground-street",
+  "eval": "A.teleport(-15,0,0,0); A.look(0,3); A.step(0.4); const s=A.state().senses; ({level:A.state().level, fog:s.fog, sat:s.sat, dim:s.dim, note:'G: fog 5-48 m, desaturated, dark'})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-ground-shaft",
+  "eval": "const sh=G.world.sunShafts.find(s=>s.level==='G'); A.teleport(sh.x-3,0,sh.z+5,0); A.look(-30,18); A.step(0.4); ({shaft:sh.id, intensity:+G.world.sunShafts.intensity.toFixed(2), note:'shafts stay warm: they are their own shader'})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-underground",
+  "eval": "A.teleport(-113,-8,22,0); A.look(0,0); A.step(0.4); const s=A.state().senses; ({level:A.state().level, fog:s.fog, sat:s.sat, dim:s.dim})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-walkway",
+  "eval": "A.teleport(20,12,-15,0); A.look(0,3); A.step(0.4); const s=A.state().senses; ({level:A.state().level, fog:s.fog, sat:s.sat})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-flyover",
+  "eval": "A.teleport(-15,24,-100,0); A.look(-90,3); A.step(0.4); const s=A.state().senses; ({level:A.state().level, fog:s.fog, sat:s.sat})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-upper-deck",
+  "eval": "A.teleport(80,38,-90,0); A.look(-90,5); A.step(0.4); const s=A.state().senses; ({level:A.state().level, fog:s.fog, sat:s.sat, note:'L3: fog opens up, colour returns'})",
+  "wait": 1400
+ },
+ {
+  "name": "perception-third-person",
+  "eval": "A.set('view','third'); A.teleport(-15,0,0,0); A.look(0,6); A.step(0.6); const s=A.state().senses; A.set('view','first'); ({sat:s.sat, fog:s.fog, note:'third person eases the grade back'})",
+  "wait": 1400
+ },
+ {
+  "name": "sing-ground-early",
+  "eval": "A.set('view','first'); A.teleport(-15,0,0,0); A.look(0,3); A.step(0.3); A.clearEvents(); const r=G.sing.tryStart(); const again=G.sing.tryStart(); A.do('pulseHold',0.45); A.step(0.2); ({started:!!r, secondBlockedByCooldown:again===null, startEvents:A.events('sing:start').length, phrase:r&&r.index, dur:r&&+r.dur.toFixed(2)})",
+  "wait": 1800
+ },
+ {
+  "name": "sing-ground-mid",
+  "eval": "A.do('pulseHold',1.1); A.step(0.2); ({radius:A.state().sing.pulse&&A.state().sing.pulse.radius})",
+  "wait": 1500
+ },
+ {
+  "name": "sing-ground-wide",
+  "eval": "A.do('pulseHold',1.9); A.step(0.2); ({radius:A.state().sing.pulse&&A.state().sing.pulse.radius})",
+  "wait": 1500
+ },
+ {
+  "name": "sing-end-event",
+  "eval": "A.do('pulseHold',null); A.step(5); const ev=A.events('sing:end'); ({endEvents:ev.length, singing:A.state().sing.singing, readyIn:A.state().sing.readyIn, audioSung:A.state().audio.sung})",
+  "wait": 500
+ },
+ {
+  "name": "sing-underground",
+  "eval": "A.do('pulseHold',null); A.teleport(-113,-8,22,0); A.look(0,0); A.step(0.3); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.5); A.step(0.2); 1",
+  "wait": 1800
+ },
+ {
+  "name": "sing-walkway-bazaar",
+  "eval": "A.do('pulseHold',null); A.step(7); A.teleport(20,12,-15,0); A.look(0,3); A.step(0.3); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.8); A.step(0.2); 1",
+  "wait": 1800
+ },
+ {
+  "name": "cane-ping-walking",
+  "eval": "A.do('pulseHold',null); A.step(7); A.teleport(-15,0,20,0); A.look(0,2); A.hold('KeyW'); A.step(1.05); const st=A.state().sing; A.release('KeyW'); ({pulse:st.pulse, steps:A.state().audio.byKind.footstep, canes:A.state().audio.byKind.caneTap, ripples:A.state().ripples.active})",
+  "wait": 1000
+ },
+ {
+  "name": "ripples-through-walls",
+  "eval": "A.teleport(-15,0,0,90); A.look(90,0); A.step(0.3); const p=G.player.pos; const at=(dx,dz,y=1)=>({x:p.x+dx,y:p.y+y,z:p.z+dz}); G.time+=3; const ev=[['bark',at(-9,-14)],['growl',at(10,8)],['drone-alert',at(12,-20,5)],['splash',at(-30,6,0.1)],['guard-shout',at(26,-4)],['crack',at(-22,-20,3)],['vendor-call',at(-14,16)]]; for(const [k,q] of ev){ G.time+=0.4; G.events.emit('sound:emit',{...q,kind:k,loudness:0.8}); } A.step(0.25); const s=A.state(); ({voices:s.audio.voices, played:s.audio.played, ripples:s.ripples.active, kinds:Object.keys(s.audio.voiceKinds)})",
+  "wait": 1300
+ },
+ {
+  "name": "ripples-more-kinds",
+  "eval": "A.look(0,2); A.step(5); const p=G.player.pos; const at=(dx,dz,y=1)=>({x:p.x+dx,y:p.y+y,z:p.z+dz}); G.time+=3; for(const [k,q] of [['mutter',at(4,-16)],['cough',at(-6,-10)],['footstep',at(8,-6,0.1)],['camera-alert',at(-3,-22,4)],['grab',at(13,-12)],['whimper',at(-16,-4)],['bite',at(1,-34)],['water-rush',at(-20,12,0.5)]]){ G.time+=0.4; G.events.emit('sound:emit',{...q,kind:k,loudness:0.8}); } A.step(0.25); ({ripples:A.state().ripples.active, played:A.state().audio.played})",
+  "wait": 1300
+ },
+ {
+  "name": "loops-and-ripples",
+  "eval": "A.step(4); const p=G.player.pos; const ids=[]; [['drone',[10,-8,6]],['water',[-14,-6,1]],['machine',[20,10,2]],['crowd',[-9,16,1.5]],['smog-wind',[5,-18,1]],['dog-pant',[-4,-12,0.5]],['drone',[30,5,6]]].forEach(([k,[dx,dz,y]],i)=>{ const id='t'+i; ids.push(id); G.events.emit('sound:loop',{id,kind:k,loudness:0.7,getPos:()=>({x:p.x+dx,y:p.y+y,z:p.z+dz})}); }); A.step(3); const a=A.state().audio; const out=({loops:a.loops.length, active:a.loops.filter(l=>l.active).length, chains:a.chainsInUse, cap:'5 loops audible at once'}); window.LOOPIDS=ids; out",
+  "wait": 2500
+ },
+ {
+  "name": "loops-stop",
+  "eval": "LOOPIDS.forEach(id=>G.events.emit('sound:loopStop',{id})); A.step(0.2); ({after:A.state().audio.loops.length, ripples:A.state().ripples.active})",
+  "wait": 300
+ },
+ {
+  "name": "voice-cap-bounded",
+  "eval": "A.step(6); const before=A.state().audio; let n=0; G.time+=10; for(let i=0;i<200;i++){ G.time+=0.01; G.events.emit('sound:emit',{x:G.player.pos.x+6+(i%7),y:1,z:G.player.pos.z+(i%5),kind:['bark','growl','crack','mutter','cough','splash','footstep'][i%7],loudness:0.8}); n++; } const a=A.state().audio; ({emitted:n, voices:a.voices, cap:40, chains:a.chainsInUse, maxChains:18, throttled:a.throttled, dropped:a.dropped, stolen:a.stolen})",
+  "wait": 500
+ },
+ {
+  "name": "setu-answers-through-walls",
+  "eval": "A.step(6); A.setTime(7); A.step(0.2); const s=G.setu; A.teleport(30,0,-30,-90); A.look(-90,2); A.step(0.3); A.clearEvents(); A.do('singReset'); const d=Math.hypot(s.pos.x-G.player.pos.x,s.pos.y-G.player.pos.y,s.pos.z-G.player.pos.z); const r=G.sing.tryStart(); A.step(2.3); const mo=A.events('sound:emit').filter(e=>e.data.kind==='mouthorgan'); ({setuWindow:s.windowId, dist:+d.toFixed(1), sung:!!r, answered:mo.length, answerDelay:mo[0]?+(mo[0].t - A.events('sing:start')[0].t).toFixed(2):null, setuHealth:+s.health.toFixed(1), voice:A.state().setuVoice})",
+  "wait": 1200
+ },
+ {
+  "name": "setu-ripples-through-everything",
+  "eval": "A.step(1.2); const s=G.setu; G.events.emit('sound:emit',{x:s.pos.x,y:s.pos.y+0.9,z:s.pos.z,kind:'mouthorgan',loudness:0.75,who:'setu'}); A.step(0.9); ({ripples:A.state().ripples.active, note:'warm gold, large, triple ripples at his position under the street'})",
+  "wait": 1000
+ },
+ {
+  "name": "setu-too-far-no-answer",
+  "eval": "A.step(8); A.teleport(-120,0,100,0); A.step(0.2); const s=G.setu; const d=Math.hypot(s.pos.x-G.player.pos.x,s.pos.z-G.player.pos.z); A.clearEvents(); A.do('singReset'); G.sing.tryStart(); A.step(2.3); const mo=A.events('sound:emit').filter(e=>e.data.kind==='mouthorgan').length; ({dist:+d.toFixed(0), answered:mo, skippedFar:A.state().setuVoice.skippedFar, note:'over 150 m: no answer'})",
+  "wait": 500
+ },
+ {
+  "name": "setu-loud-zone-range",
+  "eval": "A.step(8); A.teleport(-44,0,-30,0); A.step(0.2); const v=G.setuVoice; const loud=v.range(); A.teleport(45,0,60,0); A.step(0.2); const quiet=v.range(); A.teleport(-15,24,-100,0); A.step(0.2); ({rangeAtCrashSite:loud, rangeInStreet:quiet, rangeOnFlyover:v.range(), note:'90 m where it is loud around, else 150 m'})",
+  "wait": 300
+ },
+ {
+  "name": "setu-unprompted",
+  "eval": "A.step(8); A.teleport(30,0,-30,-90); A.step(0.2); const v=G.setuVoice; const n0=v.stats.spontaneous; const need=Math.max(0.3,(v.nextPlay||0)-G.clock.t+0.1); G.clock.advance(need,'test'); A.step(1.5); ({spontaneousBefore:n0, after:v.stats.spontaneous, advancedHours:+need.toFixed(2), hearable:v._hearable(), health:+G.setu.health.toFixed(1), note:'unprompted mouth organ every ~0.3-0.9 game hours, weaker as breath falls'})",
+  "wait": 500
+ },
+ {
+  "name": "setu-weak-and-cough",
+  "eval": "A.do('setuSetHealth',20); A.step(0.2); const v=G.setuVoice; const c0=v.stats.coughs; G.time+=30; A.step(2); A.do('setuPlay',0.8); A.step(0.3); ({health:G.setu.health, coughs:v.stats.coughs-c0, note:'weak notes, may break into a cough'})",
+  "wait": 600
+ },
+ {
+  "name": "vision-story-trigger",
+  "eval": "A.do('setuSetHealth',100); A.step(0.2); G.visionSystem.queue.length=0; A.do('visionReset'); A.do('setuSetHealth',49); A.step(0.2); const q=G.visionSystem.queue.length; A.step(3); ({queuedAfter50pct:q, active:A.state().vision.active, reason:A.state().vision.reason})",
+  "wait": 1200
+ },
+ {
+  "name": "vision-end-and-cooldown",
+  "eval": "A.do('visionEnd'); A.step(0.2); const v=A.state().vision; const demand=G.visionSystem.start({reason:'demand'}); ({active:v.active, availableAfter:v.available, cooldownHours:v.cooldownHours, demandBlockedByCooldown:demand===false})",
+  "wait": 500
+ },
+ {
+  "name": "sing-tap-with-vision-available",
+  "eval": "A.do('setuSetHealth',90); A.do('visionReset'); A.do('visionEnd'); G.visionSystem.queue.length=0; A.do('singReset'); A.teleport(30,0,-30,0); A.step(0.3); A.clearEvents(); A.hold('KeyQ'); A.step(0.15); A.release('KeyQ'); A.step(0.2); ({sang:A.events('sing:start').length, visionActive:A.state().vision.active, note:'a tap sings (on release) even while second sight is available'})",
+  "wait": 600
+ },
+ {
+  "name": "vision-hold-q",
+  "eval": "A.do('setuSetHealth',90); A.do('visionReset'); A.do('singReset'); G.sing.readyAt=0; A.teleport(30,0,-30,0); A.step(0.5); A.clearEvents(); A.hold('KeyQ'); A.step(1.0); const mid=G.sing.hold; A.step(1.4); const act=A.state().vision.active; A.release('KeyQ'); ({holdAt1s:+mid.toFixed(2), visionActive:act, sangDuringHold:A.events('sing:start').length, visionEvents:A.events('vision:start').length})",
+  "wait": 2200
+ },
+ {
+  "name": "vision-glimpse",
+  "eval": "A.do('visionEnd'); A.step(0.3); A.do('setuSetHealth',60); const r=A.do('vision',{hold:60}); A.step(1.2); ({v:A.state().vision, ok:r.ok})",
+  "wait": 3000
+ },
+ {
+  "name": "vision-steady",
+  "eval": "A.step(0.5); 1",
+  "wait": 2500
+ },
+ {
+  "name": "vision-underground-setu",
+  "eval": "A.do('visionEnd'); A.step(0.2); A.setTime(11); A.step(0.2); A.teleport(-15,0,0,0); A.step(0.2); const w=G.setu.windowId; A.do('vision',{hold:60}); A.step(1.6); ({setuWindow:w, v:A.state().vision.caption})",
+  "wait": 3000
+ },
+ {
+  "name": "vision-story-hook",
+  "eval": "A.do('visionEnd'); A.step(0.2); const ok=G.senses.vision({reason:'story',caption:'A bell. A boy counting steps in the dark.',from:{x:-80,y:-6.9,z:-49,yaw:0.5},hold:60}); A.step(1.6); ({ok, caption:A.state().vision.caption})",
+  "wait": 3000
+ },
+ {
+  "name": "pa-captions",
+  "eval": "A.do('visionEnd'); A.step(0.4); A.setTime(12); A.step(0.2); const n0=A.state().pa.said; const lines=[0,2,3,5].map((i)=>A.do('pa',i).idx); const m=A.state().messages; ({said:A.state().pa.said-n0, lines, paLines:G.pa.lines.length, feed:m.last.filter(x=>x.startsWith('pa')).length, mode:A.state().pa.last.mode})",
+  "wait": 1500
+ },
+ {
+  "name": "pa-context-lines",
+  "eval": "A.setTime(23); A.step(0.2); const night=G.pa._pick(); A.setTime(7); A.step(0.2); const morning=G.pa._pick(); ({nightLine:G.pa.lines[night].text.slice(0,60), morningLine:G.pa.lines[morning].text.slice(0,60), total:G.pa.lines.length})",
+  "wait": 500
+ },
+ {
+  "name": "pa-after-singing",
+  "eval": "A.step(30); G.pa.pendingSing=null; A.do('singReset'); const n0=A.state().pa.said; G.rng; G.pa.rng.chance=()=>true; G.pa.last.at=-99; G.sing.tryStart(); A.step(9.5); ({said:A.state().pa.said-n0, last:A.state().pa.last.text.slice(0,50)})",
+  "wait": 1200
+ },
+ {
+  "name": "audio-meter-ambience",
+  "eval": "A.setTime(9); A.teleport(-15,0,0,0); A.step(3); 1",
+  "wait": 1500
+ },
+ {
+  "name": "audio-meter-ambience-read",
+  "eval": "({ambienceOnly:A.state().audio.level, note:'the real graph is producing sound (dBFS at the compressor output)'})",
+  "wait": 200
+ },
+ {
+  "name": "audio-meter-sing",
+  "eval": "A.do('singReset'); G.sing.tryStart(); A.step(0.2); 1",
+  "wait": 900
+ },
+ {
+  "name": "audio-meter-sing-read",
+  "eval": "({singing:A.state().audio.level, voices:A.state().audio.voices})",
+  "wait": 200
+ },
+ {
+  "name": "audio-state",
+  "eval": "const a=A.state().audio; ({context:a.context, started:a.started, sampleRate:a.sampleRate, voices:a.voices, chains:a.chainsInUse, played:a.played, dropped:a.dropped, sung:a.sung, ambience:a.ambience, music:a.music, volumes:a.volumes, errors:a.errors, lastError:a.lastError})",
+  "wait": 300
+ },
+ {
+  "name": "ambience-crossfade-levels",
+  "eval": "const out={}; for(const [n,y,x,z] of [['U',-8,-113,22],['G',0,-15,0],['L1',12,20,-15],['L2',24,-15,-100],['L3',38,80,-90]]){ A.teleport(x,y,z,0); A.step(8); const w=A.state().audio.ambience.weights; out[n]=w[n]; } out",
+  "wait": 300
+ },
+ {
+  "name": "music-mood",
+  "eval": "A.setTime(6); A.step(0.2); const dawn=G.audio.music? G.audio.music._moodNow():null; A.setTime(19); A.step(0.2); const dusk=G.audio.music? G.audio.music._moodNow():null; A.setTime(2); A.step(0.2); const night=G.audio.music?G.audio.music._moodNow():null; A.do('setuSetHealth',20); A.step(0.2); const sour=G.audio.music?G.audio.music._moodNow():null; A.do('setuSetHealth',90); A.step(0.2); ({dawn,dusk,night,lowBreath:sour})",
+  "wait": 300
+ },
+ {
+  "name": "hazard-list-defensive",
+  "eval": "G.hazards={list:()=>[{id:'dog-1',kind:'dog',pos:{x:-15+8,y:0,z:-14},alert:true},{id:'drone-1',kind:'drone',pos:{x:-15-10,y:6,z:-20},alert:false}]}; A.teleport(-15,0,0,0); A.look(0,3); A.step(0.3); A.do('pulseHold',null); A.do('singReset'); G.sing.tryStart(); const n=G.sing.echoes.length; A.step(1.6); const e=G.sing.echoes.filter(x=>x.done).length; G.hazards=undefined; ({echoes:n, done:e, ripples:A.state().ripples.active})",
+  "wait": 900
+ },
+ {
+  "name": "render-budget-street",
+  "eval": "A.do('visionEnd'); G.visionSystem.queue.length=0; A.do('pulseHold',null); A.step(7); window.CALLS=[]; A.teleport(-15,0,0,0); A.look(0,3); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.8); for(let i=0;i<8;i++) G.ripples.add({x:-15+i*3,y:0+2,z:0-12,loud:0.8,tone:'neutral'}); A.step(0.2); 1",
+  "wait": 1400
+ },
+ {
+  "name": "render-budget-bazaar",
+  "eval": "if(window.CALLS) CALLS.push(A.state().render.calls); A.teleport(20,12,-15,0); A.look(0,3); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.8); for(let i=0;i<8;i++) G.ripples.add({x:20+i*3,y:12+2,z:-15-12,loud:0.8,tone:'neutral'}); A.step(0.2); 1",
+  "wait": 1400
+ },
+ {
+  "name": "render-budget-upper-deck",
+  "eval": "if(window.CALLS) CALLS.push(A.state().render.calls); A.teleport(80,38,-90,0); A.look(-90,5); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.8); for(let i=0;i<8;i++) G.ripples.add({x:80+i*3,y:38+2,z:-90-12,loud:0.8,tone:'neutral'}); A.step(0.2); 1",
+  "wait": 1400
+ },
+ {
+  "name": "render-budget-tunnel",
+  "eval": "if(window.CALLS) CALLS.push(A.state().render.calls); A.teleport(-113,-8,22,0); A.look(0,0); A.do('singReset'); G.sing.tryStart(); A.do('pulseHold',0.8); for(let i=0;i<8;i++) G.ripples.add({x:-113+i*3,y:-8+2,z:22-12,loud:0.8,tone:'neutral'}); A.step(0.2); 1",
+  "wait": 1400
+ },
+ {
+  "name": "render-budget-result",
+  "eval": "CALLS.push(A.state().render.calls); A.do('pulseHold',null); ({calls:CALLS, max:Math.max(...CALLS), budget:150, ripplesDrawCalls:1, note:'ripples = 1 instanced draw; the sing wave is a shader patch (0 extra draws)'})",
+  "wait": 300
+ },
+ {
+  "name": "final-overview-with-ripples",
+  "eval": "A.do('visionEnd'); G.visionSystem.queue.length=0; A.do('pulseHold',null); A.step(7); A.teleport(-44,0,-30,-90); A.look(-90,4); A.step(0.3); A.do('singReset'); G.sing.tryStart(); G.time+=0; A.do('pulseHold',0.9); const p=G.player.pos; for(const [k,dx,dz] of [['mutter',-6,-30],['cough',14,-12],['bark',22,6],['guard-shout',-30,22],['collapse',-8,40]]) G.events.emit('sound:emit',{x:p.x+dx,y:1,z:p.z+dz,kind:k,loudness:0.9}); A.step(0.3); 1",
+  "wait": 1800
+ }
+]
