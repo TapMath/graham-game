@@ -5,6 +5,8 @@ import { Player } from './core/player.js';
 import { LiftSystem } from './world/lift.js';
 import { SkySystem } from './world/sky.js';
 import { arenaSystem } from './world/arena.js';
+import { CitySystem } from './world/city.js';
+import { InteractableSystem } from './systems/interactables.js';
 import { OverlaySystem } from './ui/overlay.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
@@ -22,7 +24,8 @@ function boot() {
   // lifts must update before the player so platforms move first.
   game.lifts = game.addSystem('lifts', new LiftSystem());
   game.sky = game.addSystem('sky', new SkySystem());
-  game.addSystem('world', arenaSystem);      // Phase 2 swaps this for the city (arena stays behind ?arena=1)
+  game.addSystem('interactables', new InteractableSystem());   // before the world: it registers interactables in init
+  game.addSystem('world', params.arena ? arenaSystem : new CitySystem());   // the city; the Phase 1 test arena stays behind ?arena=1
   game.addSystem('player', new Player());
   game.addSystem('debughud', new DebugHudSystem());
   game.addSystem('overlay', new OverlaySystem());

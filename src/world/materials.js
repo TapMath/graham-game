@@ -66,6 +66,33 @@ export function createMaterials() {
     emissiveMap: windowTexture(),
     emissiveIntensity: 0.55,
   });
-  const all = [lit, emissive, building];
-  return { lit, emissive, building, all, textures: { concrete } };
+  // Window glow is tiered by height so the lower storeys read as dim teal and the upper ones as warm
+  // ochre (the deck's gloom-below / haze-above look) without a shader patch: same texture, different
+  // emissive colour and strength. Towers use buildingLow (< 18 m), buildingMid (18-34 m), building (> 34 m).
+  const tier = (color, intensity) => new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(color), emissiveMap: building.emissiveMap, emissiveIntensity: intensity });
+  const buildingLow = tier(0x8fd4c4, 0.28);
+  const buildingMid = tier(0xffc890, 0.42);
+  // Soft additive light pools on the floor (lamp pools, vendor and checkpoint glow): instanced, tinted per instance.
+  const pc = document.createElement('canvas'); pc.width = pc.height = 64;
+  const pg = pc.getContext('2d'), gr = pg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  pg.fillStyle = gr; pg.fillRect(0, 0, 64, 64);
+  const poolTex = new THREE.CanvasTexture(pc); poolTex.colorSpace = THREE.SRGBColorSpace;
+  const pool = new THREE.MeshBasicMaterial({ map: poolTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // Stained-glass window bands for the elite towers: lancet (pointed-arch) windows in jewel colours, unlit.
+  const gc = document.createElement('canvas'); gc.width = gc.height = 128;
+  const gg = gc.getContext('2d'); gg.fillStyle = '#05060a'; gg.fillRect(0, 0, 128, 128);
+  const jewels = ['#c0283a', '#e8a020', '#2a62c8', '#2aa060', '#8a2ab0', '#e8e0b8'];
+  for (let i = 0; i < 2; i++) {
+    const x0 = 6 + i * 62, w = 52;
+    gg.save(); gg.beginPath(); gg.moveTo(x0, 122); gg.lineTo(x0, 52); gg.quadraticCurveTo(x0, 12, x0 + w / 2, 6); gg.quadraticCurveTo(x0 + w, 12, x0 + w, 52); gg.lineTo(x0 + w, 122); gg.closePath(); gg.clip();
+    for (let k = 0; k < 14; k++) { gg.fillStyle = jewels[(k * 5 + i * 3) % 6]; gg.fillRect(x0 + (k % 3) * 18, 6 + Math.floor(k / 3) * 24, 18, 24); }
+    gg.strokeStyle = '#05060a'; gg.lineWidth = 2.5; for (let k = 1; k < 3; k++) { gg.beginPath(); gg.moveTo(x0 + k * 18, 0); gg.lineTo(x0 + k * 18, 128); gg.stroke(); }
+    for (let k = 1; k < 6; k++) { gg.beginPath(); gg.moveTo(x0, 6 + k * 24); gg.lineTo(x0 + w, 6 + k * 24); gg.stroke(); }
+    gg.restore();
+  }
+  const glassTex = new THREE.CanvasTexture(gc); glassTex.wrapS = glassTex.wrapT = THREE.RepeatWrapping; glassTex.colorSpace = THREE.SRGBColorSpace;
+  const glass = new THREE.MeshBasicMaterial({ map: glassTex, color: 0xcccccc, vertexColors: true });
+  const all = [lit, emissive, building, buildingLow, buildingMid, pool, glass];
+  return { lit, emissive, building, buildingLow, buildingMid, pool, glass, all, textures: { concrete } };
 }

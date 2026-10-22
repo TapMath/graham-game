@@ -18,6 +18,9 @@
 //   hold(code) / release(code) manual key down / up
 //   step(seconds)              advance the simulation without keys
 //   events(type?) / clearEvents()   recent event log (for asserting player:fall etc.)
+//   walk(points, opts)         SYNCHRONOUS route follower for connectivity tests: steers toward each [x,z] by
+//                              holding forward (sidesteps small obstacles), also accepts 'E' (press interact),
+//                              {step:s} (advance s seconds), {say:'tag'} (log the position). Returns {ok, log[]}.
 //   ray(origin, dir, max)      physics raycast, handy for line-of-sight checks
 //   fps()                      measured frames per second (not meaningful in headless SwiftShader)
 import { STEP } from './game.js';
@@ -127,6 +130,40 @@ export class DebugApi {
 
   step(seconds) { return this.run(null, seconds).state; }
 
+  /**
+   * Walk the player along a route using only keyboard-style input (so it proves a route is really
+   * traversable). points: [x, z] | 'E' | { step: seconds } | { say: 'label' }.
+   */
+  walk(points, { tol = 0.9, maxDetours = 14 } = {}) {
+    const p = this.game.player, log = [];
+    const snap = (tag) => { log.push(`${tag}: (${p.pos.x.toFixed(1)}, ${p.pos.y.toFixed(2)}, ${p.pos.z.toFixed(1)}) ${p.level} rays=${p.rays}`); };
+    for (const pt of points) {
+      if (pt === 'E') { this.run('KeyE', 0.1); continue; }
+      if (pt && pt.step) { this.step(pt.step); continue; }
+      if (pt && pt.say) { snap(pt.say); continue; }
+      const [tx, tz] = pt;
+      let guard = 0, last = Infinity, stall = 0, detours = 0;
+      while (guard++ < 1500) {
+        const dx = tx - p.pos.x, dz = tz - p.pos.z, d = Math.hypot(dx, dz);
+        if (d < tol) break;
+        const yaw = Math.atan2(-dx, -dz) * 180 / Math.PI;
+        if (stall > 5) {                         // blocked: sidestep around the obstacle for a moment
+          const side = (detours++ % 2 ? 1 : -1) * (60 + 15 * Math.min(4, detours >> 1));
+          this.look(yaw + side, 0); this.run('KeyW', 0.7); stall = 0; last = Infinity;
+          if (detours > maxDetours) { snap('STUCK going to ' + JSON.stringify(pt)); return { ok: false, log }; }
+          continue;
+        }
+        this.look(yaw, 0);
+        this.run('KeyW', Math.min(0.2, d / 4.2));
+        if (d > last - 0.03) stall++; else stall = 0;
+        last = Math.min(last, d);
+      }
+      if (guard >= 1500) { snap('TIMEOUT ' + JSON.stringify(pt)); return { ok: false, log }; }
+    }
+    snap('end');
+    return { ok: true, log };
+  }
+
   events(type) {
     const l = type ? this.log.filter((e) => e.type === type) : this.log;
     return l.slice(-50);
@@ -153,7 +190,7 @@ export class DebugApi {
       state: () => d.state(), teleport: (...a) => d.teleport(...a), look: (...a) => d.look(...a),
       setTime: (h) => d.setTime(h), set: (k, v) => d.set(k, v), do: (...a) => d.do(...a),
       press: (...a) => d.press(...a), hold: (c) => d.hold(c), release: (c) => d.release(c),
-      run: (...a) => d.run(...a), step: (s) => d.step(s),
+      run: (...a) => d.run(...a), step: (s) => d.step(s), walk: (...a) => d.walk(...a),
       events: (t) => d.events(t), clearEvents: () => d.clearEvents(),
       ray: (...a) => d.ray(...a), fps: () => d.fps(),
     };

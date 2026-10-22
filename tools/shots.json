@@ -1,0 +1,512 @@
+[
+ {
+  "name": "spawn",
+  "eval": "window.P=()=>{const s=__grahan.state();return {x:s.pos.x,y:s.pos.y,z:s.pos.z,level:s.level,ground:s.onGround,on:s.groundTag}};window.sky=(x,y,z)=>{const w=__grahan.game.physics;const N=96;let open=0;for(let i=0;i<N;i++){const el=Math.asin(0.34+0.66*(i+0.5)/N),az=i*2.39996;const d={x:Math.cos(el)*Math.cos(az),y:Math.sin(el),z:Math.cos(el)*Math.sin(az)};if(!w.raycast({x,y:y+1.6,z},d,260))open++;}return +(open/N).toFixed(2)};__grahan.set('rays',12); __grahan.look(-90,8); __grahan.step(0.3); ({spawn:P(), state:{level:__grahan.state().level, render:__grahan.state().render, world:__grahan.state().world.stats}})",
+  "wait": 900
+ },
+ {
+  "name": "poi-self-check",
+  "eval": "({problems: __grahan.do('validatePOIs')})",
+  "wait": 100
+ },
+ {
+  "name": "spawn-gap-above",
+  "eval": "__grahan.teleport(-44,0,-30,0); __grahan.look(-70,42); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "rubble-field",
+  "eval": "__grahan.teleport(-52,0,-22,0); __grahan.look(-60,12); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "g-street-canyon",
+  "eval": "__grahan.teleport(-75,0,-100,0); __grahan.look(0,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "g-sky-from-street",
+  "eval": "__grahan.teleport(-75,0,-100,0); __grahan.look(0,72); __grahan.step(0.4); ({skyOpen_street:sky(-75,0,-100), skyOpen_plaza:sky(-44,0,-30), skyOpen_L3:sky(75,38,-30)})",
+  "wait": 700
+ },
+ {
+  "name": "dead-tree-courtyard",
+  "eval": "__grahan.teleport(-45,0,12,0); __grahan.look(180,8); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "sunshaft-on-g",
+  "eval": "__grahan.teleport(-47,0,-25,0); __grahan.look(-70,30); __grahan.step(0.4); ({inSun: __grahan.game.world.isInSunlight(__grahan.game.player.pos), shafts: __grahan.game.world.sunShafts.length, intensity: __grahan.game.world.sunShafts.intensity})",
+  "wait": 700
+ },
+ {
+  "name": "metro-entrance",
+  "eval": "__grahan.teleport(45,0,16,0); __grahan.look(0,6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "g-promenade-south",
+  "eval": "__grahan.teleport(0,0,125,0); __grahan.look(180,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "metro-stairs-down",
+  "eval": "__grahan.teleport(45,-3,-12,0); __grahan.look(0,-8); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "metro-platform",
+  "eval": "__grahan.teleport(33,-8,10,0); __grahan.look(0,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "metro-train",
+  "eval": "__grahan.teleport(55,-8,26,0); __grahan.look(90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "u-service-tunnel-seep",
+  "eval": "__grahan.teleport(-34,-8,-40,0); __grahan.look(49,-5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "breach-chamber",
+  "eval": "__grahan.teleport(-100,-8,-32,0); __grahan.look(90,-6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "breach-sump-water",
+  "eval": "__grahan.teleport(-108,-8,-38,0); __grahan.look(90,-32); __grahan.step(0.4); ({water: __grahan.game.world.breachWater.y, level: __grahan.state().level})",
+  "wait": 700
+ },
+ {
+  "name": "sea-west-quay",
+  "eval": "__grahan.teleport(-132,0,20,0); __grahan.look(90,3); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "sea-south-pier",
+  "eval": "__grahan.teleport(24,0,150,0); __grahan.look(180,-6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "sea-walk-off-pier",
+  "eval": "__grahan.clearEvents(); __grahan.teleport(24,0,160,0); __grahan.look(180,-10); const r=__grahan.run('KeyW',4.4); ({after:P(), events:__grahan.events().filter(e=>e.type==='player:void'||e.type==='player:respawn').map(e=>e.type+':'+JSON.stringify(e.data)), lastSafe:__grahan.state().lastSafe})",
+  "wait": 700
+ },
+ {
+  "name": "sea-wall-blocks-walking",
+  "eval": "__grahan.teleport(-135,0,30,0); __grahan.look(90,2); __grahan.step(0.4); __grahan.run('KeyW',2); ({stoppedAt:P()})",
+  "wait": 500
+ },
+ {
+  "name": "world-edge-north-east",
+  "eval": "__grahan.teleport(211,38,-30,0); __grahan.look(-90,0); __grahan.step(0.4); __grahan.run('KeyW',2); ({bridgeEndStop:P()})",
+  "wait": 600
+ },
+ {
+  "name": "l1-bazaar",
+  "eval": "__grahan.teleport(15,12,-20,0); __grahan.look(-30,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l1-broken-skywalk-edge",
+  "eval": "__grahan.teleport(-37,12,-30,0); __grahan.look(90,-12); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l1-tree-walk",
+  "eval": "__grahan.teleport(-8,12,20,0); __grahan.look(90,2); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l1-shaft-pool",
+  "eval": "__grahan.setTime(10); __grahan.teleport(6,12,-20,0); __grahan.look(-30,22); __grahan.step(0.4); ({inSun:__grahan.game.world.isInSunlight(__grahan.game.player.pos)})",
+  "wait": 700
+ },
+ {
+  "name": "lift-prompt-at-bottom",
+  "eval": "__grahan.teleport(15,0,0,0); __grahan.look(-90,0); __grahan.step(0.4); __grahan.step(0.2); ({focus:__grahan.state().world.focus, lift:__grahan.game.lifts.get('lift-g1-skywalk').snapshot()})",
+  "wait": 600
+ },
+ {
+  "name": "lift-board",
+  "eval": "__grahan.run('KeyW',1.0); __grahan.look(90,6); ({p:P(), focus:__grahan.state().world.focus})",
+  "wait": 600
+ },
+ {
+  "name": "lift-called-rising",
+  "eval": "__grahan.run('KeyE',0.1); __grahan.step(1.5); __grahan.run('KeyW',0.8); ({midRide:P(), lift:__grahan.game.lifts.get('lift-g1-skywalk').snapshot(), stayedOnCar: Math.abs(__grahan.state().pos.x-20)<2.1})",
+  "wait": 700
+ },
+ {
+  "name": "lift-top-arrived",
+  "eval": "__grahan.step(3); ({p:P(), lift:__grahan.game.lifts.get('lift-g1-skywalk').snapshot(), focus:__grahan.state().world.focus})",
+  "wait": 700
+ },
+ {
+  "name": "lift-exit-to-skywalk",
+  "eval": "__grahan.look(90,0); __grahan.run('KeyW',1.5); P()",
+  "wait": 600
+ },
+ {
+  "name": "cloverleaf-overview",
+  "eval": "__grahan.set('freeze',true); __grahan.teleport(-15,72,-10,0); __grahan.look(0,-38); __grahan.step(0.4); void 0",
+  "wait": 900
+ },
+ {
+  "name": "cloverleaf-on-the-loop",
+  "eval": "__grahan.set('freeze',false); __grahan.teleport(15,24,-70,0); __grahan.look(0,4); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l2-road-east",
+  "eval": "__grahan.set('freeze',false); __grahan.teleport(-100,24,-60,0); __grahan.look(-90,3); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l2-shaft-and-road",
+  "eval": "__grahan.setTime(12); __grahan.teleport(60,24,-60,0); __grahan.look(-90,8); __grahan.step(0.4); ({inSun:__grahan.game.world.isInSunlight({x:63,y:24,z:-60})})",
+  "wait": 700
+ },
+ {
+  "name": "gate-l2-denied",
+  "eval": "__grahan.clearEvents(); __grahan.set('rays',4); __grahan.teleport(2,12,-24,0); __grahan.look(0,3); const w=__grahan.walk([[2,-36]]); __grahan.run('KeyW',1.5); ({pos:P(), blockedBeforeGate: __grahan.state().pos.z>-38, events:__grahan.events().filter(e=>e.type.startsWith('gate:')).map(e=>e.type+' '+JSON.stringify(e.data)), gate:__grahan.state().world.gates[1]})",
+  "wait": 800
+ },
+ {
+  "name": "gate-l2-opens",
+  "eval": "__grahan.clearEvents(); __grahan.set('rays',5); __grahan.step(0.5); __grahan.run('KeyW',2.5); __grahan.look(180,8); ({pos:P(), events:__grahan.events().filter(e=>e.type.startsWith('gate:')).map(e=>e.type+' '+JSON.stringify(e.data)), gate:__grahan.state().world.gates[1]})",
+  "wait": 800
+ },
+ {
+  "name": "gate-l3-denied",
+  "eval": "__grahan.clearEvents(); __grahan.set('rays',7); __grahan.teleport(105,24,-57,0); __grahan.look(0,8); __grahan.walk([[105,-63]]); __grahan.run('KeyW',1.5); ({pos:P(), blocked: __grahan.state().pos.z>-65, events:__grahan.events().filter(e=>e.type.startsWith('gate:')).map(e=>e.type+' '+JSON.stringify(e.data))})",
+  "wait": 800
+ },
+ {
+  "name": "gate-l3-opens",
+  "eval": "__grahan.clearEvents(); __grahan.set('rays',8); __grahan.step(0.5); __grahan.run('KeyW',2.5); ({pos:P(), events:__grahan.events().filter(e=>e.type.startsWith('gate:')).map(e=>e.type+' '+JSON.stringify(e.data))})",
+  "wait": 800
+ },
+ {
+  "name": "gate-exit-never-traps",
+  "eval": "__grahan.set('rays',1); __grahan.teleport(105,26.7,-70,0); __grahan.look(180,0); __grahan.step(0.4); __grahan.run('KeyW',6); ({fromStairsDownWith1Ray:P()})",
+  "wait": 600
+ },
+ {
+  "name": "l3-garden",
+  "eval": "__grahan.set('rays',12); __grahan.setTime(8); __grahan.teleport(75,38,-85,0); __grahan.look(-60,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "l3-sky",
+  "eval": "__grahan.teleport(75,38,-30,0); __grahan.look(-70,35); __grahan.step(0.4); ({skyOpen_L3:sky(75,38,-30)})",
+  "wait": 700
+ },
+ {
+  "name": "control-tower-terminal",
+  "eval": "__grahan.teleport(142,38,-88.6,0); __grahan.look(0,12); __grahan.step(0.4); __grahan.step(0.2); ({focus:__grahan.state().world.focus})",
+  "wait": 700
+ },
+ {
+  "name": "sunrise-bridge",
+  "eval": "__grahan.teleport(160,38,-30,0); __grahan.look(-90,2); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "sunrise-bridge-end",
+  "eval": "__grahan.teleport(205,38,-30,0); __grahan.look(-90,2); __grahan.step(0.4); ({end: __grahan.game.world.sunriseBridgeEnd})",
+  "wait": 700
+ },
+ {
+  "name": "time-dusk",
+  "eval": "__grahan.setTime(18.4); __grahan.teleport(-100,24,-60,0); __grahan.look(90,6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "time-night-solar-lamps",
+  "eval": "__grahan.setTime(22); __grahan.teleport(75,38,-85,0); __grahan.look(-60,8); __grahan.step(0.4); ({sunIntensity:__grahan.game.world.sunShafts.intensity, nearLamp: __grahan.game.world.isNearSolarLamp({x:75,y:38,z:-90}), inSunAtNight: __grahan.game.world.isInSunlight({x:75,y:38,z:-90})})",
+  "wait": 700
+ },
+ {
+  "name": "time-night-ground",
+  "eval": "__grahan.setTime(22); __grahan.teleport(-75,0,-100,0); __grahan.look(0,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "time-predawn",
+  "eval": "__grahan.setTime(5.2); __grahan.teleport(205,38,-30,0); __grahan.look(-90,3); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "time-sunrise-east",
+  "eval": "__grahan.setTime(6.3); __grahan.teleport(205,38,-30,0); __grahan.look(-90,5); __grahan.step(0.4); ({sunDirEast: +__grahan.game.sky.sunDir.x.toFixed(2)})",
+  "wait": 700
+ },
+ {
+  "name": "time-back-to-day",
+  "eval": "__grahan.setTime(7.5); __grahan.teleport(75,38,-85,0); __grahan.look(-60,5); __grahan.step(0.4); void 0",
+  "wait": 400
+ },
+ {
+  "name": "unstable-slab-drop",
+  "eval": "const sl=__grahan.game.world.slabs.find(s=>s.id==='us-l1-b'); __grahan.teleport(45,12,30,0); __grahan.step(0.5); const before=P(); sl.drop(-3); __grahan.step(1.2); const after=P(); sl.reset(); ({slabs:__grahan.game.world.slabs.length, before, afterDrop:after})",
+  "wait": 600
+ },
+ {
+  "name": "route-1-spawn-to-L3-via-lifts",
+  "eval": "__grahan.set('rays',12); __grahan.teleport(-44,0,-30,0); __grahan.walk([[-38,-26],[-38,-12],[-20,-5],{say:'stairs-g1-plaza bottom'},[-20,-26],[-20,-30.5],{say:'L1 broken-walkway stub'},[-10,-30],[0,-25],[2,-30],[2,-36],{say:'gate L2 (rays 12 opens)'},[2,-44],{say:'inside lift lobby'},[2,-48],{step:0.3},'E',{step:6},{say:'lift-12-bazaar arrived'},[2,-52],[2,-58],{say:'L2 flyover H'},[66,-64.6],[88,-64.6],[70,-60],[74,-60],{say:'gate L3 lobby'},[80,-60],{step:0.3},'E',{step:7},{say:'lift-23-west arrived'},[74,-60],[75,-75],{say:'L3 Garden Terrace'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-2-G-to-sunrise-via-stairs",
+  "eval": "__grahan.set('rays',12); __grahan.teleport(-15,0,60,0); __grahan.walk([[-15,57],[-15,45],{say:'stairs-g1-south'},[-15,30],{say:'L1 landing'},[8,30],[8,46],[-1,46],{say:'gate L2 at stairs-12-b'},[-1,40],{say:'on flight'},[-1,30],[-1,20],{say:'L2 landing'},[-12,19],[-15,0],[-15,-40],[-15,-58],{say:'cloverleaf'},[60,-60],[66,-64.6],[88,-64.6],[105,-62],[105,-70],{say:'on stairs-23'},[105,-86],[105,-90],{say:'L3 bridge'},[118,-90],[135,-82],[135,-60],{say:'bridge br-3-e'},[135,-45],[150,-30],[175,-30],[211,-30],{say:'Sunrise Bridge end'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-3-G-down-to-U-and-back",
+  "eval": "__grahan.set('rays',12); __grahan.teleport(-44,0,-30,0); __grahan.walk([[-38,-26],[-38,-12],[-30,-7],[-26,2],[-26,7],[0,6],[44,3],{say:'metro A top'},[45,-12],{say:'on stairs A'},[45,-24],[45,-32],{say:'U concourse N'},[33,-12],[32,20],{say:'platform'},[32,48],[40,66],[45,70],{say:'U concourse S'},[45,62],{say:'stairs B'},[45,50],[45,47],{say:'G again'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-4-U-ring",
+  "eval": "__grahan.teleport(40,-8,72,0); __grahan.walk([[40,70],[30,65],{say:'T2 start'},[-60,65],[-117,65],{say:'T2 west'},[-117,20],[-117,-20],{say:'T3 north'},[-117,-30],{say:'breach chamber'},[-100,-30],[-100,-40],[-80,-40],{say:'T1'},[-30,-40],[27,-40],[35,-40],{say:'metro concourse'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-5-U-to-G-by-service-ramp",
+  "eval": "__grahan.teleport(-100,-8,-30,0); __grahan.walk([[-110,-28],[-130,-28],{say:'chamber west'},[-133,-27],[-133,-12],{say:'ramp-u-c'},[-133,-3],[-133,3],{say:'G quay'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-6-G-to-L1-by-ramp",
+  "eval": "__grahan.teleport(75,0,94,0); __grahan.walk([[75,90],[75,88],[75,70],{say:'ramp-g1-site'},[75,52],[75,48],{say:'terrace C (L1)'},[75,30]])",
+  "wait": 900
+ },
+ {
+  "name": "route-7-L2-to-L3-by-east-lift",
+  "eval": "__grahan.set('rays',12); __grahan.teleport(125,24,-62,0); __grahan.walk([[134,-60],[138,-60],[140,-60],{step:0.3},'E',{step:7},{say:'lift-23-east arrived'},[134,-60],[135,-72],{say:'L3 Sunrise Heights'}])",
+  "wait": 900
+ },
+ {
+  "name": "story-collapse-site",
+  "eval": "__grahan.teleport(-44,0,-30,0); __grahan.look(-70,10); __grahan.step(0.4); ({collapse:__grahan.game.world.story.collapseSite.id, fallenDecks:__grahan.game.world.story.fallenDecks.length})",
+  "wait": 800
+ },
+ {
+  "name": "story-triage-tents",
+  "eval": "__grahan.teleport(-30,0,12,0); __grahan.look(53,6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-fallen-decks",
+  "eval": "__grahan.teleport(-52,0,-10,0); __grahan.look(0,10); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-mithi-home-door",
+  "eval": "__grahan.teleport(-84,0,-78,0); __grahan.look(90,4); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-mithi-home-inside-tv",
+  "eval": "__grahan.teleport(-93,0,-78,0); __grahan.look(90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-neighbour-flat-jacket",
+  "eval": "__grahan.teleport(-93,0,-88,0); __grahan.look(90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-hospital-front",
+  "eval": "__grahan.teleport(-45,0,62,0); __grahan.look(180,6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-hospital-lobby",
+  "eval": "__grahan.teleport(-45,0,74,0); __grahan.look(180,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-hospital-ward",
+  "eval": "__grahan.teleport(-52,0,82,0); __grahan.look(180,-2); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-police-front",
+  "eval": "__grahan.teleport(18,0,-66,0); __grahan.look(0,6); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-police-inside",
+  "eval": "__grahan.teleport(18,0,-77.5,0); __grahan.look(0,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-maintenance-hut",
+  "eval": "__grahan.teleport(52,0,-44,0); __grahan.look(180,4); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-maintenance-stair-down",
+  "eval": "__grahan.teleport(52,0.05,-34.6,0); __grahan.look(0,0); __grahan.step(0.4); __grahan.look(180,-18); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-lift-wreck",
+  "eval": "__grahan.teleport(50.5,-8,-21,0); __grahan.look(-90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-catacombs",
+  "eval": "__grahan.teleport(-111,-8,22,0); __grahan.look(-90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-boring-machine",
+  "eval": "__grahan.teleport(-93,-8,-47,0); __grahan.look(-90,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-clinic",
+  "eval": "__grahan.teleport(-21,-8,72,0); __grahan.look(180,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-vent-mouth-u",
+  "eval": "__grahan.teleport(-50,-8,-37,0); __grahan.look(0,-5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-vent-stack-g",
+  "eval": "__grahan.teleport(-15,0,80,0); __grahan.look(180,0); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-bridge-permit-gate",
+  "eval": "__grahan.teleport(156.5,0,-39,0); __grahan.look(-90,5); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-bridge-checkpoint",
+  "eval": "__grahan.teleport(148,38,-30,0); __grahan.look(-90,3); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "story-guarded-metro",
+  "eval": "__grahan.teleport(45,0,16,0); __grahan.look(0,6); __grahan.step(0.4); ({shutters:Object.fromEntries(Object.entries(__grahan.game.world.doors).map(([k,d])=>[k,d.closed]))})",
+  "wait": 700
+ },
+ {
+  "name": "art-ribbed-vaults",
+  "eval": "__grahan.teleport(-60,0,-60,0); __grahan.look(0,62); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "art-shrine-diyas",
+  "eval": "__grahan.teleport(36.2,0,-77,0); __grahan.look(0,4); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "art-crows-and-spires",
+  "eval": "__grahan.teleport(-100,24,-60,0); __grahan.look(-90,8); __grahan.step(0.4); void 0",
+  "wait": 700
+ },
+ {
+  "name": "art-ad-screen",
+  "eval": "__grahan.set('freeze',true); __grahan.teleport(-62,40,-30,0); __grahan.look(90,2); void 0",
+  "wait": 1500
+ },
+ {
+  "name": "art-ad-screens-wide",
+  "eval": "__grahan.teleport(40,36,-60,0); __grahan.look(120,4); void 0",
+  "wait": 1500
+ },
+ {
+  "name": "art-stained-glass",
+  "eval": "__grahan.set('freeze',false); __grahan.setTime(8); __grahan.teleport(75,38,-100,0); __grahan.look(0,28); __grahan.step(0.4); void 0",
+  "wait": 900
+ },
+ {
+  "name": "art-searchlights-night",
+  "eval": "__grahan.setTime(22); __grahan.teleport(75,38,-85,0); __grahan.look(-152,34); __grahan.step(0.4); void 0",
+  "wait": 1200
+ },
+ {
+  "name": "art-drizzle-night-g",
+  "eval": "__grahan.setTime(22); __grahan.teleport(-75,0,-100,0); __grahan.look(0,4); __grahan.step(0.4); void 0",
+  "wait": 1000
+ },
+ {
+  "name": "art-sacred-shaft",
+  "eval": "__grahan.setTime(9); __grahan.teleport(-47,0,-17,0); __grahan.look(-70,16); __grahan.step(0.4); void 0",
+  "wait": 900
+ },
+ {
+  "name": "art-back-to-morning",
+  "eval": "__grahan.setTime(7.5); __grahan.step(0.2); void 0",
+  "wait": 300
+ },
+ {
+  "name": "route-8-maintenance-shaft-down-and-up",
+  "eval": "__grahan.set('rays',12); __grahan.teleport(52,0,-46,0); __grahan.walk([[52,-41],[52,-36.8],{say:'maintenance hut door'},[52,-34.5],[52,-30],{say:'on the shaft stair'},[52,-24.5],[52,-21],{say:'U concourse (lift wreck)'},[55.5,-24],{say:'beside the wreck'},[55.5,-22],[52,-22],[52,-26],[52,-33],[52,-36.5],[52,-41],{say:'back on G'}])",
+  "wait": 900
+ },
+ {
+  "name": "door-metro-shutter-closed",
+  "eval": "__grahan.teleport(45,0,2,0); __grahan.look(0,0); __grahan.step(0.3); const w=__grahan.game.world; w.doors['metro-shutter-a'].setClosed(true); __grahan.run('KeyW',3); const blocked=P(); w.doors['metro-shutter-a'].setClosed(false); __grahan.run('KeyW',2); ({closedStopsAt:blocked, openedGoesTo:P()})",
+  "wait": 600
+ },
+ {
+  "name": "route-9a-bridge-permit-denied",
+  "eval": "__grahan.clearEvents(); __grahan.game.flags.bridgePermit=false; __grahan.teleport(156,0,-39,0); __grahan.walk([[160,-39]]); __grahan.run('KeyW',2); ({pos:P(), blocked:__grahan.state().pos.x<162.1, events:__grahan.events().filter(e=>e.type.startsWith('gate:')).map(e=>e.type+' '+JSON.stringify(e.data))})",
+  "wait": 800
+ },
+ {
+  "name": "route-9b-bridge-permit-granted",
+  "eval": "__grahan.clearEvents(); __grahan.game.flags.bridgePermit=true; __grahan.teleport(156,0,-39,0); __grahan.walk([[161,-39],[168,-39],{say:'inside the lobby'},[172,-39],{step:0.3},'E',{step:11},{say:'bridge lift top'},[172,-33],[190,-30],[211,-30],{say:'Sunrise Bridge end'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-10-spawn-to-hospital-icu",
+  "eval": "__grahan.game.flags.bridgePermit=false; __grahan.teleport(-44,0,-30,0); __grahan.walk([[-38,-26],[-38,-12],[-24,-12],[-24,55],[-45,66],[-45,71.5],{say:'hospital door'},[-45,76],{say:'lobby'},[-41.5,79],[-41.5,85],{say:'ward B'},[-41.5,79],[-31.5,79],[-31.5,86],{say:'ICU'}])",
+  "wait": 900
+ },
+ {
+  "name": "door-police-cell-locked",
+  "eval": "__grahan.teleport(18,0,-70,0); const r=__grahan.walk([[18,-74],[18,-79],[15,-79.2]]); __grahan.teleport(15,0,-79,0); __grahan.look(0,0); __grahan.run('KeyW',2); const closed=P(); const d=__grahan.game.world.doors['police-cell-gautam']; d.setClosed(false); __grahan.run('KeyW',3); ({walk:r.ok, lockedStopsAt:closed, afterBail:P()})",
+  "wait": 800
+ },
+ {
+  "name": "route-11-slum-flats",
+  "eval": "__grahan.teleport(-84,0,-70,0); __grahan.walk([[-84,-78],[-91,-78],{say:'Mithi door'},[-94,-78],{say:'inside the flat (TV)'},[-91,-78],[-86,-80],[-86,-88],[-91,-88],[-94,-88],{say:'neighbour flat (jacket)'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-12-catacombs",
+  "eval": "__grahan.teleport(-117,-8,22,0); __grahan.walk([[-113,22],{say:'catacomb entrance'},[-105,22],[-97.5,22],[-97.5,18],[-97.5,12],{say:'Aayat home room'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-13-boring-site",
+  "eval": "__grahan.teleport(-70,-8,-40,0); __grahan.walk([[-79,-40],[-79,-45],[-80,-49.5],{say:'boring site'},[-90,-50],[-68,-50],{say:'ledger spot'}])",
+  "wait": 900
+ },
+ {
+  "name": "route-14-clinic",
+  "eval": "__grahan.teleport(-20,-8,64,0); __grahan.walk([[-20,69],[-19,73],[-19,77.5],[-24,77.5],{say:'through the partition into the clinic'}])",
+  "wait": 900
+ },
+ {
+  "name": "render-budget-survey",
+  "eval": "(()=>{const pts=[[-44,0,-30,-90,8],[-75,0,-100,0,5],[45,0,16,0,6],[15,12,-20,-30,5],[-100,24,-60,-90,3],[75,38,-85,-60,5],[160,38,-30,-90,2],[33,-8,10,0,0],[-100,-8,-32,90,-6],[-15,24,-60,0,0],[142,38,-80,0,20],[0,0,125,180,5]]; const out=pts.map(p=>{__grahan.teleport(p[0],p[1],p[2],0); __grahan.look(p[3],p[4]); __grahan.game.render(); const r=__grahan.game.renderStats(); return [r.calls,r.triangles]}); return {calls:Math.max(...out.map(o=>o[0])), triangles:Math.max(...out.map(o=>o[1])), perView:out}})()",
+  "wait": 300
+ },
+ {
+  "name": "end-of-tour-state",
+  "eval": "__grahan.set('freeze',false); __grahan.set('rays',7); __grahan.teleport(-44,0,-30,-90*Math.PI/180); __grahan.look(-90,8); __grahan.step(0.5); __grahan.state()",
+  "wait": 700
+ }
+]
