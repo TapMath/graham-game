@@ -1,0 +1,254 @@
+[
+ {
+  "name": "p7a-title",
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; const ui=A.state().ui; ok(ui.screen==='title' && ui.ready && G.mode==='menu', 'the title shows in menu mode when not autostarted: '+JSON.stringify(ui)); ok(qa('#ov-menu .mbtn').map(b=>b.dataset.act).join()==='begin,howto,settings,credits', 'menu items'); ok(!q('#overlay').classList.contains('loading') && q('#ov-load').hidden, 'the loading state has cleared'); ok(/GRAHAN/.test(q('#ov-title .wordmark svg').textContent) && /sunrise in 2049 Mumbai/.test(q('.tagline').textContent) && /Children of the Sun/.test(q('#ov-title .scrawl').textContent), 'wordmark, tagline and subtitle'); ok(/Headphones recommended/.test(q('#ov-phones').textContent), 'headphones note'); ok(G.player.pos && A.state().render.calls < 200, 'game built'); ({ui, titleActive:G.menu.titleActive, calls:A.state().render.calls})",
+  "wait": 1500
+ },
+ {
+  "name": "p7a-loading-state",
+  "eval": "const o=q('#overlay'); o.classList.add('loading'); q('#ov-load').hidden=false; ok(getComputedStyle(q('#ov-menu')).display==='none' && getComputedStyle(q('#ov-load')).display!=='none', 'while the city builds the menu is replaced by a loading line (forced here: the real state is too short to catch)'); 1",
+  "wait": 1200
+ },
+ {
+  "name": "p7a-loading-cleared",
+  "eval": "q('#overlay').classList.remove('loading'); q('#ov-load').hidden=true; 1",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "p7a-howto",
+  "click": "#ov-menu [data-act=howto]",
+  "eval": "ok(A.state().ui.screen==='howto', 'how to play opens'); const cards=qa('.htp-card'); ok(cards.length>=11, 'cards: '+cards.length); const ids=cards.map(c=>c.className.replace('htp-card htp-','')).join(); for (const w of ['goal','keys','touch','health','light','sing','organ','tab','view','clock','dshot']) ok(ids.includes(w), 'card '+w); ok(qa('.htp-pic svg.pg').length===cards.length, 'every card has a pictogram'); ok(/Tab/.test(q('.htp-tab').textContent) && /Q/.test(q('.htp-sing').textContent) && /V/.test(q('.htp-view').textContent) && /flood/i.test(q('.htp-clock').textContent) && /D-shots/.test(q('.htp-dshot').textContent), 'card text'); ({cards:cards.length, ids})",
+  "wait": 700
+ },
+ {
+  "name": "p7a-howto-2",
+  "eval": "q('.panel-scroll').scrollTop=470; 1",
+  "wait": 500
+ },
+ {
+  "name": "p7a-howto-3",
+  "eval": "q('.panel-scroll').scrollTop=940; 1",
+  "wait": 500
+ },
+ {
+  "name": "p7a-howto-4",
+  "eval": "q('.panel-scroll').scrollTop=99999; 1",
+  "wait": 500
+ },
+ {
+  "name": "p7a-esc-back",
+  "key": "Escape",
+  "eval": "ok(A.state().ui.screen==='title', 'Esc goes back to the title'); 1",
+  "wait": 400,
+  "shot": false
+ },
+ {
+  "name": "p7a-settings",
+  "click": "#ov-menu [data-act=settings]",
+  "eval": "ok(A.state().ui.screen==='settings', 'settings open'); const keys=qa('.set-row').map(r=>r.dataset.key); ok(['volMaster','volMusic','volSfx','volVoice','paVoice','captions','mouseSens','invertY','fov','quality','reduceFlash','viewDefault','runMinutes'].every(k=>keys.includes(k)), 'rows '+keys); ok(!keys.includes('touchSens'), 'touch sensitivity only shows on touch devices'); const set=(key,v)=>{ const el=q('.set-row[data-key='+key+'] input'); el.value=v; el.dispatchEvent(new Event('input',{bubbles:true})); }; set('volMaster',0.3); set('volMusic',0.2); set('fov',90); set('mouseSens',1.5); q('.set-row[data-key=invertY] .tog').click(); q('.set-row[data-key=paVoice] .tog').click(); q('.set-row[data-key=captions] .tog').click(); q('.set-row[data-key=quality] [data-v=medium]').click(); q('.set-row[data-key=reduceFlash] .tog').click(); q('.set-row[data-key=viewDefault] [data-v=third]').click(); q('.set-row[data-key=runMinutes] [data-v=\"45\"]').click(); const s=G.settings; ok(s.get('volMaster')===0.3 && s.get('fov')===90 && s.get('invertY')===true && s.get('quality')==='medium' && s.get('runMinutes')==45 && s.get('viewDefault')==='third' && s.get('reduceFlash')===true && s.get('paVoice')===false && s.get('captions')===false, 'values stored: '+JSON.stringify(s.all())); ok(Math.abs(G.audio.volumes.master-0.3)<1e-6 && Math.abs(G.audio.volumes.music-0.2)<1e-6, 'audio volumes applied'); ok(G.camera.fov===90, 'fov applied: '+G.camera.fov); ok(G.input.invertY===true && Math.abs(G.input.sensitivity-0.0033)<1e-9, 'input applied'); ok(G.pa.voiceEnabled===false && G.audio.captionSounds===false, 'pa voice and captions applied'); ok(G.renderer.getPixelRatio()<=1 && G.camera.far===360, 'quality applied: '+G.renderer.getPixelRatio()+' / '+G.camera.far); ok(document.body.classList.contains('reduce-flash'), 'reduce flashing applied'); ok(JSON.parse(localStorage.getItem('grahan.settings.v1')).fov===90, 'persisted to localStorage'); A.state().settings",
+  "wait": 700
+ },
+ {
+  "name": "p7a-settings-2",
+  "eval": "q('.panel-scroll').scrollTop=99999; 1",
+  "wait": 500
+ },
+ {
+  "name": "p7a-settings-reload",
+  "reload": "seed=1",
+  "reloadWait": 4000,
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; const s=G.settings; ok(s.persisted, 'storage read back'); ok(s.get('fov')===90 && s.get('volMaster')===0.3 && s.get('invertY')===true && s.get('quality')==='medium' && s.get('runMinutes')==45 && s.get('viewDefault')==='third' && s.get('captions')===false, 'settings survived the reload: '+JSON.stringify(s.all())); ok(Math.abs(G.audio.volumes.master-0.3)<1e-6 && G.camera.fov===90 && G.input.invertY && G.pa.voiceEnabled===false, 'and were applied to the game'); ok(G.params.minutes===45, 'the stored run length is used for this run: '+G.params.minutes+' min (clock rate '+G.clock.hoursPerSec+')'); ok(document.body.classList.contains('reduce-flash'), 'reduce flashing'); q('#ov-menu [data-act=settings]').click(); ok(Math.abs(Number(q('.set-row[data-key=volMaster] input').value)-0.3)<1e-6 && q('.set-row[data-key=runMinutes] [aria-checked=true]').dataset.v==='45', 'the panel shows the stored values'); ({settings:s.all(), minutes:G.params.minutes})",
+  "wait": 800
+ },
+ {
+  "name": "p7a-minutes-override",
+  "eval": "q('.back').click(); 1",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "p7a-credits",
+  "click": "#ov-menu [data-act=credits]",
+  "eval": "ok(A.state().ui.screen==='credits', 'credits open'); const t=q('.credits').textContent; ok(/Sarat T\\. Rao/.test(t) && /Sarat Talluri Rao/.test(t) && /Mohammed Ali Rukadikar/.test(t), 'credits names'); 1",
+  "wait": 600
+ },
+ {
+  "name": "p7a-credits-back",
+  "click": ".back",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p7a-begin",
+  "click": "#ov-menu [data-act=begin]",
+  "force": true,
+  "wait": 2500,
+  "eval": "(async()=>{ for (let i=0;i<120 && !G.cinematics.active;i++) await new Promise(r=>setTimeout(r,250)); const st=A.state(); ok(G.mode==='playing', 'Begin starts play (mode '+G.mode+')'); ok(st.story6b.cine.openingPlayed && G.cinematics.active, 'the opening cinematic starts on first play'); ok(G.view.mode==='third', 'the default-view setting applies when the run begins: '+G.view.mode); return {mode:G.mode, cine:G.cinematics.current && G.cinematics.current.name, view:G.view.mode, ui:st.ui}; })()"
+ },
+ {
+  "name": "p7a-intro-skipped",
+  "eval": "(async()=>{ A.do('cineSkip'); for (let i=0;i<400 && (G.cinematics.active || G.modal || G.visionSystem.active);i++) await new Promise(r=>setTimeout(r,250)); ok(!G.cinematics.active && !G.modal && !G.visionSystem.active, 'the opening is skipped and its vision has ended'); return 1; })()",
+  "wait": 500,
+  "shot": false
+ },
+ {
+  "name": "p7a-playing",
+  "eval": "ok(G.mode==='playing' && !G.modal && q('#overlay').hidden, 'playing, overlay hidden'); A.set('view','first'); A.set('invulnerable',true); A.set('hazards',false); A.setTime(12); G.setu.setHealth(40); G.hud.showSetu(true); A.do('jeetuJoin'); for (const i of ['torch','jacket','batteries','breachEvidence']) A.do('give',i); G.flags.breachKnown=true; G.objectives.set('warn','Warn the city: Tara can get it on TV, or the Control Tower on L3',{optional:true}); G.objectives.set('light','Get light for Jeetu: the TV remote batteries at home',{optional:true}); for (const [t,k] of [['The street hums with the weight of rain on tin.','story'],['A dog barks','caption'],['REMAIN CALM. SUNLIGHT IS A PRIVILEGE, NOT A RIGHT.','pa'],['Didi, dogs, left!','clue'],['Taken: Torch.','system']]) G.messages.say(t,{kind:k,ttl:600}); A.step(0.5); G.visionSystem.queue.length=0; ({feed:qa('.hud-feed .msg').length})",
+  "wait": 3500
+ },
+ {
+  "name": "p7a-feed-limits",
+  "eval": "for (let i=0;i<4;i++){ G.messages.say('A dog barks',{kind:'caption',ttl:600}); } G.messages.say('A drone hums',{kind:'caption',ttl:600}); G.messages.say('Citizens are reminded that shadows are not a medical condition.',{kind:'pa',ttl:600}); for (let i=0;i<4;i++) G.messages.say('Extra note '+i,{kind:'system',ttl:600}); const live=qa('.hud-feed .msg:not(.gone)'); ok(live.length<=4, 'the feed stays short: '+live.length); ok(live.filter(m=>m.classList.contains('caption')).length<=1 && live.filter(m=>m.classList.contains('pa')).length<=1, 'one caption and one PA line at a time'); ok(qa('.hud-feed .msg:not(.gone)').filter(m=>m.dataset.text==='[ A dog barks ]').length===0, 'the old dog caption was replaced'); live.map(m=>m.className+': '+m.textContent)",
+  "wait": 2500
+ },
+ {
+  "name": "p7a-pause",
+  "key": "Escape",
+  "eval": "ok(G.mode==='paused' && A.state().ui.screen==='pause', 'Esc pauses and shows the pause menu: '+G.mode); ok(qa('#ov-pause .mbtn').map(b=>b.dataset.act).join()==='resume,howto,settings,restart,quit', 'pause items'); const t0=G.time; ({mode:G.mode, t:t0})",
+  "wait": 1200
+ },
+ {
+  "name": "p7a-pause-frozen",
+  "eval": "const t0=G.time; A.step(0); ok(G.mode==='paused', 'still paused'); ({t:t0, now:G.time})",
+  "wait": 1500
+ },
+ {
+  "name": "p7a-pause-settings",
+  "click": "#ov-pause [data-act=settings]",
+  "force": true,
+  "eval": "ok(A.state().ui.screen==='settings' && A.state().ui.origin==='pause', 'settings from the pause menu'); 1",
+  "wait": 600
+ },
+ {
+  "name": "p7a-pause-esc-back",
+  "key": "Escape",
+  "eval": "ok(G.mode==='paused' && A.state().ui.screen==='pause', 'Esc steps back to the pause menu, not into the game'); 1",
+  "wait": 400,
+  "shot": false
+ },
+ {
+  "name": "p7a-pause-howto",
+  "click": "#ov-pause [data-act=howto]",
+  "force": true,
+  "wait": 700
+ },
+ {
+  "name": "p7a-pause-howto-back",
+  "click": ".back",
+  "force": true,
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p7a-restart-confirm",
+  "click": "#ov-pause [data-act=restart]",
+  "force": true,
+  "eval": "ok(/again/i.test(q('#ov-pause [data-act=restart]').textContent), 'restart asks twice'); ok(G.mode==='paused', 'one press does not restart'); 1",
+  "wait": 500
+ },
+ {
+  "name": "p7a-resume",
+  "click": "#ov-pause [data-act=resume]",
+  "force": true,
+  "wait": 1500,
+  "eval": "ok(G.mode==='playing' && q('#overlay').hidden, 'Resume returns to the game'); ok(!G.input.keys.size, 'no keys leaked from the menu'); A.step(0.2); ({mode:G.mode, locked:G.input.locked})"
+ },
+ {
+  "name": "p7a-dialogue",
+  "eval": "A.set('invulnerable',true); G.dialogue.cps=1e6; A.do('cast','jeetu',2.3); A.do('talk','jeetu'); A.step(0.3); ok(G.dialogue.isOpen, 'a conversation card is open'); ({d:A.state().dialogue6a})",
+  "wait": 1200
+ },
+ {
+  "name": "p7a-dialogue-click",
+  "eval": "A.do('dialogueSkip'); 1",
+  "wait": 600
+ },
+ {
+  "name": "p7a-dialogue-close",
+  "eval": "G.dialogue.close(); ok(!G.dialogue.isOpen && !G.modal, 'closed'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p7a-fragment",
+  "eval": "A.do('fragment','frag-memo-site',{tp:true,as:'jeetu',instant:true}); A.step(0.2); ok(!q('#frag').hidden, 'fragment card open'); 1",
+  "wait": 2600,
+  "css": "#frag{animation:none !important}"
+ },
+ {
+  "name": "p7a-fragment-close",
+  "click": "#frag",
+  "force": true,
+  "eval": "A.step(0.2); ok(q('#frag').hidden && !G.modal, 'tapping the card closes it'); 1",
+  "wait": 500,
+  "shot": false
+ },
+ {
+  "name": "p7a-vendor",
+  "eval": "A.do('tpVendor', A.state().vendors.active[0].id); A.step(0.3); A.do('vendorOpen', A.state().vendors.active[0].id); A.step(0.2); ok(!q('#dialog').hidden, 'vendor dialog open'); 1",
+  "wait": 1200
+ },
+ {
+  "name": "p7a-vendor-click",
+  "click": ".dl-btn.dl-decline",
+  "force": true,
+  "eval": "A.step(0.2); ok(q('#dialog').hidden && !G.modal, 'the dialog buttons are clickable'); 1",
+  "wait": 500,
+  "shot": false
+ },
+ {
+  "name": "p7a-ending-1",
+  "eval": "A.set('cityWarned', true); A.do('ending', 1); 1",
+  "wait": 5500
+ },
+ {
+  "name": "p7a-ending-3",
+  "eval": "A.do('endingReset'); A.do('ending', 3); 1",
+  "wait": 4500
+ },
+ {
+  "name": "p7a-ending-4",
+  "eval": "A.do('endingReset'); A.do('ending', 4); 1",
+  "wait": 4500
+ },
+ {
+  "name": "p7a-restart",
+  "eval": "A.do('endingReset'); A.set('view','first'); G.settings.reset(); setTimeout(()=>G.menu.restart(),30); 1",
+  "wait": 3000,
+  "shot": false
+ },
+ {
+  "name": "p7a-after-restart",
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; ok(G.mode==='playing' && G.menu.begun, 'Restart reloads straight into the run, no title: '+G.mode); ok(G.params.seed===1, 'with the same seed: '+G.params.seed); ok(A.state().story6b.cine.openingPlayed, 'and the opening is triggered again'); ({mode:G.mode, seed:G.params.seed, cine:A.state().story6b.cine.name})",
+  "wait": 2500,
+  "waitFor": "window.__grahan && __grahan.game && __grahan.game.menu && __grahan.game.menu.begun && __grahan.game.mode === 'playing'"
+ },
+ {
+  "name": "p7a-skip-after-restart",
+  "eval": "(async()=>{ for (let i=0;i<120 && !G.cinematics.active;i++) await new Promise(r=>setTimeout(r,250)); A.do('cineSkip'); for (let i=0;i<400 && (G.cinematics.active || G.modal || G.visionSystem.active);i++) await new Promise(r=>setTimeout(r,250)); ok(!G.modal, 'skipped'); return 1; })()",
+  "wait": 500,
+  "shot": false,
+  "waitFor": "window.__grahan && __grahan.game.cinematics"
+ },
+ {
+  "name": "p7a-pause-again",
+  "eval": "G.menu.pause(); ok(G.mode==='paused', 'paused'); 1",
+  "wait": 900,
+  "shot": false
+ },
+ {
+  "name": "p7a-quit-to-title",
+  "click": "#ov-pause [data-act=quit]",
+  "force": true,
+  "eval": "ok(/again/i.test(q('#ov-pause [data-act=quit]').textContent), 'quit asks twice'); setTimeout(()=>q('#ov-pause [data-act=quit]').click(),50); 1",
+  "wait": 3000,
+  "shot": false
+ },
+ {
+  "name": "p7a-quit-result",
+  "eval": "window.A=__grahan; window.G=A.game; window.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; }; window.q=(s)=>document.querySelector(s); window.qa=(s)=>[...document.querySelectorAll(s)]; const ui=A.state().ui; ok(ui.screen==='title' && G.mode==='menu' && !ui.begun, 'quit to title shows the title screen: '+JSON.stringify(ui)); ui",
+  "wait": 1500,
+  "waitFor": "window.__grahan && __grahan.game && __grahan.game.menu && __grahan.game.menu.ready && __grahan.game.mode === 'menu'"
+ }
+]

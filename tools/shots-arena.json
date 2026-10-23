@@ -1,0 +1,157 @@
+[
+ {
+  "name": "spawn",
+  "eval": "window.P=()=>{const s=__grahan.state();return {x:s.pos.x,y:s.pos.y,z:s.pos.z,ground:s.onGround,on:s.groundTag,level:s.level}}; window.L=()=>__grahan.game.lifts.get('arena-lift'); ({spawn:P(), render:__grahan.state().render})",
+  "wait": 300
+ },
+ {
+  "name": "walk-forward",
+  "eval": "__grahan.run('KeyW',1).moved",
+  "wait": 200
+ },
+ {
+  "name": "sprint",
+  "eval": "__grahan.teleport(0,0,18,0); __grahan.run(['KeyW','ShiftLeft'],0.5).moved",
+  "wait": 200
+ },
+ {
+  "name": "strafe-and-turn",
+  "eval": "__grahan.teleport(0,0,18,0); const a=__grahan.run('KeyD',0.5).moved; __grahan.look(90,0); const b=__grahan.run('KeyW',0.5).moved; ({strafeRight:a, facingMinusX_forward:b})",
+  "wait": 200
+ },
+ {
+  "name": "arrow-key-turn",
+  "eval": "__grahan.teleport(0,0,18,0); __grahan.run('ArrowLeft',0.5); __grahan.state().yaw",
+  "wait": 200
+ },
+ {
+  "name": "press-async-real-keyboard-events",
+  "eval": "__grahan.teleport(0,0,18,0); __grahan.press('KeyW',500).then(s=>({z:s.pos.z, t:s.t}))",
+  "wait": 300
+ },
+ {
+  "name": "stepup-0.5",
+  "eval": "__grahan.teleport(-4,0,12,0); __grahan.run('KeyW',1.2); P()",
+  "wait": 300
+ },
+ {
+  "name": "blocked-by-0.9",
+  "eval": "__grahan.teleport(0,0,12,0); __grahan.run('KeyW',1.5); P()",
+  "wait": 300
+ },
+ {
+  "name": "jump-onto-0.9",
+  "eval": "__grahan.run(['KeyW','Space'],1.2); P()",
+  "wait": 300
+ },
+ {
+  "name": "wall-2.2-blocks-jump",
+  "eval": "__grahan.teleport(8,0,12,0); __grahan.run(['KeyW','Space'],2); P()",
+  "wait": 300
+ },
+ {
+  "name": "jump-height",
+  "eval": "__grahan.teleport(0,0,12,0); const r=__grahan.run('Space',1); ({maxY:r.maxY, after:P()})",
+  "wait": 200
+ },
+ {
+  "name": "ramp-up",
+  "eval": "__grahan.teleport(-14,0,-2,0); const mid=__grahan.run('KeyW',2.5).state.pos; const r=__grahan.run('KeyW',3.3); ({mid, end:P()})",
+  "wait": 400
+ },
+ {
+  "name": "ramp-top-look-back",
+  "eval": "__grahan.look(180,-12); P()",
+  "wait": 400
+ },
+ {
+  "name": "stairs-up",
+  "eval": "__grahan.teleport(16,0,-2,0); const mid=__grahan.run('KeyW',2).state.pos; __grahan.run('KeyW',3); ({mid, end:P()})",
+  "wait": 400
+ },
+ {
+  "name": "stairs-down",
+  "eval": "__grahan.look(0,0); __grahan.teleport(16,4.8,-20,180); __grahan.run('KeyW',1.0); const mid=P(); __grahan.run('KeyW',3.5); ({mid,end:P(), events:__grahan.events('player:fall').length})",
+  "wait": 400
+ },
+ {
+  "name": "lift-wait-bottom",
+  "eval": "const l=L(); l.auto=false; l.goTo('bottom'); __grahan.teleport(0,0.1,-25,0); __grahan.step(2.5); ({lift:l.snapshot(), p:P()})",
+  "wait": 300
+ },
+ {
+  "name": "lift-board",
+  "eval": "__grahan.run('KeyW',1.0); ({p:P(), lift:L().snapshot()})",
+  "wait": 300
+ },
+ {
+  "name": "lift-rising",
+  "eval": "L().goTo('top'); __grahan.step(0.8); ({p:P(), lift:L().snapshot()})",
+  "wait": 300
+ },
+ {
+  "name": "lift-top",
+  "eval": "__grahan.step(2); ({p:P(), lift:L().snapshot()})",
+  "wait": 300
+ },
+ {
+  "name": "lift-exit-to-bridge",
+  "eval": "__grahan.run('KeyW',1.5); P()",
+  "wait": 400
+ },
+ {
+  "name": "lift-down-carry",
+  "eval": "__grahan.teleport(0,4.8,-30.5,0); __grahan.step(0.3); L().goTo('bottom'); __grahan.step(1); const mid=P(); __grahan.step(1.5); ({mid,end:P(), lift:L().snapshot()})",
+  "wait": 300
+ },
+ {
+  "name": "tower-top",
+  "eval": "__grahan.teleport(40,12,-24,180); __grahan.step(1); __grahan.clearEvents(); P()",
+  "wait": 500
+ },
+ {
+  "name": "walk-off-tower",
+  "eval": "__grahan.game.events.once('player:fall', ()=>{ window.__fellAt=P(); __grahan.game.player.respawn('fall-test'); __grahan.game.input.keys.clear(); }); __grahan.run('KeyW',3.5); const fall=__grahan.events('player:fall'); ({fall, hookFiredAt:window.__fellAt, afterRespawn:P(), lastSafe:__grahan.state().lastSafe})",
+  "wait": 400
+ },
+ {
+  "name": "respawn-on-tower",
+  "eval": "__grahan.step(0.3); ({p:P(), respawnEvents:__grahan.events('player:respawn').length})",
+  "wait": 400
+ },
+ {
+  "name": "void-respawn",
+  "eval": "__grahan.step(1); __grahan.clearEvents(); __grahan.game.player.pos.y=-41; __grahan.step(0.1); ({p:P(), ev:__grahan.events().map(e=>e.type)})",
+  "wait": 300
+ },
+ {
+  "name": "raycast",
+  "eval": "({toStepBox:__grahan.ray({x:0,y:0.5,z:18},{x:0,y:0,z:-1},100), toRampSurface:__grahan.ray({x:-14,y:10,z:-17},{x:0,y:-1,z:0},50), blockedByWall:__grahan.ray({x:0,y:1,z:18},{x:0,y:0,z:-1},50)})",
+  "wait": 100
+ },
+ {
+  "name": "physics-5000-boxes",
+  "eval": "(()=>{const w=__grahan.game.physics; const cs=[]; let s=1; const r=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296); for(let i=0;i<5000;i++){const x=200+r()*600,z=200+r()*600; cs.push(w.addBox([x,0,z],[x+2+r()*6,3+r()*20,z+2+r()*6]));} const t0=performance.now(); let hits=0; for(let i=0;i<20000;i++){ if(w.groundHeightAt(200+r()*600,200+r()*600,30)>-Infinity) hits++; } const ms=performance.now()-t0; const ray=w.raycast({x:150,y:2,z:500},{x:1,y:0,z:0},800); const n=w.count; cs.forEach(c=>w.remove(c)); return {boxes:5000, queries:20000, ms:Math.round(ms), hits, rayHit:!!ray, countAfterRemove:w.count, before:n}})()",
+  "wait": 100
+ },
+ {
+  "name": "overview-arena",
+  "eval": "__grahan.teleport(0,0,18,0); __grahan.set('freeze',true); __grahan.teleport(2,24,52,0); __grahan.look(0,-24); P()",
+  "wait": 600
+ },
+ {
+  "name": "overview-ramp-bridge",
+  "eval": "__grahan.teleport(-26,12,-8,0); __grahan.look(-50,-20); P()",
+  "wait": 600
+ },
+ {
+  "name": "overview-lift-tower",
+  "eval": "__grahan.teleport(14,9,-8,0); __grahan.look(30,-8); P()",
+  "wait": 600
+ },
+ {
+  "name": "end-of-tour-state",
+  "eval": "__grahan.set('freeze',false); __grahan.teleport(0,0,18,0); __grahan.step(0.5); __grahan.state()",
+  "wait": 400
+ }
+]

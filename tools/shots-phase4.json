@@ -1,0 +1,217 @@
+[
+ {
+  "name": "p4-setup",
+  "eval": "window.A=__grahan; window.G=A.game; window.H=G.hazards; window.R=()=>G.player.rays;\nwindow.go=()=>A.do('pause',false); window.stop=()=>A.do('pause',true);\nwindow.quiet=()=>{H.slabs.aftershocks.forEach(a=>{a.done=true})};\nwindow.fresh=(x,y,z,yaw,hour)=>{ go(); H.detaining=null; G.modal=false; G.screenfx.fade(0,0); H.kickV=null; H.holdT=0; A.do('hazardGrace',0); A.set('view','first'); A.set('freeze',false); A.set('speed',1); A.set('jacket',false); G.flags.jacket=false; A.do('floodSet'); A.set('invulnerable',false); A.set('rays',12); A.do('hazardsClear'); A.setTime(hour??22); quiet(); A.teleport(x,y,z,yaw??0); A.look(yaw??0,0); A.step(0.3); };\nwindow.dogsOf=()=>H.dogs.dogs.filter(d=>!d.asleep).map(d=>d.state[0]).join('');\nwindow.lookAt=(o,pitch)=>{ const p=G.player.pos; A.look(Math.atan2(-(o.x-p.x),-(o.z-p.z))*180/Math.PI, pitch??0); };\nwindow.maxCalls=0; window.sampleCalls=()=>{ const c=A.state().render.calls; if(c>maxCalls) maxCalls=c; return c; };\nA.set('invulnerable',true);\nquiet();\nconst s=A.state(); ({seed:s.seed, total:s.hazards.total, unstable:s.hazards.slabs.unstable, droneStates:s.hazards.drones.states, fierce:s.hazards.dogs.fierce, floodSev:s.hazards.flood.severity, aftershocks:s.hazards.slabs.aftershocks, calls:s.render.calls, hazardsEnabled:s.hazards.enabled})",
+  "wait": 800
+ },
+ {
+  "name": "hazards-api-and-toggle",
+  "eval": "fresh(-15,0,-30,0,22); A.do('spawnDogs',2,10,'wander'); A.step(0.3); const l=G.hazards.list(); const api={count:l.length, first:l.slice(0,2), kinds:[...new Set(l.map(e=>e.kind))], keysOK:l.every(e=>e.id&&e.kind&&e.pos&&typeof e.alert==='number'), nearest:A.state().hazards.nearest}; A.set('hazards',false); A.step(0.5); const off={n:G.hazards.list().length, enabled:A.state().hazards.enabled, dogsVisible:H.dogs.body.visible, waterVisible:H.flood.uMesh.visible}; A.set('hazards',true); A.step(0.3); ({api, off, onAgain:G.hazards.list().length})",
+  "wait": 300
+ },
+ {
+  "name": "dogs-pack-wander",
+  "eval": "fresh(-15,0,-30,0,21); A.do('spawnDogs',3,22,'wander'); A.do('hazardGrace',999); A.step(1.0); A.do('hazardGrace',0); A.look(0,-5); const s=A.state().hazards; stop(); ({dogs:dogsOf(), pack:s.dogs.awake, nearest:s.nearest})",
+  "wait": 600
+ },
+ {
+  "name": "dogs-notice-chase",
+  "eval": "go(); A.look(0,-4); A.run(['KeyW','ShiftLeft'],1.1); const a=dogsOf(); A.step(0.9); const b=dogsOf(); const s=A.state(); stop(); ({afterRun:a, afterNotice:b, dist:s.hazards.nearest&&s.hazards.nearest.dist, rays:s.rays})",
+  "wait": 600
+ },
+ {
+  "name": "dogs-bite",
+  "eval": "go(); const r0=R(), p0={...G.player.pos}; A.clearEvents(); let firstHit=null; for(let i=0;i<300 && !firstHit;i++){ A.step(0.05); if(A.events('hazard:hurt').length) firstHit={t:+(i*0.05).toFixed(2)}; } A.step(0.5); const p1={...G.player.pos}; A.step(5); const s=A.state(); stop(); ({r0, rays:R(), bites:s.hazards.dogs.stats.bites, firstHit, movedByBiteAndKnockback:+Math.hypot(p1.x-p0.x,p1.z-p0.z).toFixed(2), msgs:s.messages.last.slice(-2)})",
+  "wait": 600
+ },
+ {
+  "name": "dogs-sing-calm",
+  "eval": "fresh(-15,0,-30,0,21); A.do('spawnDogs',3,9,'chase'); A.step(1.0); const before=dogsOf(); const r0=R(); A.do('singEmit'); A.step(3); const st=A.state().hazards.dogs; stop(); ({before, afterSing:dogsOf(), calm:st.calm, calmed:st.stats.calmed, bitesAfter:st.stats.bites, r0, rays:R()})",
+  "wait": 600
+ },
+ {
+  "name": "dogs-calm-then-leave",
+  "eval": "go(); A.step(9); const mid=dogsOf(); A.step(14); const st=A.state().hazards.dogs; ({mid, end:dogsOf(), calmLeft:st.calm})",
+  "wait": 200
+ },
+ {
+  "name": "dogs-escape-upstairs-setup",
+  "eval": "fresh(-20,0,-6,0,21); A.look(180,0); A.do('spawnDogs',3,8,'chase'); A.look(0,0); A.set('speed',1.5); A.step(0.2); ({dogs:dogsOf(), pos:A.state().pos})",
+  "wait": 300
+ },
+ {
+  "name": "dogs-escape-upstairs-run",
+  "eval": "go(); const r0=R(); A.run('KeyW',3.6); const mid={y:+G.player.pos.y.toFixed(1), level:G.player.level, rays:R()}; A.set('speed',1); A.step(4); const s1={dogs:dogsOf(), dist:A.state().hazards.nearest&&A.state().hazards.nearest.dist}; A.step(8); stop(); const s=A.state(); ({r0, mid, levelNow:s.level, rays:R(), afterRun:s1, later:dogsOf(), escaped:s.hazards.dogs.stats.escaped})",
+  "wait": 600
+ },
+ {
+  "name": "dogs-underground",
+  "eval": "fresh(33,-8,30,0,12); A.do('hazardGrace',999); A.do('spawnDogs',3,10,'wander'); A.look(0,-3); A.step(0.2); A.do('hazardGrace',0); const r0=R(); A.run(['KeyW','ShiftLeft'],1.0); A.step(5); const s=A.state(); stop(); ({level:s.level, rays0:r0, rays:R(), bites:s.hazards.dogs.stats.bites, dogs:dogsOf()})",
+  "wait": 600
+ },
+ {
+  "name": "drone-beam-view",
+  "eval": "fresh(10,12,-30,0,21); A.do('spawnDrone',{ahead:9,span:10,speed:1.6}); A.do('hazardGrace',999); A.step(1.5); const d=G.hazards.drones.drones.filter(x=>x.id.startsWith('dbg')).pop(); lookAt(d,-6); A.step(0.1); stop(); ({drone:{x:+d.x.toFixed(1),y:+d.y.toFixed(1),z:+d.z.toFixed(1),state:d.state}, calls:sampleCalls()})",
+  "wait": 600
+ },
+ {
+  "name": "drone-spotted",
+  "eval": "go(); A.do('hazardGrace',0); const did=G.hazards.drones.drones.filter(x=>x.id.startsWith('dbg')).pop().id; A.do('tpHazard','drone',did,4.6); A.set('freeze',false); const d=G.hazards.drones.drones.find(x=>x.id===did); let t=null; for(let i=0;i<60&&t===null;i++){ A.step(0.05); if(G.hazards.drones.snapshot().spot>0.35) t=+(i*0.05).toFixed(2); } lookAt(d,22); const s=A.state().hazards; stop(); ({spotAfter:t, dronesSpot:s.drones.spot, tracking:s.drones.tracking, state:d.state, nearest:s.nearest})",
+  "wait": 600
+ },
+ {
+  "name": "drone-detained-released",
+  "eval": "go(); const t0=G.clock.t, pos0={...G.player.pos}; const log=[]; for(let i=0;i<60;i++){ A.step(0.1); if(i%6===0) log.push([+(i/10).toFixed(1), A.state().hazards.detaining, A.state().screenfx.fade]); } A.step(2.5); const mid=A.state(); const p=G.player.pos; const near=G.world.checkpoints.map(c=>({id:c.id,d:+Math.hypot(c.x-p.x,c.z-p.z).toFixed(1)})).sort((a,b)=>a.d-b.d)[0]; stop(); ({clockJumpH:+(G.clock.t-t0).toFixed(2), from:pos0, level:mid.level, atCheckpoint:near, detentions:mid.hazards.detentions, modal:G.modal, msgs:mid.messages.last.slice(-3), log})",
+  "wait": 600
+ },
+ {
+  "name": "drone-sing-alert",
+  "eval": "fresh(10,12,-30,0,21); A.do('spawnDrone',{ahead:30,span:6,speed:1}); A.step(0.5); const near=()=>G.hazards.drones.drones.filter(x=>Math.hypot(x.x-10,x.z+30)<40).map(x=>x.state[0]).join(''); const d0=near(); A.do('singEmit'); A.step(0.3); const d1=near(); A.step(2.5); stop(); ({before:d0, after:d1, investigating:G.hazards.drones.drones.filter(x=>x.state==='investigate').length, stats:A.state().hazards.drones.stats})",
+  "wait": 300
+ },
+ {
+  "name": "camera-calls-drone",
+  "eval": "fresh(10,12,-30,0,21); A.do('hazardGrace',0); const id=G.world.hazardZones.cameras.find(c=>c.gate==='gate-l2-stairs-b').id; A.do('tpHazard','camera',id,5); A.set('freeze',true); A.step(0.2); let hit=false; for(let i=0;i<80&&!hit;i++){ A.step(0.1); hit=G.hazards.drones.cams.some(c=>c.alert>0); } A.step(0.5); const s=A.state().hazards.drones; const called=G.hazards.drones.drones.filter(d=>d.state==='investigate').map(d=>d.id); A.set('freeze',false); stop(); ({camera:id, alerted:hit, camAlerts:s.camAlerts, cameraCalls:s.stats.cameraCalls, droneInvestigating:called, msgs:A.state().messages.last.slice(-1)})",
+  "wait": 600
+ },
+ {
+  "name": "guard-no-jacket-shove",
+  "eval": "fresh(45,0,-30,0,21); A.do('hazardGrace',0); A.do('tpHazard','guard','guard-a-west',7); const p0={...G.player.pos}; A.step(0.2); let w=null; for(let i=0;i<80&&!w;i++){ A.step(0.05); if(H.guards.stats.warnings>0) w={t:+(i*0.05).toFixed(2)}; } A.step(0.7); const p2={...G.player.pos}; const s=A.state().hazards.guards; stop(); ({warned:w, warnings:s.stats.warnings, watch:s.watch, jacket:s.jacket, pushedMetres:+Math.hypot(p2.x-p0.x,p2.z-p0.z).toFixed(2), msgs:A.state().messages.last.slice(-3)})",
+  "wait": 600
+ },
+ {
+  "name": "guard-no-jacket-detained",
+  "eval": "go(); A.do('hazardGrace',0); const t0=G.clock.t, det0=H.detentions; let d=null; for(let i=0;i<120&&d===null;i++){ A.step(0.1); if(H.detentions>det0) d=i/10; } A.step(3); const s=A.state(); stop(); ({detainedAfter:d, clockJump:+(G.clock.t-t0).toFixed(2), level:s.level, guardStats:s.hazards.guards.stats})",
+  "wait": 600
+ },
+ {
+  "name": "guard-jacket-pass",
+  "eval": "fresh(45,0,-30,0,21); A.set('jacket',true); G.flags.jacket=true; A.do('hazardGrace',0); A.do('tpHazard','guard','guard-a-west',9); const p=G.player.pos, g=H.guards.guards.find(x=>x.id==='guard-a-west'); lookAt({x:g.x+4,z:g.z},0); const d0=H.detentions, w0=H.guards.stats.warnings; A.run('KeyW',2.0); const mid=H.guards.snapshot(); A.step(1.0); stop(); ({jacket:mid.jacket, watching:mid.watching, warnings:H.guards.stats.warnings-w0, blown:H.guards.stats.blown, detained:H.detentions-d0, pos:A.state().pos})",
+  "wait": 600
+ },
+ {
+  "name": "guard-jacket-run-blown",
+  "eval": "go(); A.do('hazardGrace',0); const g=H.guards.guards.find(x=>x.id==='guard-a-west'); const f={x:-Math.sin(g.baseYaw), z:-Math.cos(g.baseYaw)}; A.teleport(g.x+f.x*8, g.y, g.z+f.z*8, Math.atan2(f.x,f.z)*180/Math.PI+180); const d0=H.detentions; let r=null, b=null; const b0=H.guards.stats.blown; for(let i=0;i<50&&r===null;i++){ A.run(i<10?['KeyW','ShiftLeft']:null,0.1); if(b===null&&H.guards.stats.blown>b0) b=i/10; if(H.detentions>d0) r=i/10; } stop(); ({blownAfter:b, detainedAfter:r, msgs:A.state().messages.last.slice(-3)})",
+  "wait": 600
+ },
+ {
+  "name": "guard-jacket-linger",
+  "eval": "fresh(45,0,-30,0,21); A.set('jacket',true); G.flags.jacket=true; A.do('hazardGrace',0); A.do('tpHazard','guard','guard-a-west',6); const d0=H.detentions, b0=H.guards.stats.blown; let t=null; for(let i=0;i<90&&t===null;i++){ A.step(0.1); if(H.guards.stats.blown>b0) t=i/10; } A.step(1.5); stop(); ({blownAfter:t, detained:H.detentions-d0})",
+  "wait": 300
+ },
+ {
+  "name": "guard-sing-and-distract",
+  "eval": "fresh(45,0,-30,0,21); A.set('jacket',true); G.flags.jacket=true; A.do('hazardGrace',0); A.do('tpHazard','guard','guard-a-west',7); A.step(0.3); const calm0=H.guards.stats.blown; A.step(1.5); const quiet=H.guards.stats.blown-calm0; const d0=H.detentions, b0=H.guards.stats.blown; A.do('singEmit'); A.step(0.5); const alerted=H.guards.guards.filter(g=>g.alertT>0).length; let tb=null; for(let i=0;i<60&&tb===null;i++){ A.step(0.1); if(H.guards.stats.blown>b0) tb=i/10; } A.step(1.5); const sing={quietBeforeSinging:quiet===0, alerted, blownAfterSinging:tb, detained:H.detentions-d0}; fresh(45,0,-30,0,21); A.do('hazardGrace',0); A.do('tpHazard','guard','guard-a-west',7); A.do('guardDistract',20); const d1=H.detentions, w0=H.guards.stats.warnings; A.step(4); stop(); ({sing, distracted:{warnings:H.guards.stats.warnings-w0, detained:H.detentions-d1, left:H.guards.snapshot().distracted}})",
+  "wait": 300
+ },
+ {
+  "name": "slab-step-crack",
+  "eval": "fresh(0,0,40,0,21); const ids=A.do('unstableSlabs'); const id=ids[0]; A.do('tpHazard','slab',id); A.step(0.35); const st1=H.slabs.byId.get(id).state; stop(); ({unstable:ids, tested:id, stateAfterStep:st1, rays:R(), shake:A.state().hazards.shake})",
+  "wait": 500
+ },
+ {
+  "name": "slab-collapse-impact",
+  "eval": "go(); const u=H.slabs.byId.get(H.slabs.unstable[0].slab.id); A.step(1.1); const mid={state:u.state, y:+G.player.pos.y.toFixed(1)}; for(let i=0;i<100&&u.state!=='gone';i++) A.step(0.05); const rays0=R(); A.step(0.35); A.look(0,-12); const s=A.state(); stop(); ({mid, state:u.state, colliderEnabled:u.slab.collider.enabled, y:s.pos.y, level:s.level, rays:s.rays, stats:s.hazards.slabs.stats, chunks:s.hazards.slabs.chunks, dustPuffs:H.dustList.length})",
+  "wait": 600
+ },
+ {
+  "name": "slab-run-off-safe",
+  "eval": "fresh(0,0,40,0,21); const id=H.slabs.unstable.find(u=>u.state==='ok'&&u.slab.level==='L2').slab.id; A.do('tpHazard','slab',id); const u=H.slabs.byId.get(id); const sl=u.slab; A.teleport(sl.x1-1.2, sl.y, (sl.z0+sl.z1)/2, -90); A.step(0.3); const cracked=u.state; A.run(['KeyW','ShiftLeft'],0.9); const off=G.player.pos.x>sl.x1+0.5; A.step(2.2); ({cracked, ranOff:off, stateEnd:u.state, y:+G.player.pos.y.toFixed(1), rays:R()})",
+  "wait": 300
+ },
+ {
+  "name": "aftershock-event",
+  "eval": "fresh(-40,0,-6,0,21); A.do('hazardGrace',0); A.do('aftershock'); A.step(1.4); A.look(0,10); const s=A.state().hazards; stop(); ({aft:s.slabs.stats.aftershocks, shake:s.shake, chunks:s.slabs.chunks, msgs:A.state().messages.last.slice(-2)})",
+  "wait": 600
+ },
+ {
+  "name": "deranged-approach",
+  "eval": "go(); A.step(2.5); const landed=H.slabs.chunks.filter(c=>c.state==='fall').length; fresh(-15,0,-30,0,22); A.do('spawnDeranged',9,'approach'); A.do('hazardGrace',0); const w=H.deranged.list_[H.deranged.list_.length-1]; w.prefersTime=false; A.step(0.2); stop(); ({chunksStillFalling:landed, state:w.state, id:w.id, dist:+Math.hypot(w.x-G.player.pos.x,w.z-G.player.pos.z).toFixed(1)})",
+  "wait": 600
+ },
+ {
+  "name": "deranged-grab-ray",
+  "eval": "go(); const r0=R(); const t0=G.clock.t; let g=null; for(let i=0;i<150&&g===null;i++){ A.step(0.1); if(H.deranged.stats.grabs>0) g=i/10; } A.step(1.6); const st=H.deranged.snapshot(); stop(); ({grabAfter:g, rays0:r0, rays:R(), clockJumpH:+(G.clock.t-t0).toFixed(2), stats:st.stats, state:H.deranged.list_[H.deranged.list_.length-1].state, msgs:A.state().messages.last.slice(-2)})",
+  "wait": 600
+ },
+ {
+  "name": "deranged-grab-time-and-calm",
+  "eval": "fresh(-15,0,-30,0,22); A.do('spawnDeranged',7,'approach'); A.do('hazardGrace',0); let w=H.deranged.list_[H.deranged.list_.length-1]; w.prefersTime=true; const r0=R(), t0=G.clock.t, g0=H.deranged.stats.grabs; for(let i=0;i<120&&H.deranged.stats.grabs===g0;i++) A.step(0.1); A.step(1.5); const time={rays0:r0, rays:R(), clockJumpH:+(G.clock.t-t0).toFixed(2)}; fresh(-15,0,-30,0,22); A.do('spawnDeranged',12,'approach'); A.do('hazardGrace',0); w=H.deranged.list_[H.deranged.list_.length-1]; A.step(2.0); const before=w.state; A.do('singEmit'); A.step(3.0); const gr=H.deranged.stats.grabs; A.step(6); const calm={before, after:w.state, rays:R(), grabsDuring:H.deranged.stats.grabs-gr}; fresh(-15,0,-30,0,22); A.do('spawnDeranged',5,'approach'); A.do('hazardGrace',0); w=H.deranged.list_[H.deranged.list_.length-1]; for(let i=0;i<100&&w.state!=='grab';i++) A.step(0.1); const st=w.state; A.do('singEmit'); A.step(0.2); stop(); ({time, calm, tooLate:{whenSung:st, after:w.state, calm:w.calm}})",
+  "wait": 500
+ },
+ {
+  "name": "smog-from-outside",
+  "eval": "fresh(-75,0,-100,0,21); A.do('hazardGrace',999); A.look(0,2); A.step(0.5); const z=G.hazards.smog.zones.find(q=>q.id==='smog-canyon-n'); const d=A.state().hazards; stop(); ({zones:d.smog.zones, dens:+z.dens.toFixed(2), puffs:z.puffs.length, inside:d.smog.inside, calls:sampleCalls()})",
+  "wait": 600
+ },
+ {
+  "name": "smog-inside-drain",
+  "eval": "fresh(-75,0,-100,0,21); A.do('hazardGrace',999); A.set('rays',12); const airOut=G.air.at(G.player.pos).smog; A.step(27); const lostOut=12-R(); A.teleport(-75,0,-150,0); A.set('rays',12); const airIn=G.air.at(G.player.pos).smog; const t0=G.time; A.step(27); const lostIn=12-R(); const s=A.state().hazards.smog; stop(); ({outside:{air:airOut, raysLost:lostOut}, inside:{air:airIn, raysLost:lostIn, secs:+(G.time-t0).toFixed(0), expectedAbout:'27 s / (40 s / 3) = 2'}, coughs:s.stats.coughs, zone:s.zone, overlay:document.getElementById('fx-smog').style.opacity})",
+  "wait": 600
+ },
+ {
+  "name": "smog-underground-hall",
+  "eval": "fresh(33,-8,30,90,12); A.do('hazardGrace',999); A.set('rays',12); const air=G.air.at(G.player.pos).smog; A.step(3); stop(); ({air, level:G.player.level, calls:sampleCalls()})",
+  "wait": 600
+ },
+ {
+  "name": "flood-clock-and-breach-known",
+  "eval": "fresh(0,0,40,0,12); const out={}; for(const h of [6,10,14,18,22,2,5.9]) { A.setTime(h); quiet(); A.step(0.1); const f=A.state().hazards.flood; out[h]={t:G.clock.hhmm, u:f.uLevel, g:f.g['flood-promenade']}; } const gStartNoClue=A.state().hazards.flood.gStart; fresh(0,0,40,0,7); H.flood.knownAt=null; G.flags.breachKnown=true; A.step(0.1); const known=H.flood.knownAt; const gs=H.flood.gStart(); const o=[]; for(const h of [23,0.5,1.5,2.5,4,5.5]) { A.setTime(h); quiet(); A.step(0.1); o.push([h,+H.flood.zones[0].depth.toFixed(2)]); } G.flags.breachKnown=false; H.flood.knownAt=null; ({levels:out, severity:A.state().hazards.flood.severity, gStartWithoutClues:gStartNoClue, withBreachKnown:{knownAt:+known.toFixed(2), gStart:+gs.toFixed(2), rule:'knownAt+18, capped at 26 (02:00)', depthByHour:o}})",
+  "wait": 200
+ },
+ {
+  "name": "flood-u-water-view",
+  "eval": "fresh(-30,-8,-40,90,12); A.do('floodSet',-6.8,0); A.do('hazardGrace',999); A.step(0.5); A.look(90,-12); const d=H.flood.depth; stop(); ({depth:+d.toFixed(2), level:G.player.level, uLevel:H.flood.uLevel, bwY:G.world.breachWater.y, calls:sampleCalls()})",
+  "wait": 600
+ },
+ {
+  "name": "flood-u-deep-drain",
+  "eval": "go(); A.do('floodSet',-6.8,0); A.step(0.2); A.do('hazardGrace',999); A.set('rays',12); const mulNow=H.speedMods.get('water'); const t0=G.time; A.look(90,0); A.run('KeyW',3); A.look(-90,0); A.run('KeyW',3); A.step(5); const s=A.state().hazards.flood; stop(); ({depth:s.playerDepth, speedMul:mulNow, raysLost:12-R(), secs:+(G.time-t0).toFixed(0), splashes:s.stats.splashes})",
+  "wait": 300
+ },
+ {
+  "name": "flood-u-underwater-view",
+  "eval": "go(); A.do('floodSet',-6.0,0); A.set('invulnerable',true); A.step(0.5); A.look(90,-4); const o=document.getElementById('fx-water').style.opacity; stop(); ({underwater:A.state().hazards.flood.underwater, overlay:o})",
+  "wait": 600
+ },
+ {
+  "name": "flood-g-promenade",
+  "eval": "fresh(0,0,125,0,21); A.do('floodSet',-10.9,1.5); A.set('invulnerable',true); A.step(0.5); A.look(90,-8); stop(); ({depth:H.flood.depth, waterMeshes:H.flood.zones.filter(z=>z.mesh.visible).map(z=>z.id), calls:sampleCalls()})",
+  "wait": 600
+ },
+ {
+  "name": "flood-g-drain-and-shallow",
+  "eval": "go(); A.set('invulnerable',false); A.set('rays',12); A.do('hazardGrace',999); const t0=G.time; A.step(11); const deep={depth:H.flood.depth, raysLost:12-R(), secs:+(G.time-t0).toFixed(0)}; fresh(0,0,125,0,21); A.do('floodSet',-10.9,0.6); A.do('hazardGrace',999); A.step(0.3); const mul=H.speedMods.get('water'); const p0=G.player.pos.x; A.look(-90,0); A.run('KeyW',1.0); const moved=Math.abs(G.player.pos.x-p0); A.do('floodSet'); stop(); ({deep, shallow:{depth:0.6, speedMul:+mul.toFixed(2), movedIn1s:+moved.toFixed(2), normal:4.2}})",
+  "wait": 300
+ },
+ {
+  "name": "setu-dogs-bite",
+  "eval": "fresh(-15,0,-30,0,22); A.do('setuFind'); A.do('setuTeleportToPlayer',2.0); A.step(0.3); G.setu.follower.enabled=false; A.look(180,0); A.do('spawnDogs',3,9,'chase'); H.dogs.dogs.slice(-3).forEach(d=>{d.prefersSetu=true; d.target={kind:'setu',x:G.setu.pos.x,y:G.setu.pos.y,z:G.setu.pos.z,d:7}; H.dogs.setState(d,'chase');}); A.look(0,0); const h0=G.setu.health; A.do('hazardGrace',0); A.step(4); G.setu.follower.enabled=true; const st=H.dogs.snapshot().stats; stop(); ({setuHealth0:+h0.toFixed(1), setuHealth:+G.setu.health.toFixed(1), setuBites:st.setuBites, bitesOnMithi:st.bites, following:G.setu.following})",
+  "wait": 400
+ },
+ {
+  "name": "setu-smog-breath",
+  "eval": "fresh(-15,0,-100,0,21); A.do('setuFind'); A.do('setuTeleportToPlayer',2.0); A.do('hazardGrace',999); A.set('rays',12); A.step(0.2); const h0=G.setu.health; A.step(30); const outside=h0-G.setu.health; A.teleport(-75,0,-150,0); A.do('setuTeleportToPlayer',2.0); A.step(0.2); const h1=G.setu.health; A.step(30); const inside=h1-G.setu.health; const s=A.state().hazards.smog; stop(); ({outsideLoss:+outside.toFixed(3), insideLoss:+inside.toFixed(3), ratio:+(inside/outside).toFixed(2), expected:'~2.5', zone:s.zone})",
+  "wait": 400
+ },
+ {
+  "name": "setu-flood-deep",
+  "eval": "fresh(0,0,125,0,21); A.do('setuFind'); A.do('setuTeleportToPlayer',2.0); A.do('floodSet',-10.9,1.5); A.do('hazardGrace',999); A.set('invulnerable',true); A.step(0.3); const h0=G.setu.health; A.step(8); const s=A.state().hazards.flood; stop(); ({setuDeep:s.setuDeep, setuHealth0:+h0.toFixed(1), setuHealth:+G.setu.health.toFixed(1), soaked:s.stats.setuSoaked})",
+  "wait": 400
+ },
+ {
+  "name": "setu-deranged-grab",
+  "eval": "fresh(-15,0,-30,0,22); A.do('setuFind'); A.do('setuTeleportToPlayer',2.0); A.step(0.2); A.look(180,0); A.do('spawnDeranged',7,'approach'); A.look(0,0); const w=H.deranged.list_[H.deranged.list_.length-1]; w.target={kind:'setu',x:G.setu.pos.x,y:G.setu.pos.y,z:G.setu.pos.z,d:5}; A.do('hazardGrace',0); const h0=G.setu.health; A.step(7); const st=H.deranged.snapshot().stats; stop(); ({setuHealth0:+h0.toFixed(1), setuHealth:+G.setu.health.toFixed(1), setuGrabs:st.setuGrabs, rays:R()})",
+  "wait": 400
+ },
+ {
+  "name": "setu-slab-rider",
+  "eval": "fresh(0,0,40,0,21); A.do('setuFind'); const id=H.slabs.unstable.find(u=>u.state==='ok'&&u.slab.level==='L1').slab.id; A.do('tpHazard','slab',id); A.do('setuTeleportToPlayer',1.2); A.do('hazardGrace',999); A.step(0.5); const h0=G.setu.health; A.step(4); const u=H.slabs.byId.get(id); stop(); ({state:u.state, setuHealth0:+h0.toFixed(1), setuHealth:+G.setu.health.toFixed(1), rays:R()})",
+  "wait": 400
+ },
+ {
+  "name": "p4-stress-calls-and-state",
+  "eval": "go(); fresh(45,0,-14,180,21); A.set('jacket',true); G.flags.jacket=true; A.do('hazardGrace',999); A.do('spawnDogs',4,7,'wander'); A.do('spawnDeranged',9,'wander'); A.do('spawnDrone',{ahead:10,span:6,altitude:6}); A.look(180,-3); A.step(0.6); A.set('invulnerable',true); const rows=[]; for(const a of [0,60,120,200,300]){ A.look(a,-3); A.step(0.1); rows.push(sampleCalls()); } A.look(180,-3); A.step(0.1); stop(); const s=A.state(); ({rows, maxCallsOverTour:maxCalls, triangles:s.render.triangles, awake:s.hazards.awake, detentionsThisRun:s.hazards.detentions, hazardInstancedDrawn:G.scene.children.filter(o=>o.isInstancedMesh&&o.visible&&o.count>0&&/dogs|drones|cameras|crowd|hazard|debris|slab-cracks/.test(o.name)).length})",
+  "wait": 600
+ }
+]

@@ -1,0 +1,77 @@
+[
+ {
+  "name": "intro-pause",
+  "eval": "window.__grahan.set('invulnerable',true); window.__grahan.do('pause',true); JSON.stringify(window.__grahan.state().story6b.cine)",
+  "wait": 300
+ },
+ {
+  "name": "intro-stamp",
+  "eval": "window.__grahan.do('cineAdvance',1.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-vision",
+  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-wakes",
+  "eval": "window.__grahan.do('cineAdvance',5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-mat",
+  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-street",
+  "eval": "window.__grahan.do('cineAdvance',4.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-doorway-hum",
+  "eval": "window.__grahan.do('cineAdvance',1.8).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-slabs-fall",
+  "eval": "window.__grahan.do('cineAdvance',2.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-dust",
+  "eval": "window.__grahan.do('cineAdvance',2.0).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-white",
+  "eval": "window.__grahan.do('cineAdvance',2.4).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-silence",
+  "eval": "window.__grahan.do('cineAdvance',5.0).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-title",
+  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-dust-at-spawn",
+  "eval": "window.__grahan.do('cineAdvance',5.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-play",
+  "eval": "window.__grahan.do('cineAdvance',3.5).then(function(x){return JSON.stringify({t:x.t,marks:x.marks,active:x.active,last:x.last})})",
+  "wait": 1800
+ },
+ {
+  "name": "intro-after",
+  "eval": "window.__grahan.do('pause',false); window.__grahan.step(1); JSON.stringify({mode:window.__grahan.state().mode, pos:window.__grahan.state().pos, hhmm:window.__grahan.state().clock.hhmm, modal:window.__grahan.game.modal, frozen:window.__grahan.game.player.frozen})",
+  "wait": 1500
+ }
+]

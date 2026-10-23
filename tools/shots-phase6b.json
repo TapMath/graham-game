@@ -1,0 +1,237 @@
+[
+ {
+  "name": "start",
+  "eval": "window.__grahan.set('invulnerable',true); window.__grahan.set('hazards',false); window.__grahan.do('pause',true); window.__grahan.step(0.5); JSON.stringify(window.__grahan.state().story6b)",
+  "wait": 600
+ },
+ {
+  "name": "frag-phone-mithi",
+  "eval": "window.__grahan.do('fragment','frag-phone-rubble',{tp:true}); window.__grahan.step(4.5); JSON.stringify(window.__grahan.state().story6b.fragments)",
+  "wait": 1500
+ },
+ {
+  "name": "frag-voicelog-audio",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.do('fragment','frag-voicelog-metro',{tp:true,instant:true}); window.__grahan.step(1); JSON.stringify(window.__grahan.state().story6b.fragments)",
+  "wait": 1500
+ },
+ {
+  "name": "frag-memo-mithi-blind",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.do('fragment','frag-memo-site',{tp:true,instant:true}); window.__grahan.step(1); JSON.stringify({evidence:window.__grahan.game.flags.breachEvidence, clues:window.__grahan.state().story6b.fragments.clues, touched:window.__grahan.state().story6b.fragments.touched})",
+  "wait": 1500
+ },
+ {
+  "name": "frag-memo-jeetu",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.game.party={active:'jeetu',jeetu:{}}; window.__grahan.do('fragment','frag-memo-site',{instant:true}); window.__grahan.step(1); JSON.stringify(window.__grahan.state().story6b.fragments)",
+  "wait": 1500
+ },
+ {
+  "name": "terminal-no-breach",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.step(0.3); window.__grahan.teleport(142,38,-87.5,0); window.__grahan.step(0.3); window.__grahan.run('KeyE',0.1); window.__grahan.step(0.5); JSON.stringify({warned:window.__grahan.game.flags.cityWarned, msgs:window.__grahan.state().messages})",
+  "wait": 1200
+ },
+ {
+  "name": "frag-seep-clue2",
+  "eval": "window.__grahan.do('fragment','frag-seep-tunnel',{tp:true,instant:true}); window.__grahan.step(1); JSON.stringify(window.__grahan.state().story6b.fragments.clues)",
+  "wait": 1500
+ },
+ {
+  "name": "frag-ledger-clue3-breach",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.do('fragment','frag-ledger-boring',{tp:true,instant:true}); window.__grahan.step(1); JSON.stringify({known:window.__grahan.game.flags.breachKnown, evidence:window.__grahan.state().story6b.evidence, clues:window.__grahan.state().story6b.fragments.clues})",
+  "wait": 1500
+ },
+ {
+  "name": "breach-hud-flood",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.step(3.5); window.__grahan.teleport(-60,-8,-40,90); window.__grahan.step(0.5); JSON.stringify({hud:window.__grahan.state().hud, obj:window.__grahan.state().objective, known:window.__grahan.game.flags.breachKnown})",
+  "wait": 2500
+ },
+ {
+  "name": "tower-prompt",
+  "eval": "window.__grahan.teleport(142,38,-87.5,0); window.__grahan.step(0.4); JSON.stringify(window.__grahan.state().world.focus)",
+  "wait": 1200
+ },
+ {
+  "name": "tower-warn-1s",
+  "eval": "(async()=>{ window.__grahan.run('KeyE',0.1); await window.__grahan.do('cineAdvance',1.2); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "tower-warn-6s",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "tower-warn-end",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',6); await window.__grahan.do('cineAdvance',6); return JSON.stringify({warned:window.__grahan.game.flags.cityWarned, via:window.__grahan.game.flags.cityWarnedVia, active:window.__grahan.state().story6b.cine.active, paLines:window.__grahan.game.pa.lines.length}) })()",
+  "wait": 1500
+ },
+ {
+  "name": "trail-lift-wreck",
+  "eval": "window.__grahan.do('fragmentClose'); window.__grahan.do('trail','liftWreck',{bark:true}); window.__grahan.step(2); window.__grahan.look(-90,-25); JSON.stringify(window.__grahan.state().story6b.trail)",
+  "wait": 1800
+ },
+ {
+  "name": "trail-clinic-pickup",
+  "eval": "window.__grahan.do('trail','clinic',{bark:true}); const it=window.__grahan.game.interactables.get('trail:clinic'); window.__grahan.teleport(it.pos.x-1.0,it.pos.y,it.pos.z,-90); window.__grahan.step(0.5); window.__grahan.run('KeyE',0.1); window.__grahan.step(1.5); JSON.stringify(window.__grahan.state().story6b.trail)",
+  "wait": 1800
+ },
+ {
+  "name": "trail-tents-chalk",
+  "eval": "window.__grahan.do('trail','triageTents',{bark:true}); window.__grahan.step(2); window.__grahan.look(-90,-35); JSON.stringify(window.__grahan.state().story6b.trail)",
+  "wait": 1800
+ },
+ {
+  "name": "festival-19h-pa",
+  "eval": "window.__grahan.do('clockAdvance',13.2); window.__grahan.step(3.5); JSON.stringify({hhmm:window.__grahan.state().clock.hhmm, pa:window.__grahan.state().pa.last, fw:window.__grahan.state().story6b.fireworks.active})",
+  "wait": 3500
+ },
+ {
+  "name": "fireworks-L3",
+  "eval": "window.__grahan.set('hour',21.0); window.__grahan.teleport(100,38,-60,-90); window.__grahan.look(-90,32); window.__grahan.do('fireworks',7); window.__grahan.step(1.7); JSON.stringify(window.__grahan.state().story6b.fireworks)",
+  "wait": 1800
+ },
+ {
+  "name": "fireworks-L3-later",
+  "eval": "window.__grahan.step(0.9); JSON.stringify(window.__grahan.state().story6b.fireworks)",
+  "wait": 1800
+ },
+ {
+  "name": "fireworks-ground-quiet",
+  "eval": "window.__grahan.teleport(-44,0,-30,0); window.__grahan.do('fireworks',3); window.__grahan.step(1.5); JSON.stringify({render:window.__grahan.state().render, fw:window.__grahan.state().story6b.fireworks})",
+  "wait": 1500
+ },
+ {
+  "name": "setu-lost-1",
+  "eval": "(async()=>{ window.__grahan.do('fireworksOff'); window.__grahan.set('hour',2.0); window.__grahan.teleport(60,0,92,0); window.__grahan.step(0.3); window.__grahan.game.endings.trigger(3,{reason:'setuDied'}); await window.__grahan.do('cineAdvance',4); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "setu-lost-2",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',7); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "setu-lost-card",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); await window.__grahan.do('cineAdvance',6); return JSON.stringify({ending:window.__grahan.state().ending, mode:window.__grahan.state().mode}) })()",
+  "wait": 3500
+ },
+ {
+  "name": "mithi-dies-1",
+  "eval": "(async()=>{ window.__grahan.do('endingReset'); window.__grahan.do('pause',true); window.__grahan.set('hour',23.0); window.__grahan.teleport(-44,0,-30,0); window.__grahan.step(0.3); window.__grahan.game.endings.trigger(4,{reason:'rays'}); await window.__grahan.do('cineAdvance',6); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "mithi-dies-2",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "mithi-dies-card",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',8); await window.__grahan.do('cineAdvance',6); return JSON.stringify({ending:window.__grahan.state().ending}) })()",
+  "wait": 3500
+ },
+ {
+  "name": "reunion-warned-setup",
+  "eval": "window.__grahan.do('endingReset'); window.__grahan.do('pause',true); window.__grahan.set('cityWarned',true); window.__grahan.set('hour',2.0); window.__grahan.do('cine','reunion',{type:1,waiting:true}); 1",
+  "wait": 400
+ },
+ {
+  "name": "reunion-warned-stamp",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',2); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-walk",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-no-one",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',4.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-face",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-organ",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',5.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-run-start",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-run-meet",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',2.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-embrace",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',2.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-sunbreak",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',3.5); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-sunrise-words",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',4); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-crane",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',7); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-warned-card",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); await window.__grahan.do('cineAdvance',6); return JSON.stringify({ending:window.__grahan.state().ending, calls:window.__grahan.state().render.calls}) })()",
+  "wait": 3500
+ },
+ {
+  "name": "reunion-unwarned-setup",
+  "eval": "window.__grahan.do('endingReset'); window.__grahan.do('pause',true); window.__grahan.set('cityWarned',false); window.__grahan.set('hour',2.0); window.__grahan.do('cine','reunion',{type:2,waiting:true}); 1",
+  "wait": 400
+ },
+ {
+  "name": "reunion-unwarned-sunbreak",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',33); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-unwarned-crane",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',9); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-unwarned-card",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); await window.__grahan.do('cineAdvance',6); return JSON.stringify({ending:window.__grahan.state().ending, calls:window.__grahan.state().render.calls}) })()",
+  "wait": 3500
+ },
+ {
+  "name": "reunion-together-setup",
+  "eval": "window.__grahan.do('endingReset'); window.__grahan.do('pause',true); window.__grahan.set('cityWarned',true); window.__grahan.set('hour',2.0); window.__grahan.do('cine','reunion',{type:1,waiting:false}); 1",
+  "wait": 400
+ },
+ {
+  "name": "reunion-together-walk",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-together-sunrise",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',12); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "wait": 1800
+ },
+ {
+  "name": "reunion-together-card",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',40); await window.__grahan.do('cineAdvance',6); return JSON.stringify({ending:window.__grahan.state().ending, calls:window.__grahan.state().render.calls}) })()",
+  "wait": 3500
+ }
+]
