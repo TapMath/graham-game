@@ -15,8 +15,12 @@ export function isTouchDevice(search = (typeof location !== 'undefined' ? locati
   try {
     const q = new URLSearchParams(search);
     if (q.has('touch')) return q.get('touch') !== '0' && q.get('touch') !== 'false';
-    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-    return coarse && (navigator.maxTouchPoints > 0 || 'ontouchstart' in window);
+    const mq = (m) => typeof matchMedia === 'function' && matchMedia(m).matches;
+    const touchHw = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    // An iPad with a keyboard or trackpad reports a fine primary pointer (and a Mac user agent), but it is still a touch
+    // screen: any coarse pointer, or a multi-touch screen on a "Mac" (only iPads have one), counts.
+    const iPadAsMac = /Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+    return (touchHw && (mq('(pointer: coarse)') || mq('(any-pointer: coarse)'))) || iPadAsMac;
   } catch { return false; }
 }
 

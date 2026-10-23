@@ -13,8 +13,8 @@
 // Events: 'vendor:open' {id}, 'vendor:decline' {id}, 'vendor:purchase' {id, potency, hours, contaminated, rays}.
 // Debug: __grahan.do('vendorOpen', id) , __grahan.do('vendorRoll', id, {potency,hours,risk}) to force an offer,
 //        state().vendors.
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../vendor/three.module.js';
+import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
 import { buildCharacter, characterMaterial, npcSpec, SKIN } from '../characters/humanoid.js';
 
 export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], riskMax: 0.3, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25 });

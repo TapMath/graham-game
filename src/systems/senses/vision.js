@@ -16,7 +16,7 @@
 // full-screen shader pass: block tears, vertical roll, chromatic offset, colour bleed, over-exposure with a soft clip,
 // scanlines, grain, vignette, and a white-out flash at both ends. CSS layers add noise, scanlines, colour bleed, scrambled
 // text fragments and the caption. The player is held still (game.modal) and the clock pauses for the duration.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { levelAt } from '../../world/levels.js';
 
 const HEARS = {

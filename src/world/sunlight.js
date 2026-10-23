@@ -7,7 +7,7 @@
 //   world.solarLamps / isNearSolarLamp(pos)   lamps on the Upper Decks, which work at night
 //
 // Healing is Phase 3's job: it asks isInSunlight() (or isNearSolarLamp() at night, at half rate).
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { SHAFT_LEAN } from './map.js';
 
 const SIDES = 14;

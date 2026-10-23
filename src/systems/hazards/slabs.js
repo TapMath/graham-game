@@ -5,7 +5,7 @@
 //
 // Also the rare ambient AFTERSHOCK: a distant rumble, a long shake, dust, and chunks of the fallen road decks sliding off
 // the pile at the collapse site (a falling chunk can clip you if you linger there).
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { clamp, dist3, hdist } from './util.js';
 import { Parts } from './models.js';
 

@@ -13,7 +13,7 @@
 // Events emitted:   sound:emit {x,y,z,kind,loudness}, sound:loop {id,kind,loudness,getPos}, sound:loopStop {id}  (PLAN event contract)
 //                   hazard:detained {by, checkpoint, hours}, hazard:bite, hazard:grab (see the modules)
 // Everything is seeded from game.rng.fork('hazards:*'); only hazards within ~120 m of the player are simulated and drawn.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { SIM_RADIUS, clamp, hdist, dist3, LEVEL_Y, levelOfY, yawDir } from './util.js';
 import { Glows, Beams, Puffs } from './render.js';
 import { Dogs } from './dogs.js';

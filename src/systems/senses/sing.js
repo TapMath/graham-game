@@ -13,7 +13,7 @@
 // The wave drives the shared shader uniforms (uPulseOrigin / uPulseRadius / uPulseStrength / uPulseBand): a band of
 // cool white sweeping over every patched material out to ~60 m in 2.5 s, lighting edges and a 2 m scan grid, with a
 // fading wake. As it passes hazards (`game.hazards?.list?.()`, read defensively) and Setu it spawns ripples there.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { RAGA } from '../audio/synth.js';
 
 const COOLDOWN = 6;

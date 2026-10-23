@@ -17,7 +17,7 @@
 // Systems are objects { init(game), update(dt, game), reset?(game) } registered with addSystem in
 // the order they should run each simulation step (fixed dt = 1/60). Talk to other systems through
 // game.events, or look one up with game.system('name').
-import * as THREE from 'three';
+import * as THREE from '../vendor/three.module.js';
 import { Events } from './core/events.js';
 import { createRng } from './core/rng.js';
 import { Input } from './core/input.js';

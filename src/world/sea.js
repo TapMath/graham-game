@@ -4,7 +4,7 @@
 //   world.seaLevel                      y of the sea surface (-2.4)
 //   world.inSea(pos)                    true when pos is over the water (outside the land rectangle)
 //   world.breachWater = { y, setLevel(y), rect, mesh }   Phase 4 raises this; starts at the sump (-10.9)
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 
 function rippleTexture(size = 128, seed = 3) {
   const c = document.createElement('canvas'); c.width = c.height = size;

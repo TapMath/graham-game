@@ -12,7 +12,7 @@
 // The sun rises in the EAST (+X), is highest at noon, sets in the west, and sits a little south (+Z).
 // Palettes (setTimeOfDay): pre-dawn 05:00, sunrise 06:15, morning 07:30, noon, late afternoon 16:30,
 // dusk 18:30, night 20:30..04:30. No shadows anywhere (PLAN section 4).
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 
 const STATIC_DEFAULT = {
   horizon: 0x2b4a44, zenith: 0x0d1716, fog: 0x1c2f2c, fogNear: 35, fogFar: 170,

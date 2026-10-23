@@ -9,7 +9,7 @@
 //   game.fireworks.force(seconds)          debug: run regardless of the hour for a while
 //   Debug: do('fireworks', n)  (forces the show and fires n bursts), state().story6b.fireworks
 // Events: `fireworks:burst {x,y,z,kind}`. The PA lines: 19:00 (the festival begins), 00:00 (it winds down).
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 
 const POOL = 9, PER = 150;
 const PALETTE = [[1.0, 0.72, 0.28], [1.0, 0.36, 0.55], [0.4, 0.82, 1.0], [0.62, 1.0, 0.55], [0.85, 0.5, 1.0], [1.0, 0.95, 0.75], [1.0, 0.5, 0.2]];

@@ -7,7 +7,7 @@
 // ramps and lifts are an escape; one that loses its target above it paces and whines, then gives up.
 // `sing:start` within 20 m calms a dog for 25 s (it sits and whimpers, then trots away). A following Setu can
 // be a target too: a bite costs his breath. Drawn with two InstancedMeshes (bodies, legs) + eye glows.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { SIM_RADIUS, clamp, hdist, dist3, angleDiff, turnToward, yawDir, dirYaw, homeGround, randomSpot, lineOfSight, weatherMul } from './util.js';
 import { DOG, dogBodyGeometry, dogLegGeometry } from './models.js';
 import { rimMaterial } from './render.js';

@@ -9,7 +9,7 @@
 //
 // One pooled InstancedBufferGeometry (MAX instances, 4 vertices each) and one ShaderMaterial = ONE draw call in total.
 // Billboarded rings face the camera; `flat` rings (footsteps, drips) lie on the ground.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { KINDS, audibleRange } from '../audio/kinds.js';
 
 const MAX = 96;

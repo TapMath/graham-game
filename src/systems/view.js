@@ -12,7 +12,7 @@
 // whenever the camera is closer than 0.9 m). The model faces the direction she moves; standing still it turns
 // slowly toward where she looks. Walk animation is procedural (limb swing) from her horizontal speed.
 // Events: 'view:changed' {mode}.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { buildMithi, buildNpc, NPC_PRESETS } from '../characters/humanoid.js';
 import { turnToward } from './follower.js';
 

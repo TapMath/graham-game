@@ -9,9 +9,9 @@
 // car then has thin door colliders on every named side that are closed while moving and on the
 // stops' non-exit sides, so riders cannot step off mid-ride. Without `exits` the car is open.
 // game.lifts is the LiftSystem; register it BEFORE the player so platforms move first.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { makeBoxGeometry } from './builder.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
 
 export class Lift {
   constructor(game, o) {

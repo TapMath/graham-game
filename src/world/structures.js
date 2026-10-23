@@ -5,7 +5,7 @@
 // game.physics; every level change is a stair (0.3 m risers), a ramp or a lift, so the player's
 // 0.6 m step-up and 1.1 m jump are always enough. Railings are generated automatically on every
 // walkable edge that has a drop beside it (see edgeSegments).
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { Y } from './map.js';
 
 export const TONE = {

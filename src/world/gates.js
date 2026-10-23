@@ -9,7 +9,7 @@
 // The check reads `game.player.rays` (Phase 3's health system owns it). The door is a solid collider
 // that is disabled while open. It only refuses entry: from the inside (`inside` points from the
 // outside into the route) it always opens, so nobody can be trapped in a lift lobby.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { TONE } from './structures.js';
 
 const RANGE = 4.2;          // m: how close you must be for the scanner to react

@@ -15,7 +15,7 @@
 // scrubs a scene deterministically). When the viewer skips, every wait resolves at once and the visual helpers become no-ops, so a
 // scene runs straight through to its closing lines; keep state changes that must always happen in the scene's `finally`-style
 // tail (after the last wait) or inside cx.always(fn).
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { buildMithi, buildSetu, buildNpc } from '../../characters/humanoid.js';
 import { ensureStyles, esc } from './ui.js';
 import { SCENES } from './scenes.js';

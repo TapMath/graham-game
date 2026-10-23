@@ -20,7 +20,7 @@
 // Timeline: while not found, Setu stands at the spot of the current window. When a window ends he moves
 // to the next spot while the player cannot see him (more than 28 m away or behind a wall), but never later
 // than 0.4 game hours after the window ended. Leaving a spot leaves a clue there for a couple of hours.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { buildSetu } from '../characters/humanoid.js';
 import { Follower, turnToward } from './follower.js';
 import { buildSchedule, windowAt, breathRate, BREATH } from './setu-schedule.js';

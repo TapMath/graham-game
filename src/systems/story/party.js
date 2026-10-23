@@ -19,7 +19,7 @@
 // hand when he follows), speed x0.85 (`hazards.setSpeedMod('party')`), no singing (`game.canSing()` is false), no cane taps,
 // a lower eye (1.1 m). `game.party.active === 'jeetu'` is what 6b reads for `needsEyes` fragments.
 // WHILE JEETU FOLLOWS MITHI: `senses.fogBonus += 15` and hazard callouts in the feed ("Didi, dogs, left!") from `hazards.list()`.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { Follower } from '../follower.js';
 import { installStoryCss } from './story-css.js';
 

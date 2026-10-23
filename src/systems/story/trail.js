@@ -8,7 +8,7 @@
 //   game.trail.nextOf(spotId)         the timeline entry after it
 // Events consumed: `setu:moved {from,to}` (marks appear where he was), `setu:clue {id}` (the bark). Emitted: `trail:found {id}`,
 // `trail:bark {id}`. Flags: `trailFound` (count). Debug: do('trail', spotId) spawns, teleports beside it and returns the state.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { HALO_VS, HALO_FS } from './fragments.js';
 
 const _yq = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0);
