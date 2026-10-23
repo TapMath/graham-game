@@ -70,7 +70,7 @@ export class SetuSystem {
     this.follower = new Follower(game, this, game.player, { label: 'setu', speed: 4.3, maxSpeed: 7.6, followDist: 1.9 });
 
     game.interactables.add({
-      id: 'setu', pos: this.pos, radius: 2.5, height: 2.6,
+      id: 'setu', pos: this.pos, radius: 2.5, height: 2.6, priority: 2,      // Phase 7b: the pill beats any clue lying beside him
       prompt: () => (this.health < 30 ? 'Quick. Give Setu his pill and inhaler' : 'Give Setu his pill and inhaler'),
       enabled: () => !this.dead && !this.found,
       onInteract: () => this.find({ via: 'interact' }),

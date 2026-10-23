@@ -186,7 +186,7 @@
  },
  {
   "name": "setu-dies-at-3",
-  "eval": "A.set('invulnerable',true); G.setu.reset(); A.setTime(5.667); A.step(0.1); let died=null; const off=G.events.on('setu:died',(d)=>{died=d;}); for(let i=0;i<200 && !G.setu.dead;i++){ G.clock.advance(0.25,'tick'); } off(); const out={diedAt:A.state().setu.diedAt, clock:A.state().clock.hhmm, ending:A.state().ending, note:'never found: dies at about 05:00 to 05:30 (Phase 7b retune: breath 5.0 %/h, doctor +38; it was about 03:00)'}; A.do('endingReset'); G.setu.reset(); A.setTime(6); A.step(0.1); out",
+  "eval": "(async()=>{ A.set('invulnerable',true); G.setu.reset(); A.setTime(5.667); A.step(0.1); let died=null; const off=G.events.on('setu:died',(d)=>{died=d;}); for(let i=0;i<200 && !G.setu.dead;i++){ G.clock.advance(0.25,'tick'); } off(); const out={diedAt:A.state().setu.diedAt, clock:A.state().clock.hhmm, ending:A.state().ending, note:'never found: dies at about 04:15 (Phase 7b retune: breath 5.15 %/h, doctor +36; it was about 03:08)'}; A.do('cineSkip'); await new Promise((r)=>setTimeout(r,300)); /* Phase 7b: Setu lost now plays the 6b cinematic, which holds game.modal until it is skipped */ A.do('endingReset'); G.modal=false; G.setu.reset(); A.setTime(6); A.step(0.1); return out; })()",
   "wait": 400
  },
  {

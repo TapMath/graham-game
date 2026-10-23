@@ -85,7 +85,10 @@ export class Glows extends Instanced {
     if (this.n >= this.cap) return;
     _p.set(x, y, z); _s.set(size, size, size);
     _m.compose(_p, this.game.camera.quaternion, _s);
-    this._push(_m, r, g, b);
+    // Phase 7b: a lamp right at the eye (standing under a drone, in a guard's face) was a screen-filling pale square: fade it out inside ~2 m
+    const c = this.game.camera.position, d = Math.hypot(x - c.x, y - c.y, z - c.z);
+    const k = d >= 2.2 ? 1 : Math.max(0, (d - 0.4) / 1.8);
+    this._push(_m, r * k, g * k, b * k);
   }
 }
 

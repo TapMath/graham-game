@@ -201,12 +201,12 @@
  },
  {
   "name": "reunion-unwarned-sunbreak",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',30); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',33); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
   "name": "reunion-unwarned-crane",
-  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',11); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
+  "eval": "(async()=>{ await window.__grahan.do('cineAdvance',9); return JSON.stringify(window.__grahan.state().story6b.cine.caption) })()",
   "wait": 1800
  },
  {
