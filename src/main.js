@@ -39,7 +39,9 @@ import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
 import { HudSystem } from './ui/hud.js';
-import { OverlaySystem } from './ui/overlay.js';
+import { OverlaySystem, startTitleScene } from './ui/overlay.js';
+import { SettingsSystem, applyBootParams } from './ui/settings.js';
+import { TouchSystem } from './ui/touch.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
 
@@ -49,7 +51,7 @@ function fatal(msg) {
 }
 
 function boot() {
-  const params = parseParams(location.search);
+  const params = applyBootParams(parseParams(location.search));   // the stored run length applies unless ?minutes= is given
   const game = new Game({ canvas: document.getElementById('game'), params });
 
   // Registration order == update order. Lifts and sky must exist before the world builds;
@@ -94,6 +96,7 @@ function boot() {
   game.addSystem('setuVoice', guarded(new SetuVoice(), 'setuVoice'));
   game.addSystem('visionSystem', guarded(new VisionSystem(), 'visionSystem'));
   game.addSystem('pa', guarded(new PASystem(), 'pa'));
+  game.addSystem('settings', new SettingsSystem());           // after audio and the PA: it applies the stored settings to them in init
   game.addSystem('hud', new HudSystem());
   // Phase 6a story layer: the cast and the objective chain. After the HUD (the items row and the optional objectives mount into its DOM);
   // `party` is last of them so its sighted-rendering override of the fog lands after the senses grade.
@@ -105,8 +108,9 @@ function boot() {
     game.addSystem('director', new Director());
     game.addSystem('party', new PartySystem());
   }
+  game.addSystem('touch', new TouchSystem());                  // the touch layer (stick, look, buttons); a no-op without touch
   game.addSystem('debughud', new DebugHudSystem());
-  game.addSystem('overlay', new OverlaySystem());
+  game.addSystem('overlay', new OverlaySystem());               // title, pause, settings, how to play (src/ui/overlay.js)
 
   game.debug = new DebugApi(game);
   game.init();
@@ -134,9 +138,14 @@ function boot() {
   return game;
 }
 
-try {
-  boot();
-} catch (e) {
-  console.error(e);
-  fatal('Grahan could not start: ' + (e && e.message ? e.message : e));
-}
+// The title is static HTML with its skyline canvas: start the canvas, let the browser paint it, and only then build the city
+// (a synchronous few hundred milliseconds), so the "building the city" state is visible instead of a blank page.
+try { startTitleScene(); } catch (e) { console.error(e); }
+requestAnimationFrame(() => setTimeout(() => {
+  try {
+    boot();
+  } catch (e) {
+    console.error(e);
+    fatal('Grahan could not start: ' + (e && e.message ? e.message : e));
+  }
+}, 30));
