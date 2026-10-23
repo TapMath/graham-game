@@ -10,7 +10,7 @@
 //
 // Water is a dark, glossy plane (specular off the sun and the lamps, a faint scrolling neon streak map and a gently
 // scrolling normal map): one material, up to five meshes.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { clamp, hdist, smoothstep, pointInRect } from './util.js';
 
 export const FLOOD_TUNING = Object.freeze({

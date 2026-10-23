@@ -6,7 +6,7 @@
 //   Puffs  soft billboard clouds (smog volumes, dust from collapses)                      1 draw call
 //
 // Usage per step:  r.begin(); r.add(...); ...; r.end();
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 
 /** Soft radial dot texture (white core, transparent edge). */
 export function softTexture(size = 64, core = 0.12) {

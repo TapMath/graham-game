@@ -11,14 +11,6 @@
   <title>Grahan</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="src/styles.css">
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "./vendor/three.module.js",
-      "three/addons/": "./vendor/addons/"
-    }
-  }
-  </script>
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -48,6 +40,28 @@
     </section>
   </div>
   <div id="fatal" hidden></div>
+  <!-- Boot watchdog (a classic script, so it runs even where the game's modules cannot): if the game has not started after
+       a while, or an error escapes before it does, say so on screen instead of leaving "building the city" up forever. -->
+  <script>
+  (function () {
+    var errs = [];
+    function note(m) { if (m && errs.indexOf(m) < 0 && errs.length < 6) errs.push(String(m).slice(0, 300)); }
+    window.addEventListener('error', function (e) { note(e.message || (e.target && e.target.src ? 'could not load ' + e.target.src : 'error')); setTimeout(function () { report(false); }, 4000); }, true);
+    window.addEventListener('unhandledrejection', function (e) { note(e.reason && (e.reason.message || e.reason)); });
+    function webgl2() { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (x) { return false; } }
+    function report(timeout) {
+      if (window.__grahanBooted) return;
+      if (!timeout && !errs.length) return;
+      var el = document.getElementById('fatal');
+      var lines = [timeout ? 'Grahan is taking too long to start.' : 'Grahan could not start.'];
+      if (!webgl2()) lines.push('This browser has no WebGL 2, which the game needs. Please update to a recent iOS/iPadOS, Safari, Chrome or Firefox.');
+      if (errs.length) lines.push('Error: ' + errs.join(' | '));
+      lines.push(navigator.userAgent);
+      el.textContent = lines.join('\n\n'); el.style.whiteSpace = 'pre-wrap'; el.hidden = false;
+    }
+    setTimeout(function () { report(true); }, 25000);
+  })();
+  </script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

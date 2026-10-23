@@ -13,8 +13,8 @@
 // Colliders are registered immediately in game.physics.
 // `shade:true` bakes a height-dependent tint into the vertex colours: dark teal gloom low down,
 // warm ochre up high (the deck's look), so the world needs no per-level lighting.
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../vendor/three.module.js';
+import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
 import { TILE_METRES, WINDOW_TILE_METRES } from './materials.js';
 
 const _c = new THREE.Color();

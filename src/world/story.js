@@ -1,7 +1,7 @@
 // Story set pieces (PLAN 1b): collapse site, triage tents, Mithi's flat, hospital, police station, the
 // maintenance shaft and wrecked lift, catacombs, tunnel-boring site, clinic, guard posts, the bridge
 // checkpoint. Everything is deterministic dressing around the buildings from structures.buildBuildings.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { prop, fixedRng } from './props.js';
 import { TONE } from './structures.js';
 

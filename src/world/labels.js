@@ -1,6 +1,6 @@
 // Lit text signs. All labels share one canvas atlas (one draw call, one texture): add() as many as
 // you like during the build, then build() once to get a single mesh.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { TONE } from './structures.js';
 
 const FONT = '"Noto Sans Devanagari", "Noto Sans", FreeSans, "Trebuchet MS", Verdana, sans-serif';

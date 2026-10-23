@@ -6,7 +6,7 @@
 // Mithi's perception grade); `patchSenseMaterial(mat, uniforms)` chains an `onBeforeCompile` onto any lit/unlit
 // mesh material, preserving whatever hook it already had. Every material in `materials.all` is patched when
 // it is created; the senses system (`game.senses.patchMaterial(mat)`) patches the rest of the scene.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 
 /** Shared uniforms of the senses patch. One object, referenced by every patched material. */
 export function createSenseUniforms() {

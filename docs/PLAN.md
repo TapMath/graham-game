@@ -94,7 +94,7 @@ The deck's look (hazy ochre above, teal gloom below) blended with four touchston
 
 ## 4. Technical architecture
 
-- **No build step.** Static site served from the repo root. `index.html` has an import map: `"three": "./vendor/three.module.js"`, `"three/addons/": "./vendor/addons/"`. Three.js r160 is vendored. Only `vendor/addons/utils/BufferGeometryUtils.js` is vendored; if another addon is needed, copy it from the `three@0.160.0` npm package (`npm pack three@0.160.0`) into `vendor/addons/` with the same relative path.
+- **No build step.** Static site served from the repo root. Three.js r160 is vendored and imported by **relative path** (`../vendor/three.module.js` etc.). There is deliberately no import map, because import maps need Safari/iPadOS 16.4+ and broke older iPads (the game hung on "building the city"). Only `vendor/addons/utils/BufferGeometryUtils.js` is vendored; if another addon is needed, copy it from the `three@0.160.0` npm package (`npm pack three@0.160.0`) into `vendor/addons/` with the same relative path.
 - Plain ES modules under `src/`. No frameworks. No external network requests of any kind (no CDNs, no fonts from the web); the game must run offline from a static host.
 - Suggested layout (phases may add files; keep modules small and focused):
 
@@ -625,3 +625,14 @@ The playthrough numbers behind this: both seeds lose 1 ray per 40 s on G and per
 - Observed in 6b/5 code (not changed): skipping the opening while its "she hears" vision is on lets that vision play out its last seconds over gameplay. The menu hides `#vision-fx` (z 12) while it is open so the pause card is never covered; the tours wait for `visionSystem.active` to clear.
 - The title's "Begin" does not enter fullscreen or lock orientation (not requested).
 - Not done: gamepad support, rebinding keys, a language switch.
+
+### Post-release fix: iPad / touch
+
+- **Symptom:** on iPad the game hung on "building the city".
+- **Cause:** `index.html` relied on an import map for `three`, which Safari only supports from 16.4. On older iPadOS the module graph never loaded, so nothing ran and nothing reported the failure.
+- **Fixes:**
+  - All `three` imports (and the vendored `BufferGeometryUtils`) now use relative paths, and the import map is removed.
+  - `src/polyfills.js` adds `Array/String/TypedArray.prototype.at` for iPadOS 15.0–15.3.
+  - A classic-script boot watchdog in `index.html` shows the error, WebGL 2 availability and the user agent on screen if the game hasn't started within 25 s or an error escapes before boot. `main.js` sets `window.__grahanBooted`.
+  - Touch detection also counts `any-pointer: coarse` and iPads that report as a Mac (`maxTouchPoints > 1`), so the touch layer is on from the start with a keyboard attached. It still also turns on at the first touch.
+  - Audio also unlocks on `touchend`.

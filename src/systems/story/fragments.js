@@ -13,8 +13,8 @@
 //
 // The card is the OK Computer collage of PLAN 3b: pale paper, typewriter text revealed by simulation time, a pictogram, scrawled
 // annotations and strikethroughs. ~~word~~ strikes, **word** is circled in red, [[word]] is redacted, __word__ is bold.
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../../vendor/three.module.js';
+import { mergeGeometries } from '../../../vendor/addons/utils/BufferGeometryUtils.js';
 import { ensureStyles, esc, STICK_FIGURE, STICK_LISTEN, STICK_READ, STICK_HAND } from './ui.js';
 
 export const FRAGMENTS = [

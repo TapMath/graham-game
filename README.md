@@ -52,7 +52,7 @@ python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
 
-It needs a browser with WebGL and Web Audio. Nothing is loaded from the network (three.js is vendored in `vendor/`, all sound is synthesised, all textures are procedural), so it also runs offline from a static host.
+It needs a browser with WebGL 2 and Web Audio: any current Chrome, Edge, Firefox or Safari, including iPad and iPhone (iOS/iPadOS 15 or later). Touch controls turn on automatically on touch screens. Nothing is loaded from the network (three.js is vendored in `vendor/`, all sound is synthesised, all textures are procedural), so it also runs offline from a static host.
 
 ### URL parameters
 
@@ -73,7 +73,7 @@ For example `index.html?seed=7&minutes=45&debug=1`.
 ## Project structure
 
 ```
-index.html            entry: import map, the static title screen, the HUD container
+index.html            entry: the static title screen, the HUD container, a boot watchdog
 src/main.js           boot, system registration, the fixed-step loop
 src/game.js           the shared Game object (scene, camera, events, rng, systems, modes)
 src/debug.js          the debug / test API (window.__grahan with ?debug=1)

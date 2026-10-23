@@ -5,7 +5,7 @@
 // With the jacket they let you pass, unless you
 //   run in view, sing near them (sing:start within 40 m), or linger (slow, in view) for 3 s -> "You're not staff!", then DETAINED.
 // Phase 6 can call `game.hazards.guards.distract(seconds)` (Gautam's bail) to make them look away.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { SIM_RADIUS, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, angleDiff, singHeard } from './util.js';
 import { Crowd } from './models.js';
 import { rimMaterial } from './render.js';

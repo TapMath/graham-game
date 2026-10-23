@@ -4,7 +4,7 @@
 //   setuLost  the cough that does not come
 //   mithiDies the heartbeat that stops, the festival far above
 //   warning   sirens across the city, the evacuation announcement
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { EVAC } from './breach.js';
 
 const D2R = Math.PI / 180;

@@ -12,8 +12,8 @@
 // merged mesh for the whole group, only Jeetu and Gautam are animated Characters (5 calls each). Everything beyond ~70 m or on
 // another level is hidden. Talking is an interactable per person (prompt "Talk to X"); what is said lives in conversations.js
 // and the side effects in director.js (`game.director.talk(actor, memberIndex)`).
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../../../vendor/three.module.js';
+import { mergeGeometries } from '../../../../vendor/addons/utils/BufferGeometryUtils.js';
 import { buildCharacter, characterMaterial } from '../../../characters/humanoid.js';
 import { buildRoster } from './roster.js';
 

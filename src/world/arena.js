@@ -6,7 +6,7 @@
 //   x=0       lift at z=-30.5 between ground and the bridge (y 4.8); bridge links A and B
 //   x=34..46  tower, top y=12, reached by a second flight of stairs from landing B (fall-damage ledge)
 // The map is hand-fixed (not seeded), like the real city.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { Builder } from './builder.js';
 
 const GROUND = 0x6b8483;

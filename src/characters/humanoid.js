@@ -18,8 +18,8 @@
 //     props:['cane','mouthOrgan','torch','bag','hardHat','bandage' (white wrap on the left arm), 'headBand' (white bandage round the head), 'headLamp'],
 //     variants:{ name: {…fields to override…} } }
 // Everything is in metres. All characters share `characterMaterial(game)`.
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../vendor/three.module.js';
+import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
 
 let _mat = null;
 /** The one material for every person (vertex colours, flat shading, a little emissive lift so they read in the dark). */

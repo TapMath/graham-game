@@ -5,7 +5,7 @@
 // drones fly over to investigate. Cameras sit at the health gates and sweep a narrow cone; one that sees the player calls
 // the nearest drone. Everything is drawn instanced: one InstancedMesh for drones, one for camera heads, plus the shared
 // beams and glows.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { SIM_RADIUS, LEVEL_Y, clamp, hdist, dist3, turnToward, yawDir, dirYaw, inCone, lineOfSight, pointInRect, singHeard } from './util.js';
 import { droneGeometry, cameraGeometry } from './models.js';
 import { rimMaterial } from './render.js';

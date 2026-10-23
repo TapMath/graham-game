@@ -1,8 +1,8 @@
 // Low-poly hazard models: a feral dog (body + one leg, legs are separate instances so they can swing), the police
 // drone, the camera head, and `Crowd`, which draws many people with 5 InstancedMesh draw calls in total (built from
 // the Phase 3 character parts, so guards and deranged wanderers look like the rest of the cast).
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../../vendor/three.module.js';
+import { mergeGeometries } from '../../../vendor/addons/utils/BufferGeometryUtils.js';
 import { Character } from '../../characters/humanoid.js';
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();

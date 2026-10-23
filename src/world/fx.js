@@ -4,7 +4,7 @@
 //   world.fx = { ads, rain, searchlights, diyaFlicker }      all updated by CitySystem.update
 //   rain intensity follows the player's height: heavy on G, light on L1, none above L2; underground it is
 //   sparse drips from the ceiling. `world.fx.rain.setIntensity(f)` multiplies it (0 = off).
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 
 const FONT = '"Noto Sans Devanagari", "Noto Sans", FreeSans, "Trebuchet MS", Verdana, sans-serif';
 const CELL_W = 512, CELL_H = 256;

@@ -21,7 +21,7 @@
 //
 // Voices exist as *records* even when the context cannot run (headless, suspended): the logic, counts and ripples all
 // work, only the nodes are skipped. That keeps `state().audio.voices` meaningful in tests.
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { ONESHOT, LOOPS, singPhrase, RAGA } from './synth.js';
 import { KINDS, LOOP_KINDS, audibleRange } from './kinds.js';
 import { Ambience } from './ambience.js';
@@ -100,8 +100,8 @@ export class AudioSystem {
     game.debug?.addSetter('volume', (g, v) => { for (const [k, x] of Object.entries(v || {})) this.setVolume(k, x); });
 
     // first user gesture creates / resumes the context
-    const kick = () => { this.ensure(); if (this.started) for (const n of ['pointerdown', 'keydown', 'touchstart', 'click']) window.removeEventListener(n, kick, true); };
-    for (const n of ['pointerdown', 'keydown', 'touchstart', 'click']) window.addEventListener(n, kick, true);
+    const kick = () => { this.ensure(); if (this.started) for (const n of ['pointerdown', 'keydown', 'touchstart', 'touchend', 'click']) window.removeEventListener(n, kick, true); };
+    for (const n of ['pointerdown', 'keydown', 'touchstart', 'touchend', 'click']) window.addEventListener(n, kick, true);
     if (game.params.autostart) this.ensure();
   }
 

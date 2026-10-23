@@ -14,7 +14,7 @@
 // opens up on the upper levels where the warmth and the noise carry; colour drains out of the world (the sun shafts are
 // their own shader and stay warm: she feels the heat). The echolocation wave and sound ripples are added AFTER the fog, so
 // they show through it. The grade is applied per frame over the sky system's atmosphere (this system updates after it).
-import * as THREE from 'three';
+import * as THREE from '../../../vendor/three.module.js';
 import { patchSenseMaterial } from '../../world/materials.js';
 
 // by walking surface height: [y, fogNear, fogFar, saturation, brightness]

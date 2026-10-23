@@ -15,7 +15,7 @@
 //
 // Interaction: lifts register E interactables (game.interactables). Falling into the sea (west,
 // south, east of the land) emits player:void {cost:1, reason:'sea'} and respawns the player.
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.js';
 import { MAP } from './map.js';
 import { Builder, finishGeometry, shadeAt } from './builder.js';
 import { levelAt as levelAtY } from './levels.js';

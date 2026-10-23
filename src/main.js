@@ -1,4 +1,5 @@
 // Bootstrap: URL params, Game, systems, the fixed-step main loop, and the debug API.
+import './polyfills.js';
 import { Game, STEP } from './game.js';
 import { parseParams } from './core/params.js';
 import { Player } from './core/player.js';
@@ -144,6 +145,7 @@ try { startTitleScene(); } catch (e) { console.error(e); }
 requestAnimationFrame(() => setTimeout(() => {
   try {
     boot();
+    window.__grahanBooted = true;   // the watchdog in index.html stands down
   } catch (e) {
     console.error(e);
     fatal('Grahan could not start: ' + (e && e.message ? e.message : e));

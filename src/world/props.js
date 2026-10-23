@@ -1,8 +1,8 @@
 // Props and landmark dressing. Everything repeated is an InstancedMesh kind (see Builder.kind);
 // one-offs (the dead tree, rubble, the bridge's cables) are merged static geometry. All placement is
 // deterministic (a fixed-seed generator) so the city is the same every run.
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as THREE from '../../vendor/three.module.js';
+import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
 import { finishGeometry } from './builder.js';
 import { TONE } from './structures.js';
 
