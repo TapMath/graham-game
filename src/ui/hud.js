@@ -101,7 +101,12 @@ export class HudSystem {
     ev.on('objective:changed', (d) => { if (d && Array.isArray(d.shown)) { this._optN = Math.max(0, d.shown.length - (d.shown.some((o) => !o.optional) ? 1 : 0)); if (!this._optN) this.center.classList.remove('opt-open'); this._chip(); this.objWrap.hidden = !this._objText && !this._optN; } });
     ev.on('setu:story', () => this.showSetu(true));
     ev.on('setu:found', () => this.showSetu(true));
-    ev.on('health:damage', () => { game.screenfx.flash('#ff3a2a', 380, 0.34); this._kick('hurt'); });
+    // The slow darkness drain is a quiet cue (a dim ember), not the red shock of a bite or a fall
+    ev.on('health:damage', ({ source }) => {
+      if (source === 'darkness') game.screenfx.flash('#5a1a14', 700, 0.12);
+      else game.screenfx.flash('#ff3a2a', 380, 0.34);
+      this._kick('hurt');
+    });
     ev.on('health:heal', () => { game.screenfx.flash('#ffd98a', 420, 0.1); this._kick('bloom'); });
     ev.on('gate:denied', (d) => this._gateDenied(d));
     ev.on('gate:opened', (d) => game.messages.say(d.permit ? 'PERMIT ACCEPTED. The scanner chirps green.' : `BIO-SCAN ${d.min} RAYS: ACCEPTED. The door slides open.`, { kind: 'system', ttl: 4 }));
