@@ -40,6 +40,11 @@ export const CHARACTER_STYLE = Object.freeze({
   },
   walk: { stridesPerSecond: (speed) => 0.6 + 0.25 * speed, armSwing: 0.55, bob: 0.0125 },
   lipTones: ['light', 'mid', 'dark'],
+  // flat palettes in the shape the instanced crowd reads (src/systems/crowds), so the crowd wears the same colours as the cast
+  skinTones: Object.values(SKIN),
+  shirts: [0xb8483a, 0x4a6a8a, 0x6a7480, 0xd0a030, 0x5a6a52, 0x8a8478, 0xc8c0a8, 0x2c3556, 0x8a7a58, 0x1f6a6a],
+  trousers: [0x2c2f38, 0x33343c, 0x3a4048, 0x4a4038, 0x26262a, 0x2f3b52],
+  saris: [0x14595a, 0xa02a3a, 0x2a4a8a, 0xc08a28, 0x6a2f52, 0x3a6a3a],
 });
 export function installCharacterStyle(game) { if (game) game.characterStyle = CHARACTER_STYLE; return CHARACTER_STYLE; }
 
