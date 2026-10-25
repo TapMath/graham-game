@@ -178,7 +178,8 @@ export class Director {
     if (f.oldManFreed) return false;
     f.oldManFreed = true; f.knowsHospital = true;
     this.dig = 0; this.holdEl.hidden = true;
-    o.mesh.geometry = o.freed;
+    o.mesh.visible = false; o.faceMesh.visible = false;               // the heap and the buried man give way to a standing, shaken one
+    o.hiddenModel = false; o.model.group.visible = true; o.model.setMood('worry'); o.group.rotation.y = 0;
     g.cast.place(o, o.pos.x - 1.15, o.pos.y, o.pos.z + 0.55, o.yaw + 1.1);
     const it = g.interactables.get('talk:oldman'); if (it) { it.pos.x = o.pos.x; it.pos.z = o.pos.z; }
     g.interactables.remove('dig:oldman');
@@ -410,7 +411,7 @@ export class Director {
       const near = Math.hypot(game.player.pos.x - 45, game.player.pos.z - 10) < 90;
       if (live && near) game.hazards?.guards?.distract(3);
       // he waves his arms while he shouts
-      if (a.model && live && a.group.visible) { const t = game.time; a.model.armR.rotation.x = -1.1 + Math.sin(t * 6) * 0.45; a.model.armL.rotation.x = -0.8 + Math.sin(t * 5 + 1) * 0.4; }
+      if (a.model && live && a.group.visible) { a.model.setMood('shout'); a.model.setTalking(true); a.model.gesture('shout', 0.5); } else if (a.model) { a.model.setTalking(false); a.model.setMood('neutral'); }
       if (live && near) {
         this._gShout -= dt;
         if (this._gShout <= 0) {

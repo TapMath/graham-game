@@ -14,19 +14,21 @@
 // and the side effects in director.js (`game.director.talk(actor, memberIndex)`).
 import * as THREE from '../../../../vendor/three.module.js';
 import { mergeGeometries } from '../../../../vendor/addons/utils/BufferGeometryUtils.js';
-import { buildCharacter, characterMaterial } from '../../../characters/humanoid.js';
+import { buildCharacter, characterMaterial, mergeStatic } from '../../../characters/humanoid.js';
+import { faceMaterial } from '../../../characters/face.js';
 import { buildRoster } from './roster.js';
 
 const SHOW_DIST = 72;
 
-function bake(game, spec, { x = 0, y = 0, z = 0, yaw = 0, lying = false, arms = {} } = {}) {
+/** Bake one person (body + face patch) in the pose given: lying, arms, a mood. */
+function bake(game, spec, { x = 0, y = 0, z = 0, yaw = 0, lying = false, arms = {}, mood } = {}) {
   const c = buildCharacter(spec, game);
   c.group.rotation.order = 'YXZ';
   c.group.rotation.set(lying ? Math.PI / 2 : 0, yaw, 0);
   c.group.position.set(x, y, z);
-  const g = c.toStaticGeometry(arms);
+  const parts = c.toStaticParts({ ...arms, mood: mood ?? (lying ? 'sleep' : undefined) });
   c.dispose();
-  return g;
+  return parts;
 }
 
 function paint(g, hex, matrix) {
@@ -64,6 +66,7 @@ export class CastSystem {
     game.cast = this;
     this.actors = new Map();
     this.mat = characterMaterial(game);
+    this.fmat = faceMaterial(game);
     this.hidden = new Set();
     const S = game.world.story;
     for (const def of buildRoster(S)) {
@@ -91,40 +94,44 @@ export class CastSystem {
       pos: { x: def.x ?? def.centre?.x ?? 0, y: def.y ?? baseY, z: def.z ?? def.centre?.z ?? 0 }, yaw: def.yaw ?? 0, members: [], owner: null, talkCount: 0, def, mesh: null, hiddenFlag: false,
       talkable: def.talkable !== false,
     };
-    if (def.kind === 'static' || def.kind === 'oldman') {
+    const addMeshes = (parts, a) => {
+      const mesh = new THREE.Mesh(parts.body, this.mat), face = new THREE.Mesh(parts.face, this.fmat);
+      mesh.frustumCulled = true; face.frustumCulled = true;
+      group.add(mesh, face); a.mesh = mesh; a.faceMesh = face;
+    };
+    if (def.kind === 'static') {
       if (def.y === undefined) actor.pos.y = this._ground(def.x, def.z, baseY);
-      const geo = bake(g, def.spec, { lying: !!def.lying, arms: def.arms });
-      const mesh = new THREE.Mesh(geo, this.mat);
-      mesh.frustumCulled = true;
-      group.add(mesh); actor.mesh = mesh;
-      if (def.kind === 'oldman') {
-        // buried: lying under a heap of rubble, one arm reaching up; freed: standing beside it, dusty
-        const lying = bake(g, def.spec, { lying: true, arms: { armR: 1.55, armL: 0.5 } });
-        const heap = rubbleMound();
-        actor.buried = mergeGeometries([lying, heap], false);
-        actor.freed = bake(g, def.spec, { arms: { armR: 0.3, armL: 0.1 } });
-        lying.dispose(); heap.dispose();
-        mesh.geometry = actor.buried;
-        geo.dispose();
-      }
+      addMeshes(bake(g, def.spec, { lying: !!def.lying, arms: def.arms, mood: def.mood }), actor);
+    } else if (def.kind === 'oldman') {
+      // buried: lying under a heap of rubble, one arm reaching up; freed: an animated old man standing beside it, dusty
+      if (def.y === undefined) actor.pos.y = this._ground(def.x, def.z, baseY);
+      const lying = bake(g, def.spec, { lying: true, arms: { armR: 1.55, armL: 0.5 }, mood: 'pain' });
+      const heap = rubbleMound();
+      const buried = mergeGeometries([lying.body.toNonIndexed(), heap], false);
+      lying.body.dispose(); heap.dispose();
+      addMeshes({ body: buried, face: lying.face }, actor);
+      actor.buried = buried;
+      const model = buildCharacter(def.spec, g);
+      model.setMood('worry');
+      model.group.visible = false;
+      actor.model = model; actor.hiddenModel = true;
+      group.add(model.group);
     } else if (def.kind === 'anim') {
       const model = buildCharacter(def.spec, g);
       actor.model = model;
+      if (def.mood) model.setMood(def.mood);
       group.add(model.group);
-      if (def.lying) { model.group.rotation.order = 'YXZ'; model.group.rotation.x = Math.PI / 2; }
+      if (def.lying) { model.group.rotation.order = 'YXZ'; model.group.rotation.x = Math.PI / 2; if (!def.mood) model.setMood('sleep'); }
       model.group.rotation.y = 0;
       if (def.y === undefined) actor.pos.y = this._ground(def.x, def.z, baseY);
     } else if (def.kind === 'group') {
-      const geos = [];
+      const parts = [];
       for (const m of def.members) {
         const y = m.y ?? this._ground(m.x, m.z, baseY);
-        geos.push(bake(g, m.spec, { x: m.x, y, z: m.z, yaw: m.yaw, lying: !!m.lying, arms: m.arms }));
+        parts.push(bake(g, m.spec, { x: m.x, y, z: m.z, yaw: m.yaw, lying: !!m.lying, arms: m.arms, mood: m.mood }));
         actor.members.push({ x: m.x, y, z: m.z, yaw: m.yaw });
       }
-      const geo = mergeGeometries(geos, false);
-      geos.forEach((x) => x.dispose());
-      const mesh = new THREE.Mesh(geo, this.mat);
-      group.add(mesh); actor.mesh = mesh;
+      addMeshes(mergeStatic(parts), actor);
       actor.pos.y = actor.members[0]?.y ?? baseY;
     }
     if (def.kind !== 'group') this.place(actor, actor.pos.x, actor.pos.y, actor.pos.z, actor.yaw);
@@ -162,7 +169,7 @@ export class CastSystem {
     a.pos.x = x; a.pos.y = y; a.pos.z = z; a.yaw = yaw;
     if (a.kind === 'group') return;
     a.group.position.set(x, y, z);
-    if (a.model) a.model.group.rotation.y = yaw; else a.group.rotation.y = yaw;
+    if (a.model && !a.hiddenModel) a.model.group.rotation.y = yaw; else a.group.rotation.y = yaw;
     const s = a.spots?.[0]?.item;
     if (s) { s.pos.x = x; s.pos.y = y; s.pos.z = z; }
   }
@@ -197,7 +204,11 @@ export class CastSystem {
       const sameLevel = (a.level === 'U') === inU;
       const show = !a.hiddenFlag && d < SHOW_DIST && sameLevel && Math.abs((a.pos.y ?? 0) - pl.pos.y) < 14;
       if (a.group.visible !== show) a.group.visible = show;
-      if (show && a.model && d < 40) a.model.update(dt, a.speed ?? 0, { onGround: true });
+      if (show && a.model && d < 40 && !(a.hiddenModel)) {
+        // people turn their heads to whoever is near (a talking partner gets the full attention)
+        if (d < 12 && !a.noLook && a.def.lying !== true) a.model.lookAt({ x: cam.x, y: cam.y, z: cam.z }); else a.model.lookAt(null);
+        a.model.update(dt, a.speed ?? 0, { onGround: true });
+      }
     }
   }
 }

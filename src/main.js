@@ -45,6 +45,7 @@ import { SettingsSystem, applyBootParams } from './ui/settings.js';
 import { TouchSystem } from './ui/touch.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
+import { installCharacterStyle } from './characters/humanoid.js';
 
 function fatal(msg) {
   const el = document.getElementById('fatal');
@@ -54,6 +55,7 @@ function fatal(msg) {
 function boot() {
   const params = applyBootParams(parseParams(location.search));   // the stored run length applies unless ?minutes= is given
   const game = new Game({ canvas: document.getElementById('game'), params });
+  installCharacterStyle(game);          // game.characterStyle: the palette and proportions of the people (the crowd matches them)
 
   // Registration order == update order. Lifts and sky must exist before the world builds;
   // lifts must update before the player so platforms move first.

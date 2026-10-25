@@ -15,7 +15,8 @@
 //        state().vendors.
 import * as THREE from '../../vendor/three.module.js';
 import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
-import { buildCharacter, characterMaterial, npcSpec, SKIN } from '../characters/humanoid.js';
+import { buildCharacter, characterMaterial, npcSpec, SKIN, mergeStatic } from '../characters/humanoid.js';
+import { faceMaterial } from '../characters/face.js';
 
 export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], riskMax: 0.3, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25 });
 
@@ -72,7 +73,7 @@ export class VendorSystem {
         bottom: { color: 0x2a2a30, style: 'trousers' }, glasses: false }), game);
       ch.group.position.set(spot.x, spot.y, spot.z);
       ch.group.rotation.y = spot.yaw;
-      geos.push(ch.toStaticGeometry({ armR: 0.95, armL: -0.35 }));
+      geos.push(ch.toStaticParts({ armR: 0.95, armL: -0.35, mood: this.rng.pick(['neutral', 'smile', 'smirk']) }));
       ch.dispose?.();
       // interact point: in front of the counter
       const fx = -Math.round(Math.sin(spot.yaw)), fz = -Math.round(Math.cos(spot.yaw));
@@ -84,11 +85,12 @@ export class VendorSystem {
       });
     });
     if (geos.length) {
-      const g = mergeGeometries(geos, false);
-      geos.forEach((x) => x.dispose());
-      this.mesh = new THREE.Mesh(g, characterMaterial(game));
+      const parts = mergeStatic(geos);
+      this.mesh = new THREE.Mesh(parts.body, characterMaterial(game));
       this.mesh.name = 'vendors';
-      game.scene.add(this.mesh);
+      this.faces = new THREE.Mesh(parts.face, faceMaterial(game));
+      this.faces.name = 'vendor-faces';
+      game.scene.add(this.mesh, this.faces);
     }
     game.debug?.addState('vendors', () => ({
       state: this.state, stats: { ...this.stats },
