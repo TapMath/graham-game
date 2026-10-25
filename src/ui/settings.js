@@ -48,6 +48,7 @@ export const DEFS = {
   volMusic: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.5, label: 'Music', fmt: 'pct' },
   volSfx: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.95, label: 'Sound effects', fmt: 'pct' },
   volVoice: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.95, label: 'Voices and singing', fmt: 'pct' },
+  speech: { group: 'sound', type: 'toggle', def: true, label: 'Character voices', hint: 'The people you meet speak their lines. The words always appear on screen.' },
   paVoice: { group: 'sound', type: 'toggle', def: true, label: 'PA announcer voice', hint: 'The municipal voice. The words always appear on screen.' },
   captions: { group: 'sound', type: 'toggle', def: true, label: 'Captions for sounds', hint: '[ A dog barks ] lines in the feed.' },
   mouseSens: { group: 'controls', type: 'range', min: 0.4, max: 2.5, step: 0.05, def: 1, label: 'Mouse sensitivity', fmt: 'x' },

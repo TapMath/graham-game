@@ -26,6 +26,8 @@ import { SetuVoice } from './systems/senses/organ.js';
 import { VisionSystem } from './systems/senses/vision.js';
 import { guarded } from './systems/senses/guard.js';
 import { DialogueSystem } from './systems/story/dialogue.js';
+import { VoiceSystem } from './systems/story/voices.js';
+import { Banter } from './systems/story/banter.js';
 import { ItemSystem } from './systems/story/items.js';
 import { ObjectiveBoard } from './systems/story/objectives.js';
 import { CastSystem } from './systems/story/cast/index.js';
@@ -103,6 +105,7 @@ function boot() {
   game.addSystem('hud', new HudSystem());
   // Phase 6a story layer: the cast and the objective chain. After the HUD (the items row and the optional objectives mount into its DOM);
   // `party` is last of them so its sighted-rendering override of the fog lands after the senses grade.
+  game.addSystem('voices', new VoiceSystem());                    // per-character speech (before the cards that use it)
   game.addSystem('dialogue', new DialogueSystem());
   if (!params.arena) {
     game.addSystem('items', new ItemSystem());
@@ -110,6 +113,7 @@ function boot() {
     game.addSystem('cast', new CastSystem());
     game.addSystem('director', new Director());
     game.addSystem('party', new PartySystem());
+    game.addSystem('banter', new Banter());
   }
   game.addSystem('touch', new TouchSystem());                  // the touch layer (stick, look, buttons); a no-op without touch
   game.addSystem('debughud', new DebugHudSystem());

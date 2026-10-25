@@ -2,6 +2,9 @@
 // Injected from JS so this file is the only place that owns them. Same visual language as the HUD (PLAN 3b):
 // pale blue-white thin sans-serif, safety-card pictograms, a scrawled correction in the margin.
 const CSS = `
+#convo-vig { position: fixed; inset: 0; z-index: 25; pointer-events: none; opacity: 0; transition: opacity .6s ease; background: radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 38%, rgba(2,4,8,.5) 82%, rgba(2,4,8,.78) 100%); }
+#convo-vig.on { opacity: 1; }
+body.cine-active #convo-vig { opacity: 0; }
 #convo { position: fixed; inset: 0; z-index: 26; display: flex; align-items: flex-end; justify-content: center; padding: 0 0 5vh;
   background: radial-gradient(ellipse at 50% 85%, rgba(4, 8, 14, .66), rgba(4, 8, 14, 0) 68%); font-family: var(--sans); color: var(--ink); pointer-events: none; }
 #convo[hidden] { display: none; }
