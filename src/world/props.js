@@ -171,7 +171,7 @@ export function scatterStreets(ctx) {
       const lane = rnd.pick(lanes);
       const x = alongX ? d.x0 + t : d.x0 + lane, z = alongX ? d.z0 + lane : d.z0 + t;
       if (d.id === 'road-h' && ((x > 62 && x < 94) || (x > 122 && x < 150))) continue;   // keep the lift lobbies' side lanes clear
-      if (!prop(ctx, 'car', { x, y: d.y, z, yaw: alongX ? Math.PI / 2 : 0, sy: 1.65, color: rnd.pick(CAR_COLORS) }, { tag: 'vehicle' })) continue;
+      // Phase 8B: the cars on the flyovers are now moving traffic (src/systems/crowds), not parked props; the jersey barriers stay
       if (rnd() < 0.2) prop(ctx, 'cube', { x: alongX ? x + 4 : x, y: d.y, z: alongX ? z : z + 4, sx: alongX ? 2.2 : 0.7, sy: 0.9, sz: alongX ? 0.7 : 2.2, color: 0x8a8a80 }, { tag: 'barrier', walkable: true });
     }
   }

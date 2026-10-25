@@ -1,4 +1,5 @@
-// The fixed city of Grahan as DATA. Identical every run (the generated dressing below uses its own
+// The fixed city of Grahan as DATA (a compressed slice of central Mumbai, 2049: Dharavi, Sion, Matunga, Wadala, Sewri; see
+// PLAN section 12.1 for which game place is which real place). Identical every run (the generated dressing below uses its own
 // fixed-seed generator, never game.rng). Units are metres, +Y up, +X EAST (the Sunrise Bridge side),
 // -Z north, +Z south. The sea lies to the WEST (x < -140) and SOUTH (z > 145); the Sunrise Bridge
 // leaves the east side of the Upper Decks at x = 155 and runs out over the water to x = 215.
@@ -38,12 +39,12 @@ const spawn = { x: -44, y: 0, z: -30, yaw: -Math.PI / 2 };
 // blocks that carry the window grids and block the sun.
 const towers = [
   // north wall of towers (row r0) and the world edge behind them
-  { id: 'tw-n0', x0: -125, z0: -170, x1: -85, z1: -130, h: 105, color: 0x4e5f66, name: 'Palm Court Tower' },
-  { id: 'tw-n1', x0: -65, z0: -170, x1: -25, z1: -130, h: 140, color: 0x5a5a52, name: 'Meridian' },
-  { id: 'tw-n2', x0: -5, z0: -170, x1: 35, z1: -130, h: 96, color: 0x6a5f50, name: 'Orchid Heights' },
-  { id: 'tw-n3', x0: 55, z0: -170, x1: 95, z1: -130, h: 132, color: 0x4a5a60, name: 'Solaris One', glass: [44, 62] },
-  { id: 'tw-n4', x0: 115, z0: -170, x1: 155, z1: -130, h: 118, color: 0x5d6256, name: 'Aurum', glass: [44, 62] },
-  { id: 'wall-n', x0: -142, z0: -182, x1: 222, z1: -170, h: 92, color: 0x44525a, name: 'North Wall' },
+  { id: 'tw-n0', x0: -125, z0: -170, x1: -85, z1: -130, h: 105, color: 0x4e5f66, name: 'Matunga Palm Court' },
+  { id: 'tw-n1', x0: -65, z0: -170, x1: -25, z1: -130, h: 140, color: 0x5a5a52, name: 'Antop Hill Meridian' },
+  { id: 'tw-n2', x0: -5, z0: -170, x1: 35, z1: -130, h: 96, color: 0x6a5f50, name: 'Orchid Heights, Wadala' },
+  { id: 'tw-n3', x0: 55, z0: -170, x1: 95, z1: -130, h: 132, color: 0x4a5a60, name: 'Solaris One, New Wadala', glass: [44, 62] },
+  { id: 'tw-n4', x0: 115, z0: -170, x1: 155, z1: -130, h: 118, color: 0x5d6256, name: 'Aurum, New Wadala', glass: [44, 62] },
+  { id: 'wall-n', x0: -142, z0: -182, x1: 222, z1: -170, h: 92, color: 0x44525a, name: 'Eastern Express Highway wall' },
   // strips that close the open cells on their north/south sides
   { id: 'tw-slum-n', x0: -125, z0: -110, x1: -85, z1: -98, h: 70, color: 0x5c5648 },
   { id: 'tw-clover-w', x0: -65, z0: -110, x1: -25, z1: -98, h: 82, color: 0x4e5f66 },
@@ -51,27 +52,27 @@ const towers = [
   { id: 'tw-depot-s', x0: -65, z0: 98, x1: -25, z1: 110, h: 72, color: 0x4a5560 },
   { id: 'tw-slum-s', x0: -125, z0: 98, x1: -85, z1: 110, h: 60, color: 0x5c5648 },
   // west terraces (L1) with towers rising from them
-  { id: 'pod-w2', x0: -125, z0: -50, x1: -85, z1: -10, h: 12, color: 0x6a6658, roof: { kind: 'terrace' }, name: 'West Terrace' },
+  { id: 'pod-w2', x0: -125, z0: -50, x1: -85, z1: -10, h: 12, color: 0x6a6658, roof: { kind: 'terrace' }, name: 'Dharavi Terrace' },
   { id: 'tw-w2', x0: -125, z0: -50, x1: -103, z1: -10, y0: 12, h: 100, color: 0x536168 },
-  { id: 'pod-w3', x0: -125, z0: 10, x1: -85, z1: 50, h: 12, color: 0x665f52, roof: { kind: 'terrace' }, name: 'West Terrace South' },
+  { id: 'pod-w3', x0: -125, z0: 10, x1: -85, z1: 50, h: 12, color: 0x665f52, roof: { kind: 'terrace' }, name: 'Kumbharwada Terrace' },
   { id: 'tw-w3', x0: -125, z0: 10, x1: -103, z1: 50, y0: 12, h: 88, color: 0x4f5a60 },
   // bazaar and the other L1 terraces
-  { id: 'bazaar', x0: -5, z0: -50, x1: 35, z1: -10, h: 12, color: 0x7a6650, roof: { kind: 'terrace' }, style: 'market', name: 'Bazaar' },
+  { id: 'bazaar', x0: -5, z0: -50, x1: 35, z1: -10, h: 12, color: 0x7a6650, roof: { kind: 'terrace' }, style: 'market', name: "King's Circle Skywalk Bazaar" },
   { id: 'tw-bz', x0: 24, z0: -50, x1: 35, z1: -36, y0: 12, h: 70, color: 0x5d5a52 },
-  { id: 'terr-b', x0: -5, z0: 10, x1: 35, z1: 50, h: 12, color: 0x6a6658, roof: { kind: 'terrace' }, name: 'Terrace B' },
+  { id: 'terr-b', x0: -5, z0: 10, x1: 35, z1: 50, h: 12, color: 0x6a6658, roof: { kind: 'terrace' }, name: 'Matunga Terrace' },
   { id: 'tw-b', x0: 20, z0: 36, x1: 35, z1: 50, y0: 12, h: 75, color: 0x4e5f66 },
-  { id: 'terr-c', x0: 55, z0: 10, x1: 95, z1: 50, h: 12, color: 0x6a6252, roof: { kind: 'terrace' }, name: 'Terrace C' },
+  { id: 'terr-c', x0: 55, z0: 10, x1: 95, z1: 50, h: 12, color: 0x6a6252, roof: { kind: 'terrace' }, name: 'Wadala Terrace' },
   { id: 'tw-c', x0: 80, z0: 10, x1: 95, z1: 24, y0: 12, h: 70, color: 0x5a5a52 },
   // Upper Decks (L3): four podium roofs at 38 m joined by bridges
-  { id: 'pod-3-1', x0: 55, z0: -110, x1: 95, z1: -70, h: 38, color: 0x65604f, roof: { kind: 'garden' }, name: 'Garden Terrace' },
-  { id: 'pod-4-1', x0: 115, z0: -110, x1: 155, z1: -70, h: 38, color: 0x5f6454, roof: { kind: 'garden' }, name: 'Sunrise Heights' },
-  { id: 'pod-3-2', x0: 55, z0: -50, x1: 95, z1: -10, h: 38, color: 0x68604f, roof: { kind: 'garden' }, name: 'Skyline Terrace' },
-  { id: 'pod-4-2', x0: 115, z0: -50, x1: 155, z1: -10, h: 38, color: 0x625e50, roof: { kind: 'garden' }, name: 'Dawn Terrace' },
-  { id: 'tw-control', x0: 134, z0: -104, x1: 150, z1: -92, y0: 38, h: 140, color: 0x8a8f90, style: 'control', name: 'Control Tower', glass: [62, 84] },
+  { id: 'pod-3-1', x0: 55, z0: -110, x1: 95, z1: -70, h: 38, color: 0x65604f, roof: { kind: 'garden' }, name: 'New Wadala Garden Terrace' },
+  { id: 'pod-4-1', x0: 115, z0: -110, x1: 155, z1: -70, h: 38, color: 0x5f6454, roof: { kind: 'garden' }, name: 'New Wadala Sunrise Heights' },
+  { id: 'pod-3-2', x0: 55, z0: -50, x1: 95, z1: -10, h: 38, color: 0x68604f, roof: { kind: 'garden' }, name: 'New Wadala Skyline Terrace' },
+  { id: 'pod-4-2', x0: 115, z0: -50, x1: 155, z1: -10, h: 38, color: 0x625e50, roof: { kind: 'garden' }, name: 'New Wadala Dawn Terrace' },
+  { id: 'tw-control', x0: 134, z0: -104, x1: 150, z1: -92, y0: 38, h: 140, color: 0x8a8f90, style: 'control', name: 'MMRDA Disaster Control Tower, Wadala', glass: [62, 84] },
   // remaining towers
-  { id: 'tw-e3', x0: 115, z0: 10, x1: 155, z1: 50, h: 124, color: 0x585c52, name: 'Harbour Crown', glass: [46, 60] },
-  { id: 'tw-s2', x0: -5, z0: 70, x1: 35, z1: 110, h: 100, color: 0x4e5a5e, name: 'Lotus Court' },
-  { id: 'tw-s4', x0: 115, z0: 70, x1: 155, z1: 110, h: 110, color: 0x5a5648, name: 'Vertex' },
+  { id: 'tw-e3', x0: 115, z0: 10, x1: 155, z1: 50, h: 124, color: 0x585c52, name: 'Harbour Crown, Sewri', glass: [46, 60] },
+  { id: 'tw-s2', x0: -5, z0: 70, x1: 35, z1: 110, h: 100, color: 0x4e5a5e, name: 'Lotus Court, Sion' },
+  { id: 'tw-s4', x0: 115, z0: 70, x1: 155, z1: 110, h: 110, color: 0x5a5648, name: 'Vertex, Sewri' },
 ];
 
 // ------------------------------------------------------------------------------------ ground zones
@@ -99,6 +100,7 @@ const streets = [
   { id: 'sz3', axis: 'x', c: 60, w: 20, from: -125, to: 155 },
 ];
 
+const landmarksExtra = [];
 // ------------------------------------------------------------------------------------ decks
 // Raised walking decks. `cuts` are candidate unstable slabs (Phase 4): the deck is built without
 // them and each cut becomes an individually movable slab in game.world.slabs.
@@ -115,7 +117,7 @@ const decks = [
   { id: 'collapse-e', level: 'L1', ...rect(-35, -33, -5, -27), y: 12, th: 0.8, kind: 'walkway', pillars: false, broken: '-x' },
   { id: 'land-g1-b', level: 'L1', ...rect(-20, 26, -5, 34), y: 12, th: 0.8, kind: 'walkway', pillars: true },
   // ---- L2 flyovers (y 24)
-  { id: 'road-h', level: 'L2', ...rect(-135, -66, 157, -54), y: 24, th: 1.2, kind: 'road', pillars: true, lane: 'x',
+  { id: 'road-h', level: 'L2', ...rect(-135, -66, 157, -54), y: 24, th: 1.2, kind: 'road', pillars: true, lane: 'x', pillarAcross: [0.3, 11.7], pillarSize: [1.4, 0.6],
     cuts: [{ id: 'us-l2-h1', ...rect(-100, -66, -94, -54) }, { id: 'us-l2-h2', ...rect(-72, -66, -66, -54) },
       { id: 'us-l2-h3', ...rect(24, -66, 30, -54) }, { id: 'us-l2-h4', ...rect(60, -66, 66, -54) }, { id: 'us-l2-h5', ...rect(120, -66, 126, -54) }] },
   { id: 'overlook-n', level: 'L2', ...rect(135, -70, 157, -66), y: 24, th: 1.2, kind: 'road', pillars: false },
@@ -134,20 +136,55 @@ const decks = [
   { id: 'loop-sw-a', level: 'L2', ...rect(-48, -54, -42, -24), y: 24, th: 1.2, kind: 'road', pillars: true, lane: 'z' },
   { id: 'loop-sw-b', level: 'L2', ...rect(-42, -30, -21, -24), y: 24, th: 1.2, kind: 'road', pillars: true, lane: 'x' },
   { id: 'land-12-bazaar', level: 'L2', ...rect(-4, -54, 8, -50), y: 24, th: 1.2, kind: 'road', pillars: false },
+  { id: 'land-12-canyon', level: 'L2', ...rect(102, -54, 108, -50), y: 24, th: 1.2, kind: 'road', pillars: false },
   { id: 'land-12-b', level: 'L2', ...rect(-9, 16, 4, 22), y: 24, th: 1.2, kind: 'road', pillars: true },
   // ---- L3 upper decks (y 38)
   { id: 'br-3-w', level: 'L3', ...rect(72, -70, 78, -50), y: 38, th: 1.0, kind: 'bridge', pillars: false },
   { id: 'br-3-e', level: 'L3', ...rect(132, -70, 138, -50), y: 38, th: 1.0, kind: 'bridge', pillars: false },
   { id: 'br-3-n', level: 'L3', ...rect(95, -93, 115, -87), y: 38, th: 1.0, kind: 'bridge', pillars: false },
   { id: 'br-3-s', level: 'L3', ...rect(95, -33, 115, -27), y: 38, th: 1.0, kind: 'bridge', pillars: false },
+  { id: 'br-3-lift', level: 'L3', ...rect(102, -46, 108, -33), y: 38, th: 1.0, kind: 'bridge', pillars: false },
   { id: 'sunrise-bridge', level: 'L3', ...rect(155, -37, 203, -23), y: 38, th: 1.2, kind: 'bridge', pillars: false },
   { id: 'sunrise-end', level: 'L3', ...rect(203, -41, 215, -19), y: 38, th: 1.2, kind: 'bridge', pillars: false },
   // ---- piers into the sea (G level, unrailed: walking off the end is the sea edge)
   { id: 'pier-s1', level: 'G', ...rect(20, 145, 28, 172), y: 0, th: 0.8, kind: 'pier', pillars: false, rails: false },
   { id: 'pier-s2', level: 'G', ...rect(-80, 145, -72, 168), y: 0, th: 0.8, kind: 'pier', pillars: false, rails: false },
-  { id: 'pier-w1', level: 'G', ...rect(-166, -60, -140, -54), y: 0, th: 0.8, kind: 'pier', pillars: false, rails: false },
+  // the Harbour Line viaducts over Mahim Bay (west) and the Sewri mudflats (east): the line runs on out over the water to its buffers
+  { id: 'viaduct-w', level: 'G', ...rect(-182, -70, -140, -50), y: 0, th: 1.0, kind: 'pier', pillars: false },
+  { id: 'viaduct-e', level: 'G', ...rect(160, -70, 207, -50), y: 0, th: 1.0, kind: 'pier', pillars: false },
   { id: 'pier-bridge', level: 'G', ...rect(160, -44, 176, -34), y: 0, th: 0.8, kind: 'pier', pillars: false },
 ];
+
+
+// ------------------------------------------------------------------------------------ the Harbour Line (Phase 8B)
+// A two-track suburban line along the z = -60 street (west to east through the whole map), under the EEH cloverleaf flyover. The
+// eastbound track is the northern one (left-hand running), with side platforms on the street edges (0.5 m, the carriage floor height).
+// Trains run on two tracks, reverse at the two termini with a crossover, and the static line is built by world/rail.js; the trains
+// themselves are src/systems/transit. Axis-aligned (a train is a box that slides along x), so every collider is an AABB.
+const railStations = [
+  { id: 'mahim', name: 'Mahim Jn', dev: 'माहीम जं.', x: -152, terminus: 'west', note: 'on the viaduct over Mahim Bay' },
+  { id: 'kings-circle', name: "King's Circle", dev: 'किंग्स सर्कल', x: -105 },
+  { id: 'sion', name: 'Sion', dev: 'सायन', x: -45, note: 'beside Sion Junction, the collapse' },
+  { id: 'wadala-road', name: 'Wadala Road', dev: 'वडाळा रोड', x: 75 },
+  { id: 'sewri', name: 'Sewri', dev: 'शिवडी', x: 135, terminus: 'east', note: 'by the Atal Setu pier' },
+];
+const rail = {
+  id: 'harbour-line', name: 'Harbour Line', dev: 'हार्बर लाइन', zc: -60, half: 1.4,
+  tracks: { east: { id: 'up', z: -63.7, dir: 1, platform: 'north' }, west: { id: 'down', z: -56.3, dir: -1, platform: 'south' } },
+  corridor: { z0: -65.4, z1: -54.6 },
+  platformTop: 0.5, platformHalfLen: 20,
+  platforms: { north: { z0: -69.8, z1: -65.4 }, south: { z0: -54.6, z1: -50.2 } },
+  x0: -181, x1: 207, turnWest: -162, turnEast: 188,
+  trainLen: 37.2, cars: 4, carLen: 9, gap: 0.4,
+  stations: railStations.map((st) => ({ ...st, x0: st.x - 20, x1: st.x + 20 })),
+  // level crossings: where the N-S streets cross the line (the street is 20 m wide, so is the opening in the fence)
+  crossings: streets.filter((st) => st.axis === 'z').map((st) => ({ id: `crossing-${st.id}`, street: st.id, x: st.c, w: st.w })),
+};
+// where a station's platforms stand, the flyover's blade pillars (which sit on the deck edges, i.e. on the platforms' track edges) move to the
+// strip between the two tracks, so no door ever opens onto a pillar
+decks.find((d) => d.id === 'road-h').pillarOverrides = rail.stations.map((st) => ({ x0: st.x0 - 3.6, x1: st.x1 + 3.6, across: [6.0], size: [1.8, 0.9] }));
+for (const st of rail.stations) landmarks_push(st);
+function landmarks_push(st) { landmarksExtra.push({ id: `station-${st.id}`, name: `${st.name} (Harbour Line)`, level: 'G', x: st.x, y: 0.5, z: -67.6 }); }
 
 // ------------------------------------------------------------------------------------ connections
 // Every level change is a stair, ramp or lift. `gate` names an entry of `gates`. Stairs: (x,z) is the
@@ -169,11 +206,26 @@ const ramps = [
 // Lifts: platform centre, size, exits (the sides you walk on/off at each stop). `lobby` adds a walled
 // approach corridor on that side, where the gate stands.
 const lifts = [
-  { id: 'lift-g1-skywalk', center: [20, 0], size: [4, 4], yBottom: 0, yTop: 12, exits: { bottom: '-x', top: '-x' }, tone: 'free', label: 'WALKWAYS' },
-  { id: 'lift-12-bazaar', center: [2, -48], size: [4, 4], yBottom: 12, yTop: 24, exits: { bottom: '+z', top: '-z' }, tone: 'gate5', label: 'FLYOVERS', gate: 'gate-l2-lift-bazaar', lobby: { side: '+z', len: 8 } },
-  { id: 'lift-23-west', center: [80, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-w', lobby: { side: '-x', len: 6 } },
-  { id: 'lift-bridge', center: [172, -39], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '-x', top: '+z' }, tone: 'sun', label: 'SUNRISE BRIDGE', gate: 'gate-bridge', lobby: { side: '-x', len: 8 } },
-  { id: 'lift-23-east', center: [140, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-e', lobby: { side: '-x', len: 6 } },
+  // `stops` (lowest first): id, level, y (walking surface), exit = the side of the car you walk on/off at that stop. Two-stop lifts
+  // keep the ids 'bottom' and 'top'. `panel`: 'sun' (the solar cell on the shaft cap is above the haze) or 'shade'. `min`: bio-scan
+  // threshold (rays) to RIDE to that stop; the older gated lifts keep their physical gates instead.
+  { id: 'lift-g1-skywalk', center: [20, 0], size: [4, 4], yBottom: 0, yTop: 12, exits: { bottom: '-x', top: '-x' }, tone: 'free', label: 'WALKWAYS', panel: 'shade', start: 0.9 },
+  { id: 'lift-12-bazaar', center: [2, -48], size: [4, 4], yBottom: 12, yTop: 24, exits: { bottom: '+z', top: '-z' }, tone: 'gate5', label: 'FLYOVERS', gate: 'gate-l2-lift-bazaar', lobby: { side: '+z', len: 8 }, panel: 'sun', start: 0.8 },
+  { id: 'lift-23-west', center: [80, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-w', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.85 },
+  { id: 'lift-bridge', center: [172, -39], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '-x', top: '+z' }, tone: 'sun', label: 'ATAL SETU', gate: 'gate-bridge', lobby: { side: '-x', len: 8 }, panel: 'sun', start: 1 },
+  { id: 'lift-23-east', center: [140, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-e', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.75 },
+  // Phase 8B: express lifts from the street straight up to the New Wadala podiums (38 m: the longest, dearest ride), and a three-stop
+  // lift in the canyon between the podiums (ground, the EEH flyover, the Upper Decks).
+  { id: 'lift-wadala-express-s', center: [97, -22], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.7,
+    stopMeta: { bottom: { name: 'Wadala street', level: 'G' }, top: { name: 'New Wadala Skyline Terrace', level: 'L3', min: 8 } } },
+  { id: 'lift-wadala-express-n', center: [97, -80], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.9,
+    stopMeta: { bottom: { name: 'Wadala street', level: 'G' }, top: { name: 'New Wadala Garden Terrace', level: 'L3', min: 8 } } },
+  { id: 'lift-canyon', center: [105, -48], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+z', top: '+z' }, tone: 'gate5', label: 'WADALA CANYON', panel: 'sun', start: 0.8,
+    stops: [
+      { id: 'bottom', y: 0, exit: '+z', name: 'Wadala street', level: 'G' },
+      { id: 'L2', y: 24, exit: '-z', name: 'EEH flyover', level: 'L2', min: 5 },
+      { id: 'top', y: 38, exit: '+z', name: 'Upper Decks bridge', level: 'L3', min: 8 },
+    ] },
 ];
 // Health gates. (x,y,z) = centre of the door on the walking surface; `axis` = the axis the door spans
 // along; `inside` = direction from the outside (where you are refused) into the route. Entering needs
@@ -191,22 +243,22 @@ const gates = [
 // ------------------------------------------------------------------------------------ underground
 // U floors are at -8; the ground slab (y -2..0) is their ceiling. Tracks lie 0.5 m lower.
 const uFloors = [
-  { id: 'u-concourse-n', ...rect(27, -46, 63, -8), name: 'Metro concourse' },
-  { id: 'u-hall', ...rect(27, -8, 63, 50), name: 'Metro platforms', tracks: rect(38, -4, 52, 46) },
-  { id: 'u-concourse-s', ...rect(27, 50, 63, 80), name: 'Metro south concourse' },
+  { id: 'u-concourse-n', ...rect(27, -46, 63, -8), name: 'Dharavi Metro concourse' },
+  { id: 'u-hall', ...rect(27, -8, 63, 50), name: 'Dharavi Metro platforms', tracks: rect(38, -4, 52, 46) },
+  { id: 'u-concourse-s', ...rect(27, 50, 63, 80), name: 'Dharavi Metro south concourse' },
   { id: 'u-t1', ...rect(-98, -43, 27, -37), name: 'Service tunnel West' },
   { id: 'u-store', ...rect(-62, -37, -48, -25), name: 'Store room' },
-  { id: 'u-chamber', ...rect(-138, -50, -98, -26), name: 'Breach chamber', sump: rect(-126, -46, -108, -30) },
+  { id: 'u-chamber', ...rect(-138, -50, -98, -26), name: 'Mithi Line breach chamber', sump: rect(-126, -46, -108, -30) },
   { id: 'u-ramp-c', ...rect(-137, -26, -129, -2), name: 'Service ramp', ramp: true },
   { id: 'u-t3', ...rect(-120, -26, -114, 68), name: 'Service tunnel Ring' },
   { id: 'u-t2', ...rect(-120, 62, 27, 68), name: 'Service tunnel South' },
   { id: 'u-maint', ...rect(-50, 68, -36, 80), name: 'Maintenance room' },
   // catacomb homes carved off the ring tunnel (no lamps)
   { id: 'u-cat-door', ...rect(-114, 20, -112, 24), name: 'Catacomb entrance' },
-  { id: 'u-catacombs', ...rect(-112, 4, -84, 40), name: 'Catacomb homes' },
+  { id: 'u-catacombs', ...rect(-112, 4, -84, 40), name: 'Neeche Dharavi catacomb homes' },
   // tunnel-boring machine cavern, north of the west tunnel
   { id: 'u-boring-link', ...rect(-82, -45, -76, -43), name: 'Boring site passage' },
-  { id: 'u-boring', ...rect(-96, -64, -62, -45), name: 'Tunnel-boring machine site' },
+  { id: 'u-boring', ...rect(-96, -64, -62, -45), name: "SURYA's Mithi Line boring site" },
   // the underground doctor's clinic, south of the south tunnel
   { id: 'u-clinic-link', ...rect(-22, 68, -18, 70), name: 'Clinic passage' },
   { id: 'u-clinic', ...rect(-30, 70, -12, 84), name: 'Underground clinic' },
@@ -248,27 +300,34 @@ const slumShacks = [...shacks(rect(-125, -98, -85, -70), (x, z) => inRect(x, z, 
 // ------------------------------------------------------------------------------------ signs
 // Lit signs on facades and canopies; `dir` is the way the sign faces.
 const signs = [
-  { id: 'sign-metro-a', text: 'METRO', x: 45, y: 4.7, z: -4.6, dir: '+z', w: 6, h: 1.4, tone: 'metro' },
-  { id: 'sign-metro-b', text: 'METRO', x: 45, y: 4.7, z: 50.8, dir: '-z', w: 6, h: 1.4, tone: 'metro' },
-  { id: 'sign-metro-b2', text: 'METRO', x: 45, y: 4.7, z: 67.2, dir: '+z', w: 6, h: 1.4, tone: 'metro' },
-  { id: 'sign-bazaar', text: 'BAZAAR', x: 15, y: 9.5, z: -9.8, dir: '+z', w: 12, h: 2.2, tone: 'free' },
-  { id: 'sign-bazaar-w', text: 'BAZAAR', x: -5.2, y: 9.5, z: -22, dir: '-x', w: 10, h: 2.2, tone: 'free' },
-  { id: 'sign-control', text: 'CONTROL TOWER', x: 142, y: 47, z: -91.8, dir: '+z', w: 14, h: 2.4, tone: 'gate8' },
-  { id: 'sign-sunrise', text: 'SUNRISE BRIDGE >', x: 154.8, y: 41.5, z: -30, dir: '-x', w: 13, h: 2.0, tone: 'sun' },
-  { id: 'sign-clover', text: 'FLYOVERS', x: -15, y: 27.5, z: -66.3, dir: '+z', w: 8, h: 1.5, tone: 'gate5' },
-  { id: 'sign-ramp-c', text: 'SERVICE', x: -133, y: 3.4, z: -1.6, dir: '+z', w: 6, h: 1.2, tone: 'work' },
-  { id: 'sign-hospital', text: 'अस्पताल  HOSPITAL', x: -45, y: 3.9, z: -0 + 71.85, dir: '-z', w: 8.5, h: 1.4, tone: 'free' },
-  { id: 'sign-police', text: 'पुलिस  POLICE', x: 18, y: 3.9, z: -75.85, dir: '+z', w: 7, h: 1.2, tone: 'metro' },
+  { id: 'sign-metro-a', text: 'मेट्रो  DHARAVI METRO · AQUA LINE', x: 45, y: 4.7, z: -4.6, dir: '+z', w: 8.4, h: 1.4, tone: 'metro' },
+  { id: 'sign-metro-b', text: 'मेट्रो  DHARAVI METRO · AQUA LINE', x: 45, y: 4.7, z: 50.8, dir: '-z', w: 8.4, h: 1.4, tone: 'metro' },
+  { id: 'sign-metro-b2', text: 'मेट्रो  DHARAVI METRO · AQUA LINE', x: 45, y: 4.7, z: 67.2, dir: '+z', w: 8.4, h: 1.4, tone: 'metro' },
+  { id: 'sign-bazaar', text: "किंग्स सर्कल  KING'S CIRCLE BAZAAR", x: 15, y: 9.5, z: -9.8, dir: '+z', w: 15, h: 2.2, tone: 'free' },
+  { id: 'sign-bazaar-w', text: "किंग्स सर्कल  KING'S CIRCLE BAZAAR", x: -5.2, y: 9.5, z: -22, dir: '-x', w: 13, h: 2.2, tone: 'free' },
+  { id: 'sign-control', text: 'MMRDA आपदा नियंत्रण  DISASTER CONTROL', x: 142, y: 47, z: -91.8, dir: '+z', w: 16, h: 2.4, tone: 'gate8' },
+  { id: 'sign-sunrise', text: 'अटल सेतू  ATAL SETU >', x: 154.8, y: 41.5, z: -30, dir: '-x', w: 13, h: 2.0, tone: 'sun' },
+  { id: 'sign-clover', text: 'EEH  ·  सायन SION JN', x: -15, y: 27.5, z: -66.3, dir: '+z', w: 9, h: 1.5, tone: 'gate5' },
+  { id: 'sign-ramp-c', text: 'माहीम खाड़ी  MAHIM CREEK', x: -133, y: 3.4, z: -1.6, dir: '+z', w: 7, h: 1.2, tone: 'work' },
+  { id: 'sign-hospital', text: 'सायन अस्पताल  SION HOSPITAL', x: -45, y: 3.9, z: -0 + 71.85, dir: '-z', w: 10, h: 1.4, tone: 'free' },
+  { id: 'sign-police', text: 'सायन पुलिस  SION POLICE', x: 18, y: 3.9, z: -75.85, dir: '+z', w: 8.4, h: 1.2, tone: 'metro' },
   { id: 'sign-maint', text: 'रखरखाव  MAINTENANCE', x: 52, y: 3.05, z: -36.2, dir: '-z', w: 4.2, h: 0.7, tone: 'work' },
   { id: 'sign-clinic', text: 'दवा  CLINIC', x: -26, y: -4.9, z: 69.85, dir: '-z', w: 5, h: 0.95, tone: 'free' },
-  { id: 'sign-bridge-gantry', text: 'पुल  BRIDGE: PERMIT HOLDERS ONLY', x: 156.7, y: 42.6, z: -30, dir: '-x', w: 12, h: 1.4, tone: 'sun' },
+  { id: 'sign-bridge-gantry', text: 'अटल सेतू  ATAL SETU: PERMIT HOLDERS ONLY', x: 156.7, y: 42.6, z: -30, dir: '-x', w: 12, h: 1.4, tone: 'sun' },
   { id: 'sign-surya-a', text: 'सूर्य  SURYA: the light you deserve', x: -105, y: 24, z: -129.9, dir: '+z', w: 16, h: 2.6, tone: 'surya' },
-  { id: 'sign-surya-b', text: 'सूर्य  SURYA', x: 54.9, y: 27, z: -90, dir: '-x', w: 9, h: 2.2, tone: 'surya' },
+  { id: 'sign-surya-b', text: 'सूर्य हाउस  SURYA HOUSE, WADALA', x: 54.9, y: 27, z: -90, dir: '-x', w: 13, h: 2.2, tone: 'surya' },
   { id: 'sign-surya-c', text: 'सूर्य  SURYA: sunlight, subscribed', x: 155.1, y: 30, z: 30, dir: '+x', w: 16, h: 2.6, tone: 'surya' },
   { id: 'sign-nosing-a', text: 'गाना मना है  NO SINGING', x: -85.2, y: 5.2, z: -30, dir: '+x', w: 6, h: 1.1, tone: 'danger' },
   { id: 'sign-nosing-b', text: 'गाना मना है  NO SINGING', x: 35.2, y: 5.4, z: -30, dir: '+x', w: 6, h: 1.1, tone: 'danger' },
   { id: 'sign-water', text: 'पानी  WATER', x: -84.9, y: 3.6, z: 80, dir: '+x', w: 4.5, h: 0.9, tone: 'metro' },
-  { id: 'sign-tree', text: 'WALKWAYS', x: -45, y: 15.4, z: 16.6, dir: '-z', w: 8, h: 1.4, tone: 'free' },
+  { id: 'sign-dharavi', text: 'धारावी  DHARAVI · 90 FEET ROAD', x: -105, y: 9.5, z: -97.9, dir: '+z', w: 14, h: 1.9, tone: 'free' },
+  { id: 'sign-kumbharwada', text: "कुंभारवाडा  KUMBHARWADA · POTTERS' LANE", x: -105, y: 9.5, z: 97.9, dir: '-z', w: 15, h: 1.8, tone: 'work' },
+  { id: 'sign-sion-junction', text: 'सायन जंक्शन  SION JUNCTION · SKYGRID', x: -33.6, y: 16.2, z: -30, dir: '-x', w: 12, h: 1.6, tone: 'danger' },
+  { id: 'sign-neeche', text: 'नीचे धारावी  NEECHE DHARAVI', x: -114.05, y: -4.6, z: 22, dir: '-x', w: 4.6, h: 0.95, tone: 'work' },
+  { id: 'sign-mithi-line', text: 'सूर्य  SURYA · MITHI LINE DEEP TUNNEL WORKS', x: -79, y: -4.4, z: -63.9, dir: '+z', w: 11, h: 1.2, tone: 'surya' },
+  { id: 'sign-sewri', text: 'शिवडी  SEWRI WATERFRONT', x: 155.1, y: 6.5, z: -45, dir: '+x', w: 8, h: 1.4, tone: 'metro' },
+  { id: 'sign-wadala', text: 'वडाळा  NEW WADALA · SURYA TOWERS', x: 54.9, y: 8.5, z: -22, dir: '-x', w: 12, h: 1.4, tone: 'surya' },
+  { id: 'sign-tree', text: 'माटुंगा  MATUNGA · WALKWAYS', x: -45, y: 15.4, z: 16.6, dir: '-z', w: 10, h: 1.4, tone: 'free' },
 ];
 
 // ------------------------------------------------------------------------------------ sunlight
@@ -325,25 +384,25 @@ const setuSpots = [
   { id: 'setu-terrace-w', level: 'L1', x: -93, y: 12, z: -18, note: 'under the tower base on the west terrace' },
 ];
 const vendorSpots = [
-  { id: 'vendor-g-tree', level: 'G', x: -78, y: 0, z: 26, yaw: -Math.PI / 2, name: 'Tree Alley' },
-  { id: 'vendor-g-slum', level: 'G', x: -108, y: 0, z: -72, yaw: 0, name: 'Slum Row' },
-  { id: 'vendor-g-quay', level: 'G', x: 20, y: 0, z: 120, yaw: Math.PI, name: 'Harbour Steps' },
-  { id: 'vendor-l1-bazaar-a', level: 'L1', x: 10, y: 12, z: -20, yaw: Math.PI, name: 'Bazaar North' },
-  { id: 'vendor-l1-bazaar-b', level: 'L1', x: 28, y: 12, z: -14, yaw: 0, name: 'Bazaar East' },
-  { id: 'vendor-l1-terrace-c', level: 'L1', x: 70, y: 12, z: 42, yaw: Math.PI, name: 'Terrace C' },
+  { id: 'vendor-g-tree', level: 'G', x: -78, y: 0, z: 26, yaw: -Math.PI / 2, name: 'Matunga Tree Lane' },
+  { id: 'vendor-g-slum', level: 'G', x: -108, y: 0, z: -72, yaw: 0, name: 'Dharavi 90 Feet Row' },
+  { id: 'vendor-g-quay', level: 'G', x: 20, y: 0, z: 120, yaw: Math.PI, name: 'Mithi River Steps' },
+  { id: 'vendor-l1-bazaar-a', level: 'L1', x: 10, y: 12, z: -20, yaw: Math.PI, name: "King's Circle Bazaar North" },
+  { id: 'vendor-l1-bazaar-b', level: 'L1', x: 28, y: 12, z: -14, yaw: 0, name: "King's Circle Bazaar East" },
+  { id: 'vendor-l1-terrace-c', level: 'L1', x: 70, y: 12, z: 42, yaw: Math.PI, name: 'Wadala Terrace' },
 ];
 const checkpoints = [
-  { id: 'cp-west', x: -80, y: 0, z: 2, yaw: 0, name: 'West Junction' },
-  { id: 'cp-center', x: -9, y: 0, z: 4, yaw: 0, name: 'Central Crossing' },
-  { id: 'cp-east', x: 101, y: 0, z: 4, yaw: 0, name: 'East Junction' },
-  { id: 'cp-south', x: 8, y: 0, z: 118, yaw: Math.PI, name: 'Harbour Gate' },
+  { id: 'cp-west', x: -80, y: 0, z: 2, yaw: 0, name: 'Dharavi Junction' },
+  { id: 'cp-center', x: -9, y: 0, z: 4, yaw: 0, name: 'Sion Crossing' },
+  { id: 'cp-east', x: 101, y: 0, z: 4, yaw: 0, name: 'Wadala Junction' },
+  { id: 'cp-south', x: 8, y: 0, z: 118, yaw: Math.PI, name: 'Mithi River Gate' },
 ];
 const controlTowerTerminal = { id: 'control-terminal', x: 142, y: 38, z: -90, radius: 3.2, level: 'L3' };
 const sunriseBridgeEnd = { id: 'sunrise-bridge-end', x: 211, y: 38, z: -30, radius: 4, level: 'L3' };
 
 const hazardZones = {
   dogs: [
-    { id: 'dog-slum-w', level: 'G', x: -105, z: -85, r: 18 }, { id: 'dog-site', level: 'G', x: 75, z: 95, r: 18 }, { id: 'dog-clover', level: 'G', x: -45, z: -86, r: 16 },
+    { id: 'dog-slum-w', level: 'G', x: -105, z: -86, r: 14 }, { id: 'dog-site', level: 'G', x: 75, z: 95, r: 18 }, { id: 'dog-clover', level: 'G', x: -45, z: -86, r: 15 },
     { id: 'dog-promenade', level: 'G', x: -20, z: 128, r: 20 }, { id: 'dog-slum-s', level: 'G', x: -105, z: 85, r: 16 },
     { id: 'dog-u-hall', level: 'U', x: 45, z: 22, r: 18 }, { id: 'dog-u-ring', level: 'U', x: -60, z: 65, r: 16 },
     { id: 'dog-u-chamber', level: 'U', x: -103, z: -38, r: 12 },
@@ -360,7 +419,7 @@ const hazardZones = {
   cameras: gates.map((g) => ({ id: `cam-${g.id.slice(5)}`, gate: g.id, x: g.x, y: g.y + 3.9, z: g.z, yaw: { '-z': 0, '+z': Math.PI, '-x': Math.PI / 2, '+x': -Math.PI / 2 }[g.inside] + Math.PI, range: 14, fov: 55 })),
   unstableSlabs: decks.flatMap((d) => (d.cuts ?? []).map((c) => ({ id: c.id, level: d.level, deck: d.id, ...rect(c.x0, c.z0, c.x1, c.z1), y: d.y }))),
   deranged: [
-    { id: 'wander-slum', level: 'G', x: -100, z: -80, r: 14 }, { id: 'wander-hospital-lane', level: 'G', x: -72, z: 100, r: 14 },
+    { id: 'wander-slum', level: 'G', x: -102, z: -84, r: 12 }, { id: 'wander-hospital-lane', level: 'G', x: -72, z: 100, r: 14 },
     { id: 'wander-sz3-east', level: 'G', x: 100, z: 60, r: 14 }, { id: 'wander-canyon-n', level: 'G', x: 105, z: -140, r: 14 },
     { id: 'wander-quay-w', level: 'G', x: -134, z: 45, r: 12 }, { id: 'wander-courtyard', level: 'G', x: -45, z: 25, r: 12 },
   ],
@@ -380,7 +439,7 @@ const hazardZones = {
 //   doors: [{side:'n'|'s'|'e'|'w', c: coordinate along the wall, w: width, low?: height}]  (low = a broken wall piece, not a door)
 //   partitions: [{axis:'x'|'z', at, a, b, gaps:[[centre,width],...]}]   axis = the direction the wall runs
 const buildings = [
-  { id: 'hospital', name: 'Sion General Hospital', ...rect(-63, 72, -27, 94), h: 5, color: 0x8a9490, tone: 'free',
+  { id: 'hospital', name: 'Sion Hospital (Sion General)', ...rect(-63, 72, -27, 94), h: 5, color: 0x8a9490, tone: 'free',
     doors: [{ side: 'n', c: -45, w: 4 }, { side: 's', c: -45, w: 1.6 }],
     partitions: [
       { axis: 'x', at: 80, a: -62.5, b: -27.5, gaps: [[-55, 2.4], [-41.5, 2.4], [-31.5, 2]] },
@@ -388,7 +447,7 @@ const buildings = [
       { axis: 'z', at: -36, a: 80, b: 93.5, gaps: [] },
       { axis: 'z', at: -55, a: 87, b: 93.5, gaps: [] },
     ] },
-  { id: 'police-station', name: 'Colaba Police Station', ...rect(2, -90, 32, -76), h: 5, color: 0x56627a, tone: 'metro',
+  { id: 'police-station', name: 'Sion Police Station', ...rect(2, -90, 32, -76), h: 5, color: 0x56627a, tone: 'metro',
     doors: [{ side: 's', c: 18, w: 3.4 }],
     partitions: [
       { axis: 'x', at: -81, a: 2.5, b: 31.5, gaps: [[6, 1.6], [15, 1.2], [26, 1.6]] },
@@ -475,6 +534,10 @@ const adScreens = [
   { id: 'ad-harbour', x: 135, y: 58, z: 49.9, dir: '-z', w: 20, h: 10, ad: 2 },
   { id: 'ad-vertex', x: 114.9, y: 50, z: 90, dir: '-x', w: 16, h: 8, ad: 1 },
   { id: 'ad-solaris', x: 75, y: 62, z: -129.9, dir: '+z', w: 22, h: 11, ad: 3 },
+  // over the Harbour Line stations (Phase 8B): the street is lit by the SURYA towers that shade it
+  { id: 'ad-sion-yard', x: -45, y: 15, z: -97.88, dir: '+z', w: 22, h: 9, ad: 2 },
+  { id: 'ad-wadala-road', x: 75, y: 17, z: -69.88, dir: '+z', w: 22, h: 9, ad: 0 },
+  { id: 'ad-sewri', x: 135, y: 17, z: -69.88, dir: '+z', w: 22, h: 9, ad: 3 },
   { id: 'ad-tv-home', x: -97.45, y: 1.55, z: -78, dir: '+x', w: 1.1, h: 0.7, ad: 4 },
 ];
 const shrineSpots = [[-66.3, -83], [-23.8, -41], [-66.3, 3], [-23.8, 31], [36.2, -83], [53.8, -41], [36.2, 31], [53.8, 69], [96.2, -123], [113.8, 3], [-86.3, -123], [-83.8, 69], [-24, -123], [14, 125]]
@@ -487,42 +550,42 @@ const searchlights = [
 const statues = [[66, 38, -98], [124, 38, -98], [66, 38, -40], [124, 38, -40], [130, 38, -84], [190, 38, -39.5]].map(([x, y, z], i) => ({ id: `statue-${i + 1}`, x, y, z }));
 
 const landmarks = [
-  { id: 'rubble-field', name: 'Collapsed walkway rubble field', level: 'G', x: -44, y: 0, z: -30 },
-  { id: 'dead-tree', name: 'Dead tree courtyard', level: 'G', x: -45, y: 0, z: 32 },
-  { id: 'metro-a', name: 'Metro station (north entrance)', level: 'G', x: 45, y: 0, z: 6 },
-  { id: 'metro-hall', name: 'Metro platforms', level: 'U', x: 33, y: -8, z: 10 },
-  { id: 'market', name: 'Market skywalk and bazaar', level: 'L1', x: 15, y: 12, z: -28 },
-  { id: 'cloverleaf', name: 'Cloverleaf flyover', level: 'L2', x: -15, y: 24, z: -60 },
-  { id: 'control-tower', name: 'Control Tower', level: 'L3', x: 142, y: 38, z: -86 },
-  { id: 'sunrise-bridge', name: 'Sunrise Bridge', level: 'L3', x: 185, y: 38, z: -30 },
-  { id: 'breach-chamber', name: 'Breach chamber', level: 'U', x: -118, y: -8, z: -28 },
-  { id: 'collapse-site', name: 'Collapse site (five fallen road decks)', level: 'G', x: -44, y: 0, z: -30 },
-  { id: 'triage-tents', name: 'Triage tents and body area', level: 'G', x: -46, y: 0, z: 3 },
-  { id: 'mithi-home', name: "Mithi's home", level: 'G', x: -94, y: 0, z: -78 },
-  { id: 'neighbour-flat', name: "The dead neighbour's flat", level: 'G', x: -94, y: 0, z: -88 },
-  { id: 'hospital', name: 'Sion General Hospital', level: 'G', x: -45, y: 0, z: 74.2 },
-  { id: 'police-station', name: 'Police station', level: 'G', x: 18, y: 0, z: -79 },
+  { id: 'rubble-field', name: 'Sion Junction rubble field (the fallen SkyGrid)', level: 'G', x: -44, y: 0, z: -30 },
+  { id: 'dead-tree', name: 'Dead tree courtyard, Matunga', level: 'G', x: -45, y: 0, z: 32 },
+  { id: 'metro-a', name: 'Dharavi Metro (Aqua Line), north entrance', level: 'G', x: 45, y: 0, z: 6 },
+  { id: 'metro-hall', name: 'Dharavi Metro platforms', level: 'U', x: 33, y: -8, z: 10 },
+  { id: 'market', name: "King's Circle Skywalk Bazaar", level: 'L1', x: 15, y: 12, z: -28 },
+  { id: 'cloverleaf', name: 'EEH Cloverleaf, Sion', level: 'L2', x: -15, y: 24, z: -60 },
+  { id: 'control-tower', name: 'MMRDA Disaster Control Tower, Wadala', level: 'L3', x: 142, y: 38, z: -86 },
+  { id: 'sunrise-bridge', name: 'Atal Setu, Sewri', level: 'L3', x: 185, y: 38, z: -30 },
+  { id: 'breach-chamber', name: 'Mithi Line breach chamber', level: 'U', x: -118, y: -8, z: -28 },
+  { id: 'collapse-site', name: 'Sion Junction, five fallen road decks', level: 'G', x: -44, y: 0, z: -30 },
+  { id: 'triage-tents', name: 'Triage tents and body area, Sion', level: 'G', x: -46, y: 0, z: 3 },
+  { id: 'mithi-home', name: "Mithi's home, Dharavi", level: 'G', x: -94, y: 0, z: -78 },
+  { id: 'neighbour-flat', name: "The dead neighbour's flat, Dharavi", level: 'G', x: -94, y: 0, z: -88 },
+  { id: 'hospital', name: 'Sion Hospital (Sion General)', level: 'G', x: -45, y: 0, z: 74.2 },
+  { id: 'police-station', name: 'Sion Police Station', level: 'G', x: 18, y: 0, z: -79 },
   { id: 'maintenance-shaft', name: 'Maintenance shaft (stair to U)', level: 'G', x: 52, y: 0, z: -35 },
   { id: 'lift-wreck', name: 'Wrecked maintenance lift car', level: 'U', x: 55.5, y: -8, z: -24 },
-  { id: 'catacombs', name: 'Catacomb homes', level: 'U', x: -98, y: -8, z: 22 },
-  { id: 'boring-site', name: 'Tunnel-boring machine site', level: 'U', x: -80, y: -8, z: -49.5 },
+  { id: 'catacombs', name: 'Neeche Dharavi catacomb homes', level: 'U', x: -98, y: -8, z: 22 },
+  { id: 'boring-site', name: "SURYA's Mithi Line boring site", level: 'U', x: -80, y: -8, z: -49.5 },
   { id: 'underground-clinic', name: "Underground doctor's clinic", level: 'U', x: -21, y: -8, z: 77 },
   { id: 'vent-1', name: 'Air vent 1 (G exit)', level: 'G', x: -50, y: 0, z: -45.9 },
   { id: 'vent-3', name: 'Air vent 3 (G exit)', level: 'G', x: -15, y: 0, z: 89.8 },
-  { id: 'bridge-checkpoint', name: 'Bridge checkpoint', level: 'L3', x: 157, y: 38, z: -30 },
-  { id: 'bridge-permit-gate', name: 'Bridge permit gate (G quay)', level: 'G', x: 158, y: 0, z: -39 },
-  { id: 'sea-west', name: 'West sea edge', level: 'G', x: -137, y: 0, z: 20 },
-  { id: 'sea-south', name: 'South sea edge', level: 'G', x: 0, y: 0, z: 142 },
+  { id: 'bridge-checkpoint', name: 'Atal Setu checkpoint', level: 'L3', x: 157, y: 38, z: -30 },
+  { id: 'bridge-permit-gate', name: 'Atal Setu permit gate (Sewri quay)', level: 'G', x: 158, y: 0, z: -39 },
+  { id: 'sea-west', name: 'Mahim Bay shore', level: 'G', x: -137, y: 0, z: 20 },
+  { id: 'sea-south', name: 'Mithi River estuary', level: 'G', x: 0, y: 0, z: 142 },
 ];
 
 export const MAP = {
   name: 'Mumbai 2049',
   levels: Y, bounds, land, seaLevel: -2.4, spawn,
   towers, zones, streets, decks, stairs, ramps, lifts, gates, uFloors,
-  deadTree, rubble, slumShacks, signs, buildings, uPartitions, ventSpots, doorDefs, metroGuardPosts, story, setuTimeline, adScreens, shrineSpots, searchlights, statues,
+  rail, deadTree, rubble, slumShacks, signs, buildings, uPartitions, ventSpots, doorDefs, metroGuardPosts, story, setuTimeline, adScreens, shrineSpots, searchlights, statues,
   sunShafts, solarLamps,
   breachChamber, controlTowerTerminal, sunriseBridgeEnd,
-  setuSpots, vendorSpots, fragmentSpots, hazardZones, checkpoints, landmarks,
+  setuSpots, vendorSpots, fragmentSpots, hazardZones, checkpoints, landmarks: [...landmarks, ...landmarksExtra],
   // market stalls and other dressing zones used by the prop generator in city.js
   markets: [{ id: 'bazaar', ...rect(1, -48, 34, -12), y: 12 }, { id: 'terrace-c', ...rect(58, 14, 92, 48), y: 12 }],
   gardens: [rect(58, -108, 92, -72), rect(118, -108, 152, -72), rect(58, -48, 92, -12), rect(118, -48, 152, -12)],

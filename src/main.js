@@ -7,6 +7,9 @@ import { LiftSystem } from './world/lift.js';
 import { SkySystem } from './world/sky.js';
 import { arenaSystem } from './world/arena.js';
 import { CitySystem } from './world/city.js';
+import { LiftPanelSystem } from './systems/lifts/panel.js';
+import { TransitSystem } from './systems/transit/index.js';
+import { CrowdSystem } from './systems/crowds/index.js';
 import { InteractableSystem } from './systems/interactables.js';
 import { ClockSystem } from './systems/clock.js';
 import { AirSystem } from './systems/air.js';
@@ -64,6 +67,8 @@ function boot() {
   game.addSystem('dialog', new DialogSystem());
   game.addSystem('screenfx', new ScreenFxSystem());
   game.addSystem('world', params.arena ? arenaSystem : new CitySystem());   // the city; the Phase 1 test arena stays behind ?arena=1
+  if (!params.arena) game.addSystem('liftpanel', new LiftPanelSystem());   // Phase 8B: E panels, floor choice, solar charge (after the world, before the player)
+  if (!params.arena) game.addSystem('transit', new TransitSystem());       // Phase 8B: the Harbour Line trains (they must move before the player is carried)
   game.addSystem('player', new Player());
   // Phase 3 core loop. Order is update order: the clock first, then health, Setu, vendors, endings, the view
   // (it moves the camera after the player did), and the HUD last (it only reads).
@@ -78,6 +83,7 @@ function boot() {
   game.addSystem('objective', new ObjectiveSystem());
   game.addSystem('view', new ViewSystem());
   if (!params.arena) game.addSystem('hazards', new HazardSystem());   // Phase 4 perils (after the view so the camera shake lands on the final camera)
+  if (!params.arena) game.addSystem('crowds', guarded(new CrowdSystem(), 'crowds'));   // Phase 8B: instanced pedestrians and traffic (after the player, so they part around her)
   // Phase 6b narrative layer: the breach and the warning (game.story), fragments, Setu's trail, the festival fireworks and the
   // cinematics. After the hazards, so the cinematic camera has the last word; before audio (its listener follows the camera).
   if (!params.arena) {
