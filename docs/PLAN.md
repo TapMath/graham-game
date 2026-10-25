@@ -636,3 +636,112 @@ The playthrough numbers behind this: both seeds lose 1 ray per 40 s on G and per
   - A classic-script boot watchdog in `index.html` shows the error, WebGL 2 availability and the user agent on screen if the game hasn't started within 25 s or an error escapes before boot. `main.js` sets `window.__grahanBooted`.
   - Touch detection also counts `any-pointer: coarse` and iPads that report as a Mac (`maxTouchPoints > 1`), so the touch layer is on from the start with a keyboard attached. It still also turns on at the first touch.
   - Audio also unlocks on `touchend`.
+
+
+## 12. Phase 8: feedback round (realism, Mumbai, transit, crowds, lifts, map, sunlight)
+
+The game shipped and was played on desktop and iPad. The player's feedback, in their words: the vibe, feeling and sound design are great. The requested changes:
+
+1. Make the **characters more realistic**.
+2. Make the **intro video (opening cinematic) more realistic**.
+3. **Human dialogue "can be much better"**: both the writing and how conversations are presented.
+4. **Show a map**, at least a local map, of where you are.
+5. **Map the story to the actual city of Bombay** and its real locations.
+6. Add **rapid public transport at ground level**, where the journey begins.
+7. Make it **more crowded**.
+8. Add **lifts that go to various heights**, and make the lifts **need to recharge**.
+9. **Indicate or suggest where sunlight can be found**, and make the ways to reach it clear.
+
+### 12.1 Bombay geography (binding for every Phase 8 agent)
+
+The map is a compressed, stylised slice of central Mumbai around Dharavi, Sion, Matunga, Wadala and Sewri. Keep the existing geometry, re-badge it, and add the real names to signs, dialogue, PA, fragments and the map. The axes stay as they are: -Z north, +X east.
+
+| Game place (coords) | Real Mumbai name | Notes |
+|---|---|---|
+| West sea (x < -140) | **Mahim Bay** and **Mahim Creek** | Arabian Sea side. |
+| South water (z > 145) | **Mithi River** estuary | Stylised (the real river is north-west of Dharavi). Mithi shares its name; a line about that is welcome. |
+| Slum west (x -125..-85), Mithi's home, the neighbour's flat | **Dharavi** (the area off 90 Feet Road, Kumbharwada potters' lanes) | Mithi and Setu's home. |
+| Collapse junction / rubble field (-44, -30) | **Sion Junction**, the five-level interchange where the Sion flyover, the Eastern Express Highway (EEH) and the Sion–Panvel connector stack | SURYA Corp's 2040s "Sion SkyGrid" rebuild. |
+| Hospital (-45, 74) | **Sion Hospital** (LTMG, "Sion General") | |
+| Police station (18, -79) | **Sion Police Station** | |
+| Metro station (45, …) U/G | **Dharavi Metro, Line 3 (Aqua Line)**, underground | |
+| Market skywalk L1 (1..34, -48..-12) | **King's Circle Skywalk Bazaar** (Matunga) | |
+| Cloverleaf L2 | **EEH Cloverleaf** | |
+| Elite towers and gardens L3 (58..152, -108..-12), SURYA Corp | **New Wadala** (luxury towers); the SURYA tower is **SURYA House, Wadala** | |
+| Control Tower (142, 38, -90) | **MMRDA Disaster Control Tower, Wadala** | Fictional 2049 version. |
+| Underground boring site and breach | **SURYA's "Mithi Line" deep tunnel works** under Dharavi | |
+| Catacomb homes | the **"Neeche Dharavi"** tunnel settlement | "Neeche" means "below". |
+| East quay, pier, bridge gate (157..172) | **Sewri** waterfront (Sewri Fort, mudflats where flamingos winter) | |
+| The bridge (x 160..222, L3) | **Atal Setu** (Mumbai Trans Harbour Link), Sewri → Nhava Sheva, facing east over the harbour | Sunrise over the water. In the story, the "bridge connecting the two islands" where Setu was found as a baby. Setu shares its name. |
+| New: ground-level rail | the **Harbour Line** local train | Stations west→east: **Mahim Jn** (west edge), **King's Circle**, **Sion** (near spawn), **Wadala Road**, **Sewri** (east, near the bridge pier). Station names can be approximate to the slice. |
+
+### 12.2 Workstreams and file ownership
+
+**Stage 1 runs two agents in parallel. Stage 2 starts after both are merged.**
+
+- **8B, the world** (stage 1, main checkout). Owns `src/world/**`, a new `src/systems/transit/**`, a new `src/systems/crowds/**`, `src/systems/hazards/**` where crowds must coexist, and `src/debug.js` / debug-bot additions.
+  - **Mumbai naming** in the world: signs, labels, landmark names, `world.story` display names, station signage.
+  - **The Harbour Line local train at G.** A track along a street corridor through the whole map, west to east; the train must not cut through buildings or decks. The stations in 12.1 have platforms, signage and crowds.
+    - Trains arrive regularly: every ~45–60 real seconds at each station in daytime, sparser at night, no trains 01:00–04:00.
+    - The player boards with E or by walking in while the doors are open and rides **inside the moving carriage**. It's a dynamic collider that carries the player, packed with commuters, people hanging from the doors, and fans.
+    - Alight at any station. A ride compresses a little game time.
+    - Visible from outside as a long, lit, crowded, rattling Mumbai local, with horn and rail sounds via `sound:emit` and `sound:loop`.
+    - Hazards must not spawn on the track, and the player must not get stuck.
+    - Expose `game.transit` (stations, next train ETA per station, ride state) for the map.
+  - **Crowds.** Dense pedestrian life at G: Dharavi lanes, Sion Junction rescue crowds, station platforms, the bazaar, hawkers, auto-rickshaws and taxis (kaali-peeli), people sleeping, kids. Thinner at L1/L2, sparse and well-dressed at L3.
+    - Use InstancedMesh with vertex-shader walk animation, plus LOD and distance culling. Pedestrians walk along street paths and part around the player.
+    - Use the same realism level as 8C's characters where possible: share 8C's palette and proportions via `game.characterStyle` if present, else sensible defaults. The crowd is a separate, cheap instanced model, not 8C's hero rig.
+  - **Lifts at various heights with solar charge.**
+    - Multi-stop lifts (for example G↔L1↔L2↔L3) with a floor-selection panel (choices via the existing dialog/dialogue UI with number keys and tap), plus some short lifts.
+    - Every lift runs on a solar battery shown on its panel and in a world-space gauge. A ride costs charge in proportion to height. Lifts recharge from sunlight: fast by day if their panel is lit, slowly by day otherwise, nearly nothing at night.
+    - A drained lift can be (a) waited out, or (b) **topped up by pressing your palm to the panel: 1 ray buys a ride**. Health is still the currency.
+    - Gates keep their thresholds.
+    - Expose `game.lifts` charge state for the map.
+  - **Budget and tests.**
+    - Stay within ~150 draw calls; crowds and trains must be instanced.
+    - The **playthrough tours (`tools/shots-playthrough.json`, seed 2 variant, built by `tools/build-playthrough.mjs`) must still reach ending 1**. Update the bot's scripts for the lifts (charge, floor choice) and optionally use the train.
+- **8C, the people** (stage 1, separate worktree). Owns `src/characters/**`, `src/systems/story/**` (cast, conversations, dialogue UI, director, scenes, cinematics, fragments text, trail text) and `src/systems/audio/pa.js` lines.
+  - **Realistic characters.** Replace the blocky humanoid look with believable low-poly people:
+    - real proportions (about 7.5 heads tall, children about 5.5);
+    - smooth capsule/lathe limbs and torso with shoulders, waist and hips, plus hands and feet;
+    - South Asian skin tones;
+    - faces with a painted canvas face atlas: eyes, brows, nose shading, lips, a little expression variety;
+    - real hair meshes (Mithi's long braid, buns, short cuts);
+    - believable clothing: sari drape with a border pattern, salwar kameez and dupatta, kurta, shirt, school shorts, Metro jacket;
+    - a more natural procedural animation: walk with knee and elbow bend, hip sway, arm swing, breathing idle, head look-at towards the speaker or player, gestures while talking.
+    
+    Keep each character at most ~3–4 draw calls via merged geometry and vertex colours plus one shared face atlas. Export `game.characterStyle` (palette, proportions) for 8B's crowd.
+  - **Dialogue, much better.** Rewrite every conversation, NPC bark, fragment and PA line for natural, specific, human speech.
+    - Bambaiya Hindi-English code-switching, used sparingly and naturally.
+    - Each character gets a distinct voice: Jeetu is a scared, brave, funny 9-year-old; Tara is warm but used to command; Gautam is gentle and stubborn; Aayat is wary and blunt; Kaalu Seth is menacing and transactional; the doctor is tired and suspicious; nurses and rescuers are overwhelmed.
+    - Mithi's lines stay sensory and terse.
+    - Real Mumbai references from 12.1.
+    - Fix the Jeetu-perspective problem properly.
+  - **Better presentation.**
+    - Conversation camera framing (over-the-shoulder or a two-shot on the speaker with a shallow-feeling vignette), with speaker gestures.
+    - Each line voiced with `speechSynthesis` per character: pick en-IN or hi-IN voices when available (iOS has Rishi/Veena), with distinct pitch and rate per character, and text-only fallback. Respect the settings voice toggle.
+    - Lines typed at a speakable pace, and skippable.
+  - **A more realistic intro.**
+    - Restage the opening in the real place: Mithi's room in Dharavi before dawn, a vision, then the walk out into the lane (crowd, rain), then the Sion Junction collapse seen from street level.
+    - Build the collapse with structural detail: deck spans with girders and pillars cracking in sequence (dominoes), rebar, vehicles sliding, dust clouds rolling down the street (particles), sparks, and people running.
+    - Add handheld camera shake, then silence, car alarms and dust.
+    - Keep it skippable and around 40–55 s.
+  - **Tests:** keep the 6a/6b/7b tours and the playthrough passing (the dialogue choice order the bot uses may change: update `tools/build-playthrough.mjs` scripts accordingly).
+- **8A, the map and sunlight guidance** (stage 2, after 8B and 8C are merged). Owns a new `src/ui/map.js` and HUD and touch integration. It may also touch the world for sunlight beacons and signage.
+  - **Minimap**: a local map that rotates with the player's view, shows the current level's walkable layout, and marks:
+    - the player;
+    - followers;
+    - nearby lifts (with charge) and stairs between levels;
+    - stations and the next train;
+    - **sunlight patches active now**;
+    - known objectives.
+  - **Full map** (M, or a touch button): a Mumbai-styled map with real names, per-level tabs (U/G/L1/L2/L3), the train line, lifts with their floors, the gates' thresholds, sunlight, and discovered places.
+    - Setu is **not** shown (finding him is the game), but his last known lead can be.
+    - Style: the OK Computer/safety-card look, like a city transit map.
+  - **Sunlight guidance**:
+    - shafts visible from afar as pale columns piercing the smog;
+    - a subtle "warmth" cue on the HUD pointing towards the nearest reachable sunlight (Mithi feels the heat);
+    - painted street arrows and signs (धूप / SUN ↑) pointing up the routes to light;
+    - NPC hints.
+
+All Phase 8 agents append to §10 when done, and their final reports list what they couldn't do.
