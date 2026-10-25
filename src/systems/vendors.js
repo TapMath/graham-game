@@ -25,16 +25,19 @@ const LINES = {
     'Clean needle, boiled twice. My mother\'s diya burns on it, didi.',
     'Pharmacy grade. I keep the receipts. Do not ask to see the receipts.',
     'Look at my hands. Steady. Sit, breathe, this one is honest.',
+    'Dharavi-made, Sion-tested. Kala Killa people buy from me, didi. They do not buy twice from a cheat.',
   ],
   shaky: [
     'Same lot as last week. Mostly good. Mostly.',
     'Arre, the label rubbed off, but the colour is right. The colour is always right.',
+    'Came up from Neeche Dharavi this morning. Cold storage? What cold storage, the whole city is cold storage.',
     'It is the real thing, cut a little. Everybody cuts a little.',
   ],
   dodgy: [
     'Special price, festival price! Light for everyone, no? Do not look at the bottle, look at me.',
     'Cheap, fast, my cousin\'s cousin made it. That smell? Lemon. Mostly lemon.',
     'No refunds, no questions. Hurry, the drone is coming back.',
+    'Bhai, I have a daughter in Mahim. You think I make poison on purpose? Not on purpose. Take it or leave it.',
   ],
 };
 const POTENCY_WORD = { 2: 'a small top-up', 3: 'a decent top-up', 4: 'a proper dose', 5: 'a strong dose', 6: 'the full sun in a syringe' };

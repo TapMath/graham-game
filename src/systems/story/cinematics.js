@@ -352,6 +352,7 @@ export class CinematicSystem {
   _end(cx) {
     const game = this.game;
     cx.done = true;
+    game.voices?.cancel?.();
     cx.cleanup();
     for (const el of Object.values(this.layers)) { if (el.id === 'cine-title' || el.id === 'cine-stamp') el.classList.remove('on'); }
     if (!cx.opts.keepLayers) for (const id of ['white', 'bloom', 'vig']) { this.layers[id].style.opacity = '0'; this.layers[id].dataset.a = '0'; }
@@ -377,6 +378,7 @@ export class CinematicSystem {
   skip() {
     const cx = this.current; if (!cx || cx.skipped) return;
     cx.skipped = true;
+    this.game.voices?.cancel?.();
     for (const t of cx.timers.splice(0)) t.res();
     for (const tw of cx.tweens.splice(0)) { tw.fn(tw.to); tw.res(); }
     for (const a of cx.actors) { if (a.goal) { a.pos.x = a.goal.x; a.pos.z = a.goal.z; const r = a.goal.res; a.goal = null; r(); } }

@@ -626,9 +626,9 @@ function buildHair(mb, spec, D, hairC, hs, ringAt, torsoR, wHead, wRigid, age) {
     case 'turban': {
       // layers of wound cloth: a dome, then bands wound across it
       const rows = [];
-      for (const t of [0.52, 0.6, 0.72, 0.85, 0.96, 1.04, 1.1]) { const rr = ringAt(Math.min(1, t), hh * 0.085 * (t > 1 ? 0.5 : 1)); rows.push({ ...rr, y: D.chinY + t * hh + (t > 1 ? hh * 0.02 : 0), rx: rr.rx * (t > 1 ? 0.55 : 1), rz: rr.rz * (t > 1 ? 0.55 : 1), c: hairC, wf: wHead }); }
+      for (const t of [0.64, 0.7, 0.78, 0.88, 0.97, 1.04, 1.1]) { const rr = ringAt(Math.min(1, t), hh * 0.085 * (t > 1 ? 0.5 : 1)); rows.push({ ...rr, y: D.chinY + t * hh + (t > 1 ? hh * 0.02 : 0), rx: rr.rx * (t > 1 ? 0.55 : 1), rz: rr.rz * (t > 1 ? 0.55 : 1), c: hairC, wf: wHead }); }
       mb.tube(rows, { seg: 16, cap1: true });
-      for (let i = 0; i < 4; i++) mb.blob({ x: (i - 1.5) * hh * 0.02, y: D.chinY + (0.64 + i * 0.1) * hh, z: hh * 0.04, rx: hh * 0.5, ry: hh * 0.06, rz: hh * 0.53, c: shade2(hairC, i % 2 ? 0.8 : 1.15), rot: [0.1 * (i - 1.5), 0.2 * (i % 2 ? 1 : -1), 0.12 * (i - 1.5)], seg: 14, rings: 4, wf: wHead });
+      for (let i = 0; i < 4; i++) mb.blob({ x: (i - 1.5) * hh * 0.02, y: D.chinY + (0.74 + i * 0.085) * hh, z: hh * 0.04, rx: hh * 0.5, ry: hh * 0.06, rz: hh * 0.53, c: shade2(hairC, i % 2 ? 0.8 : 1.15), rot: [0.1 * (i - 1.5), 0.2 * (i % 2 ? 1 : -1), 0.12 * (i - 1.5)], seg: 14, rings: 4, wf: wHead });
       mb.blob({ x: hh * 0.12, y: D.chinY + 0.98 * hh, z: -hh * 0.02, rx: hh * 0.18, ry: hh * 0.08, rz: hh * 0.2, c: shade2(hairC, 0.9), seg: 8, rings: 4, wf: wHead });
       break;
     }

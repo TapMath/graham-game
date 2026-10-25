@@ -44,7 +44,7 @@ full('sleepers', 3.0); full('patients', 4.0);
 // Jeetu's side: he joins, we play him, and talk to Tara, Kaalu and the doctor as a nine-year-old
 steps.push({ name: 'p8c-jeetu-joins', eval: "go(); A.do('jeetuJoin'); A.step(0.5); A.do('switch','jeetu'); A.step(0.8); stop(); ok(G.party.active==='jeetu','playing Jeetu'); ({active:G.party.active})", wait: 500 });
 steps.push({ name: 'p8c-as-jeetu-tara', eval: "go(); A.set('perceive',0); A.do('cast','tara',2.8); A.step(0.4); A.do('talk','tara'); A.step(2.8); stop(); const s=A.state().dialogue6a; ok(G.party.active==='jeetu','still Jeetu while talking (no swap)'); ok(/Jeetu|boy|Beta|your didi/i.test(s.line),'Tara speaks to Jeetu: '+s.line); ({line:s.line.slice(0,90), choices:s.choices})", wait: 700 });
-steps.push({ name: 'p8c-as-jeetu-tara-2', eval: "go(); A.do('dialogueAdvance'); A.do('dialogueAdvance'); A.step(2.2); stop(); ({line:A.state().dialogue6a.line.slice(0,90)})", wait: 500 });
+steps.push({ name: 'p8c-as-jeetu-tara-2', eval: "go(); A.do('dialogueAdvance'); A.do('dialogueAdvance'); A.step(2.2); stop(); const d2=A.state().dialogue6a; ({line:d2?d2.line.slice(0,90):'(closed)'})", wait: 500 });
 close();
 steps.push({ name: 'p8c-as-jeetu-kaalu', eval: "go(); A.set('perceive',0); A.do('cast','kaalu',3.2); A.step(0.4); A.do('talk','kaalu'); A.step(2.8); stop(); ({line:A.state().dialogue6a.line.slice(0,90), choices:A.state().dialogue6a.choices})", wait: 700 });
 close();

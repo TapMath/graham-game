@@ -329,7 +329,7 @@
  },
  {
   "name": "p8c-as-jeetu-tara-2",
-  "eval": "go(); A.do('dialogueAdvance'); A.do('dialogueAdvance'); A.step(2.2); stop(); ({line:A.state().dialogue6a.line.slice(0,90)})",
+  "eval": "go(); A.do('dialogueAdvance'); A.do('dialogueAdvance'); A.step(2.2); stop(); const d2=A.state().dialogue6a; ({line:d2?d2.line.slice(0,90):'(closed)'})",
   "wait": 500
  },
  {
