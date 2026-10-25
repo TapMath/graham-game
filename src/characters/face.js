@@ -32,7 +32,7 @@ export function headAt(t) {
 }
 /** The nose, an ellipsoid in head units. */
 export function noseOf(child) {
-  return child ? { x: 0, y: 0.45, z: -0.395, rx: 0.05, ry: 0.07, rz: 0.05 } : { x: 0, y: 0.455, z: -0.405, rx: 0.058, ry: 0.088, rz: 0.062 };
+  return child ? { x: 0, y: 0.45, z: -0.395, rx: 0.05, ry: 0.07, rz: 0.05 } : { x: 0, y: 0.455, z: -0.405, rx: 0.05, ry: 0.082, rz: 0.054 };
 }
 const FACE_T0 = 0.17, FACE_T1 = 0.80, FACE_HW = 0.34;     // the painted region: t range and half width (head units)
 
@@ -116,7 +116,7 @@ function paintBrow(g, x, y, w, lift, side, look, ex) {
   const col = look.brow === 'grey' ? 'rgba(168,164,158,.95)' : 'rgba(24,16,12,.92)';
   // from the inner end (towards the nose) to the outer end
   const ix = x - side * w * 0.52, ox = x + side * w * 0.62;
-  const iy = y - inner * S * 0.045, oy = y - outer * S * 0.03 - S * 0.008;
+  const iy = y - inner * S * 0.085, oy = y - outer * S * 0.055 - S * 0.008;
   const my = Math.min(iy, oy) - S * 0.018 - Math.max(0, (inner + outer) * 0.5) * S * 0.008;
   g.fillStyle = col;
   g.beginPath();
@@ -132,7 +132,7 @@ function paintMouth(g, cx, cy, w, look, ex) {
   const line = 'rgba(48,22,20,.85)';
   switch (ex.mouth) {
     case 'flat': case 'tight': case 'frown': case 'smile': case 'smirk': case 'grimace': {
-      const curve = ex.mouth === 'smile' ? -w * 0.14 : ex.mouth === 'frown' ? w * 0.13 : ex.mouth === 'smirk' ? -w * 0.06 : ex.mouth === 'grimace' ? w * 0.03 : 0;
+      const curve = ex.mouth === 'smile' ? -w * 0.2 : ex.mouth === 'frown' ? w * 0.2 : ex.mouth === 'smirk' ? -w * 0.06 : ex.mouth === 'grimace' ? w * 0.03 : 0;
       const half = w * (ex.mouth === 'smile' ? 0.56 : ex.mouth === 'tight' ? 0.42 : 0.48);
       const slant = ex.mouth === 'smirk' ? w * 0.08 : 0;
       // lips
@@ -190,7 +190,10 @@ function paintNose(g, cx, y, w, look) {
 }
 
 function paintCell(g, x0, y0, look, name) {
-  const ex = EXPR[name] ?? EXPR.neutral, S = CELL;
+  // a name is a mood, optionally followed by a mouth to say it with: 'worry', 'worry:openA', 'smile:grin', 'neutral:blink'
+  const [base, ...rest] = String(name).split(':');
+  const ex = { ...(EXPR[base] ?? EXPR.neutral) }, S = CELL;
+  for (const t of rest) { if (t === 'blink') { ex.eye = 0; ex.sleep = false; } else if (t === 'openA' || t === 'openB' || t === 'openC' || t === 'grin' || t === 'smile' || t === 'smirk' || t === 'frown' || t === 'tight' || t === 'grimace' || t === 'flat') ex.mouth = t; }
   g.save();
   g.beginPath(); g.rect(x0, y0, S, S); g.clip();
   g.translate(x0, y0);

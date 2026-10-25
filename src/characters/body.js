@@ -377,7 +377,7 @@ export function buildBodyGeometry(spec) {
     }
     mb.tube(rows, { seg: 10, p: 2.05, cap0: false });
     // deltoid cap hides the shoulder seam
-    mb.blob({ x: side * (D.shoulderX - 0.004 * H), y: D.shoulderY - 0.004 * H, z: 0, rx: D.armR * 1.02, ry: D.armR * 0.95, rz: D.armR * 1.0, c: shortSleeve(longSleeves, sleeveC, skin, tl, sleeveEnd, D), seg: 10, rings: 6, wf: (x, y) => [[B.chest, 0.55], [B['uarm' + sg], 0.45]] });
+    mb.blob({ x: side * (D.shoulderX - 0.004 * H), y: D.shoulderY - 0.004 * H, z: 0, rx: D.armR * 1.02, ry: D.armR * 0.95, rz: D.armR * 1.0, c: shortSleeve(longSleeves, sleeveC, skin, tl, sleeveEnd, D), seg: 16, rings: 9, wf: (x, y) => [[B.chest, 0.55], [B['uarm' + sg], 0.45]] });
     // hand: palm, fingers, thumb
     const hx = (y) => ax(y), hy = D.wristY, L = D.handLen;
     const hw = wRigid(B['hand' + sg]);
@@ -523,7 +523,7 @@ function buildHair(mb, spec, D, hairC, hs, ringAt, torsoR, wHead, wRigid, age) {
   const grey = age > 0.5 ? hairC.clone().lerp(new THREE.Color(0.7, 0.7, 0.7), (age - 0.5) * 1.2) : hairC;
   const col = (c, k = 1) => (k === 1 ? c : c.clone().multiplyScalar(k));
   const cap = (o) => {
-    const ts = o.ts ?? [1.01, 0.97, 0.9, 0.82, 0.72, 0.62, 0.52, 0.42, 0.32];
+    const ts = o.ts ?? [1.01, 0.985, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.64, 0.58, 0.52, 0.46, 0.4, 0.34, 0.3];
     const rows = ts.map((t) => {
       const r = ringAt(Math.min(t, 1), (o.grow ?? 0.05) * hh * (t > 0.95 ? 1.2 : 1), o.w ?? 1, o.d ?? 1);
       let gap = 0;
@@ -533,7 +533,7 @@ function buildHair(mb, spec, D, hairC, hs, ringAt, torsoR, wHead, wRigid, age) {
       if (t > 0.99) { r.rx *= 0.6; r.rz *= 0.6; r.y += hh * 0.02; }
       return { ...r, a0: gap, a1: Math.PI * 2 - gap, c: col(hairC), wf: wHead, cf: o.cf };
     });
-    mb.tube(rows, { seg: 16, p: 2 });
+    mb.tube(rows, { seg: 26, p: 2 });
   };
   const flat = (rows, seg = 12, o = {}) => mb.tube(rows, { seg, ...o });
   const hc = hairC;

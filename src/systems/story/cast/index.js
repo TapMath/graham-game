@@ -129,9 +129,10 @@ export class CastSystem {
       for (const m of def.members) {
         const y = m.y ?? this._ground(m.x, m.z, baseY);
         parts.push(bake(g, m.spec, { x: m.x, y, z: m.z, yaw: m.yaw, lying: !!m.lying, arms: m.arms, mood: m.mood }));
-        actor.members.push({ x: m.x, y, z: m.z, yaw: m.yaw });
+        actor.members.push({ x: m.x, y, z: m.z, yaw: m.yaw, spec: m.spec, arms: m.arms, lying: !!m.lying, mood: m.mood });
       }
-      addMeshes(mergeStatic(parts), actor);
+      actor.memberParts = parts;
+      addMeshes(mergeStatic(parts, true), actor);
       actor.pos.y = actor.members[0]?.y ?? baseY;
     }
     if (def.kind !== 'group') this.place(actor, actor.pos.x, actor.pos.y, actor.pos.z, actor.yaw);
@@ -156,6 +157,43 @@ export class CastSystem {
     a.spots = spots;
   }
 
+  // ------------------------------------------------------------------------------------------ talking bodies
+  /**
+   * A body to animate for a conversation. Anim actors are themselves; a member of a baked bystander group is lifted out of the merged
+   * mesh and replaced by a live Character in the same spot and pose (put back by endTalk).
+   */
+  beginTalk(a, i = 0) {
+    if (!a) return null;
+    a.talking = true;
+    if (a.model) return a.hiddenModel ? null : a.model;
+    if (a.kind !== 'group' || !a.memberParts) return null;
+    const m = a.members[i]; if (!m || m.lying) return null;
+    this.endTalk(a);
+    const c = buildCharacter(m.spec, this.game);
+    c.group.position.set(m.x, m.y, m.z); c.group.rotation.y = m.yaw;
+    c.setPose?.('stand');
+    this.game.scene.add(c.group);
+    this.game.senses?.patchObject?.(c.group);
+    a.double = { model: c, index: i };
+    this._rebuildGroup(a, i);
+    return c;
+  }
+
+  endTalk(a, i) {
+    if (a) a.talking = false;
+    if (!a?.double) return;
+    this.game.scene.remove(a.double.model.group); a.double.model.dispose?.();
+    a.double = null;
+    this._rebuildGroup(a, -1);
+  }
+
+  _rebuildGroup(a, skip) {
+    const keep = a.memberParts.filter((_, k) => k !== skip);
+    const parts = keep.length ? mergeStatic(keep, true) : null;
+    a.mesh.geometry.dispose(); a.faceMesh.geometry.dispose();
+    if (parts) { a.mesh.geometry = parts.body; a.faceMesh.geometry = parts.face; } else { a.mesh.geometry = new THREE.BufferGeometry(); a.faceMesh.geometry = new THREE.BufferGeometry(); }
+  }
+
   // ------------------------------------------------------------------------------------------ API
   get(id) { return this.actors.get(id); }
   list() { return [...this.actors.values()]; }
@@ -166,7 +204,7 @@ export class CastSystem {
   place(a, x, y, z, yaw = a.yaw) {
     if (typeof a === 'string') a = this.actors.get(a);
     if (!a) return;
-    a.pos.x = x; a.pos.y = y; a.pos.z = z; a.yaw = yaw;
+    a.pos.x = x; a.pos.y = y; a.pos.z = z; a.yaw = yaw; if (a.model) a.restYaw = yaw;
     if (a.kind === 'group') return;
     a.group.position.set(x, y, z);
     if (a.model && !a.hiddenModel) a.model.group.rotation.y = yaw; else a.group.rotation.y = yaw;
@@ -204,6 +242,11 @@ export class CastSystem {
       const sameLevel = (a.level === 'U') === inU;
       const show = !a.hiddenFlag && d < SHOW_DIST && sameLevel && Math.abs((a.pos.y ?? 0) - pl.pos.y) < 14;
       if (a.group.visible !== show) a.group.visible = show;
+      if (a.double) a.double.model.update(dt, 0, { onGround: true });
+      if (a.model && a.restYaw !== undefined && !a.talking && !a.hiddenModel && a.def.lying !== true && a.owner !== 'party' && !a.moving) {     // back to where they were standing
+        const m = a.model.group; let dy = a.restYaw - m.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+        if (Math.abs(dy) > 0.01) m.rotation.y += dy * Math.min(1, dt * 1.6);
+      }
       if (show && a.model && d < 40 && !(a.hiddenModel)) {
         // people turn their heads to whoever is near (a talking partner gets the full attention)
         if (d < 12 && !a.noLook && a.def.lying !== true) a.model.lookAt({ x: cam.x, y: cam.y, z: cam.z }); else a.model.lookAt(null);

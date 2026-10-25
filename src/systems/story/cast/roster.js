@@ -44,14 +44,14 @@ export function buildRoster(S) {
   const h = S.hospital, cat = S.catacombs, bs = S.boringSite, cl = S.clinic;
   return [
     // ---- named, single
-    { id: 'jeetu', kind: 'anim', spec: SPECS.jeetu, name: 'Jeetu', role: 'FRIEND', portrait: 'boy', color: '#ff9f8a', x: -60, y: 0.76, z: 90.15, yaw: 0, lying: true, level: 'G', radius: 3.2, talkAt: { x: -58.4, z: 90.5 } },
-    { id: 'tara', kind: 'anim', spec: SPECS.tara, name: 'Tara Shahjehan', role: 'ACTRESS', portrait: 'woman', color: '#7fe0d8', x: h.taraRoom.x, z: h.taraRoom.z, yaw: rot(8), arms: { armR: 0.35, armL: 0.1 }, level: 'G', radius: 3 },
+    { id: 'jeetu', kind: 'anim', mood: 'worry', spec: SPECS.jeetu, name: 'Jeetu', role: 'FRIEND', portrait: 'boy', color: '#ff9f8a', x: -60, y: 0.76, z: 90.15, yaw: 0, lying: true, level: 'G', radius: 3.2, talkAt: { x: -58.4, z: 90.5 } },
+    { id: 'tara', kind: 'anim', mood: 'worry', spec: SPECS.tara, name: 'Tara Shahjehan', role: 'ACTRESS', portrait: 'woman', color: '#7fe0d8', x: h.taraRoom.x, z: h.taraRoom.z, yaw: rot(8), arms: { armR: 0.35, armL: 0.1 }, level: 'G', radius: 3 },
     { id: 'sameer', kind: 'static', spec: SPECS.sameer, name: 'Sameer Shahjehan', role: 'ICU', portrait: 'man', color: '#ffdf9a', x: h.icu.x, y: 0.76, z: 89.35, yaw: 0, lying: true, level: 'G', radius: 3.2 },
     { id: 'gautam', kind: 'anim', spec: SPECS.gautam, name: 'Gautam', role: 'IN CUSTODY', portrait: 'man', color: '#a8c4e8', x: S.policeStation.cell.x, z: S.policeStation.cell.z, yaw: Math.PI, level: 'G', radius: 7 },   // Phase 7b: he is behind the bars at z -81, so the player stands 5.5+ m away (it was 3.6: unreachable)
-    { id: 'aayat', kind: 'anim', spec: SPECS.aayat, name: 'Aayat', role: 'THE TUNNELS', portrait: 'girl', color: '#f0c890', x: cat.aayatHome.x - 1.4, y: -8, z: cat.aayatHome.z + 1.6, yaw: Math.PI * 0.95, arms: { armR: 0.15 }, level: 'U', radius: 3 },
-    { id: 'kaalu', kind: 'anim', spec: SPECS.kaalu, name: 'Kaalu Seth', role: 'THE BIG MAN', portrait: 'big', color: '#ff9a70', x: bs.foreman.x + 0.5, y: -8, z: bs.foreman.z + 1.4, yaw: rot(80), arms: { armR: 0.7, armL: 0.2 }, level: 'U', radius: 3.4 },
+    { id: 'aayat', kind: 'anim', mood: 'worry', spec: SPECS.aayat, name: 'Aayat', role: 'THE TUNNELS', portrait: 'girl', color: '#f0c890', x: cat.aayatHome.x - 1.4, y: -8, z: cat.aayatHome.z + 1.6, yaw: Math.PI * 0.95, arms: { armR: 0.15 }, level: 'U', radius: 3 },
+    { id: 'kaalu', kind: 'anim', mood: 'smirk', spec: SPECS.kaalu, name: 'Kaalu Seth', role: 'THE BIG MAN', portrait: 'big', color: '#ff9a70', x: bs.foreman.x + 0.5, y: -8, z: bs.foreman.z + 1.4, yaw: rot(80), arms: { armR: 0.7, armL: 0.2 }, level: 'U', radius: 3.4 },
     { id: 'contractor', kind: 'anim', spec: SPECS.contractor, name: 'The contractor', role: 'SURYA SUBCONTRACT', portrait: 'man', color: '#c8d0a0', x: bs.x + 8.5, y: -8, z: bs.z + 2.2, yaw: rot(-35), arms: { armR: 0.3 }, level: 'U', radius: 3.2 },
-    { id: 'doctor', kind: 'anim', spec: SPECS.doctor, name: 'The doctor', role: 'CLINIC', portrait: 'doctor', color: '#cfe8e0', x: cl.x - 2.6, y: -8, z: cl.z - 2.4, yaw: rot(60), arms: { armR: 0.25, armL: 0.25 }, level: 'U', radius: 3.2 },
+    { id: 'doctor', kind: 'anim', mood: 'worry', spec: SPECS.doctor, name: 'The doctor', role: 'CLINIC', portrait: 'doctor', color: '#cfe8e0', x: cl.x - 2.6, y: -8, z: cl.z - 2.4, yaw: rot(60), arms: { armR: 0.25, armL: 0.25 }, level: 'U', radius: 3.2 },
     { id: 'oldman', kind: 'oldman', spec: SPECS.oldman, name: 'Old man', role: 'UNDER THE RUBBLE', portrait: 'old', color: '#dccfae', x: -38.2, z: -26.3, yaw: rot(-70), level: 'G', radius: 2.7 },
     // ---- bystander groups, one draw call each
     { id: 'rescuers-collapse', kind: 'group', name: 'Rescuer', role: 'RESCUE', portrait: 'worker', color: '#ffa84a', level: 'G', radius: 2.6, centre: { x: -45, z: -26 },

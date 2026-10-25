@@ -427,9 +427,9 @@ export const buildMithi = (game) => buildCharacter(MITHI, game);
 export const buildSetu = (game) => buildCharacter(SETU, game);
 
 /** Merge baked { body, face } pairs into one body geometry and one face geometry (for groups of bystanders). */
-export function mergeStatic(list) {
+export function mergeStatic(list, keep = false) {
   const bodies = list.map((p) => p.body), faces = list.map((p) => p.face);
   const body = mergeGeometries(bodies, false), face = mergeGeometries(faces, false);
-  bodies.forEach((g) => g.dispose()); faces.forEach((g) => g.dispose());
+  if (!keep) { bodies.forEach((g) => g.dispose()); faces.forEach((g) => g.dispose()); }
   return { body, face };
 }

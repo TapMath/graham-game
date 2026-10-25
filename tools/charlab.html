@@ -7,6 +7,8 @@
 import * as THREE from '../vendor/three.module.js';
 import { buildCharacter, MITHI, SETU, NPC_PRESETS, characterMaterial } from '../src/characters/humanoid.js';
 import { SPECS } from '../src/systems/story/cast/roster.js';
+import { faceAtlas } from '../src/characters/face.js';
+window.__atlas = (look, name) => faceAtlas().cell(look, name);
 
 const W = 1280, H = 720;
 const canvas = document.getElementById('c');
