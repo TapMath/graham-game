@@ -16,7 +16,7 @@
 // scene runs straight through to its closing lines; keep state changes that must always happen in the scene's `finally`-style
 // tail (after the last wait) or inside cx.always(fn).
 import * as THREE from '../../../vendor/three.module.js';
-import { buildMithi, buildSetu, buildNpc } from '../../characters/humanoid.js';
+import { buildMithi, buildSetu, buildNpc, buildCharacter } from '../../characters/humanoid.js';
 import { ensureStyles, esc } from './ui.js';
 import { SCENES } from './scenes.js';
 import { STEP } from '../../game.js';
@@ -36,7 +36,7 @@ export class Cine {
     this.timers = []; this.tweens = []; this.actors = []; this.props = []; this.frameFns = [];
     this.rig = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 75, roll: 0, on: false };
     this.camTween = null; this.camFn = null; this.shakeAmp = 0; this.shakeT = 0; this.shakeDur = 1;
-    this.capUntil = 0; this.cleanups = [];
+    this.capUntil = 0; this.cleanups = []; this.handAmp = 0; this.handPhase = Math.random() * 100;
   }
 
   // ------------------------------------------------------------------ time
@@ -81,6 +81,8 @@ export class Cine {
     return new Promise((res) => { this.camFn = { t: 0, dur, fn, e: ease[e] ?? ease.inout, res }; });
   }
   _applyPath(o) { const r = this.rig; if (o.p) r.pos.copy(Array.isArray(o.p) ? V(o.p) : o.p); if (o.l) r.look.copy(Array.isArray(o.l) ? V(o.l) : o.l); if (o.fov) r.fov = o.fov; if (o.roll !== undefined) r.roll = o.roll; }
+  /** Hand-held drift: a continuous slow wander of the camera (amp ~ 0.5 is a steady operator, 2 is running). */
+  hand(amp) { this.handAmp = amp; }
   shake(amp, secs = 1) { if (this.skipped) return; this.shakeAmp = amp; this.shakeT = this.shakeDur = secs; }
 
   /** Record the scene time of a beat (state().story6b.cine.marks), handy for tuning. */
@@ -121,6 +123,7 @@ export class Cine {
     el.innerHTML = (who ? `<span class="who">${esc(who)}</span>` : '') + esc(text);
     void el.offsetWidth; el.classList.add('on');
     this.capUntil = this.t + ttl; this.sys.lastCaption = (who ? who + ': ' : '') + text;
+    if (who && kind === 'say') this.game.voices?.say({ who, text });                 // the person speaks the line when the browser has a voice
     this.game.events.emit('cinematic:caption', { text, who, kind });
   }
   capOff() { this.sys.capEl.classList.remove('on'); this.capUntil = 0; }
@@ -130,10 +133,10 @@ export class Cine {
   // ------------------------------------------------------------------ actors and props
   actor(kind, x, y, z, yaw = 0) {
     const g = this.game;
-    const char = kind === 'mithi' ? buildMithi(g) : kind === 'setu' ? buildSetu(g) : buildNpc(kind, g);
+    const char = typeof kind === 'object' ? buildCharacter(kind, g) : kind === 'mithi' ? buildMithi(g) : kind === 'setu' ? buildSetu(g) : buildNpc(kind, g);
     g.scene.add(char.group);
     g.senses?.patchObject?.(char.group);
-    const a = { kind, char, pos: { x, y, z }, yaw, speed: 0, goal: null, visible: true };
+    const a = { kind: typeof kind === 'object' ? kind.name : kind, char, pos: { x, y, z }, yaw, speed: 0, goal: null, visible: true };
     this.actors.push(a);
     this._syncActor(a);
     return a;
@@ -224,7 +227,15 @@ export class Cine {
     }
     cam.up.set(0, 1, 0);
     cam.lookAt(r.look);
-    if (r.roll || sr) cam.rotateZ(r.roll + sr);
+    let hx = 0, hy = 0, hr = 0;
+    if (this.handAmp > 0) {
+      const tt = this.game.time + this.handPhase, k = this.handAmp;
+      cam.position.x += (Math.sin(tt * 1.1) + 0.5 * Math.sin(tt * 2.9 + 1)) * 0.012 * k;
+      cam.position.y += (Math.sin(tt * 1.7 + 2) + 0.5 * Math.sin(tt * 3.7)) * 0.01 * k;
+      hx = (Math.sin(tt * 1.9) + 0.6 * Math.sin(tt * 4.3 + 0.5)) * 0.0045 * k; hy = (Math.sin(tt * 1.3 + 1) + 0.6 * Math.sin(tt * 3.1)) * 0.005 * k; hr = Math.sin(tt * 1.6) * 0.004 * k;
+      cam.rotateX(hx); cam.rotateY(hy);
+    }
+    if (r.roll || sr || hr) cam.rotateZ(r.roll + sr + hr);
     if (Math.abs(cam.fov - r.fov) > 1e-3) { cam.fov = r.fov; cam.updateProjectionMatrix(); }
   }
 
@@ -341,6 +352,7 @@ export class CinematicSystem {
   _end(cx) {
     const game = this.game;
     cx.done = true;
+    game.voices?.cancel?.();
     cx.cleanup();
     for (const el of Object.values(this.layers)) { if (el.id === 'cine-title' || el.id === 'cine-stamp') el.classList.remove('on'); }
     if (!cx.opts.keepLayers) for (const id of ['white', 'bloom', 'vig']) { this.layers[id].style.opacity = '0'; this.layers[id].dataset.a = '0'; }
@@ -366,6 +378,7 @@ export class CinematicSystem {
   skip() {
     const cx = this.current; if (!cx || cx.skipped) return;
     cx.skipped = true;
+    this.game.voices?.cancel?.();
     for (const t of cx.timers.splice(0)) t.res();
     for (const tw of cx.tweens.splice(0)) { tw.fn(tw.to); tw.res(); }
     for (const a of cx.actors) { if (a.goal) { a.pos.x = a.goal.x; a.pos.z = a.goal.z; const r = a.goal.res; a.goal = null; r(); } }

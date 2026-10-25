@@ -126,22 +126,28 @@ export class Director {
     if (g.modal || !g.dialogue) return false;
     const key = a.id, make = CONVERSATIONS[key];
     if (!make) return false;
-    // Phase 7b: every card is written from Mithi's side (what she hears, what a hand feels like), so when Jeetu is the one
-    // being played he steps back and she takes the lead: the controller swaps to her, with his line in the feed.
-    if (g.party?.active === 'jeetu' && a.id !== 'jeetu') {
-      if (g.party.switchTo('mithi')) g.messages?.say('"Didi, you talk to them. They will listen to you." Jeetu steps back, and the lead is yours.', { kind: 'clue', speaker: 'Jeetu', ttl: 5 });
-    }
+    // Phase 8C: the cards know who is asking (ctx.as): written for what Mithi hears and feels, or for what Jeetu sees. No swapping.
     const n = this.counts.get(key + ':' + i) ?? 0;
-    const spec = make(g, { actor: a, idx: i, n, d: this });
+    const as = g.party?.active === 'jeetu' ? 'jeetu' : 'mithi';
+    const spec = make(g, { actor: a, idx: i, n, d: this, as });
     this.counts.set(key + ':' + i, n + 1);
     this.stats.talks++;
     const p = g.cast.worldPos(a);
     this._face = { x: p.x, y: (p.y ?? 0) + (a.id === 'jeetu' || a.id === 'sameer' ? 0.35 : a.id === 'aayat' || a.id === 'torchBoys' ? 0.55 : 1.05), z: p.z };
     g.dialogue.open({
-      speaker: a.name, role: a.role, portrait: a.portrait, portraitColor: a.color, pos: { x: p.x, y: p.y, z: p.z }, ...spec,
+      speaker: a.name, role: a.role, portrait: a.portrait, portraitColor: a.color, pos: { x: p.x, y: p.y, z: p.z }, actor: a, memberIndex: i, ...spec,
       onClose: () => { spec.onClose?.(); g.events.emit('story:talked', { id: a.id, idx: i }); },
     });
     return true;
+  }
+
+  /** Jeetu fetches Mithi (or Mithi hands the talk back): swap the controlled character, then carry on the same conversation. */
+  handTo(who, actor, idx = 0) {
+    const g = this.game;
+    if (g.party?.active !== who && g.party?.switchTo?.(who)) {
+      g.messages?.say(who === 'mithi' ? '"Didi! Didi, come! She needs your blood!" Jeetu runs off to fetch her, and a moment later you are Mithi again, walking to the ward.' : '"Okay, I will go." Jeetu takes the lead.', { kind: 'clue', ttl: 5, speaker: 'Jeetu' });
+      g.wait(0.6).then(() => { if (!g.modal) this.talk(actor, idx); });
+    }
   }
 
   // ------------------------------------------------------------------------------------------ knowledge
@@ -178,7 +184,8 @@ export class Director {
     if (f.oldManFreed) return false;
     f.oldManFreed = true; f.knowsHospital = true;
     this.dig = 0; this.holdEl.hidden = true;
-    o.mesh.geometry = o.freed;
+    o.mesh.visible = false; o.faceMesh.visible = false;               // the heap and the buried man give way to a standing, shaken one
+    o.hiddenModel = false; o.model.group.visible = true; o.model.setMood('worry'); o.group.rotation.y = 0;
     g.cast.place(o, o.pos.x - 1.15, o.pos.y, o.pos.z + 0.55, o.yaw + 1.1);
     const it = g.interactables.get('talk:oldman'); if (it) { it.pos.x = o.pos.x; it.pos.z = o.pos.z; }
     g.interactables.remove('dig:oldman');
@@ -218,7 +225,7 @@ export class Director {
     if (this._moanT <= 0) {
       this._moanT = 6.5;
       game.events.emit('sound:emit', { x: o.pos.x, y: o.pos.y + 0.5, z: o.pos.z, kind: 'mutter', loudness: 0.62 });
-      if (!this._moanSaid && game.time > 1.5) { this._moanSaid = true; game.messages?.say('Under the roar of the machines, something else. A moan, human and low, east of you, under the rubble.', { kind: 'story', ttl: 9 }); }
+      if (!this._moanSaid && game.time > 1.5) { this._moanSaid = true; game.messages?.say('Under the sirens and the cranes of Sion Junction, something else. A moan, human and low, east of you, under the rubble.', { kind: 'story', ttl: 9 }); }
       else if (Math.hypot(p.pos.x - o.pos.x, p.pos.z - o.pos.z) < 40) game.messages?.caption('someone moaning under the rubble', 3);
     }
   }
@@ -236,7 +243,7 @@ export class Director {
     if (!J || g.party?.jeetu) return false;
     this._calledAt = g.time;
     g.flags.jeetuCalled = true;
-    g.messages?.say('A boy\'s voice, high and cracked, carries across the ward: "Didi! Didi, I\'m here! DIDI!"', { kind: 'clue', ttl: 7, speaker: 'Jeetu' });
+    g.messages?.say('A boy\'s voice, high and cracked, carries over the beds of Sion Hospital: "Didi! Didi, I\'m here! DIDI!"', { kind: 'clue', ttl: 7, speaker: 'Jeetu' });
     g.events.emit('sound:emit', { x: J.pos.x, y: J.pos.y + 0.8, z: J.pos.z, kind: 'mutter', loudness: 0.8, who: 'jeetu' });
     g.events.emit('story:jeetu-call', { via });
     return true;
@@ -276,8 +283,9 @@ export class Director {
     return {
       lines: [
         N_('A needle, a rubber tube, a cold bright line in the crook of your arm. You count the beeps from the next room to keep still. Somewhere in them, a man\'s heart takes up a little of yours.'),
-        'Thank you. Thank you. (her voice breaks, then steadies) What is your brother\'s name?',
-        'Setu. Eight, asthma. I will make calls: the press, the Bridge Authority, anyone who still answers a phone. Come back when you know where he is.',
+        { text: 'Thank you. Thank you. (her voice breaks, then steadies) What is your brother\'s name?', mood: 'sad', g: 'chest' },
+        N_('Nobody has thanked her in a long time, and the word sits on her like a coat that is too warm. She does not know where to put her hands.'),
+        { text: 'Setu. Eight, asthma. I will make calls: the press, the Bridge Authority, anyone who still answers a phone at this hour. Come back when you know where he is. And child... do not let that arm go cold.', mood: 'worry', g: 'explain' },
       ],
       choices: [{ label: 'Thank you, Tara.' }],
     };
@@ -287,7 +295,7 @@ export class Director {
     const g = this.game, f = g.flags;
     if (f.bridgePermit) return false;
     f.bridgePermit = true;
-    g.messages?.say('Tara has arranged it: the pier gate on the east quay will open for you.', { kind: 'system', ttl: 7 });
+    g.messages?.say('Tara has arranged it: the pier gate on the Sewri quay will open for you.', { kind: 'system', ttl: 7 });
     g.events.emit('story:permit', { via });
     g.objectives?.complete('permit');
     return true;
@@ -298,7 +306,7 @@ export class Director {
     if (g.story?.warnCity) g.story.warnCity('tara');
     else { g.flags.cityWarned = true; g.events.emit('city:warned', { via: 'tara' }); g.messages?.say('Tara takes the folder. Within the hour, every screen in the city is showing the tunnels.', { kind: 'story', ttl: 8 }); }
     return {
-      lines: ['(she reads, and her face changes) The pumping chamber. The ledger. Child... they knew. Give me an hour and a camera crew. I will put this on every screen in the city, if I have to climb into the studio myself.'],
+      lines: [{ text: '(she reads, and her face changes) The pumping chamber. The ledger. A seawall at Mahim Creek, and children... Child, they knew. Give me an hour and a camera crew. I will put this on every screen from Sewri to Colaba, if I have to climb into the studio myself.', mood: 'angry', g: 'explain' }],
       choices: [{ label: 'Thank you.' }],
     };
   }
@@ -402,7 +410,7 @@ export class Director {
       game.cast.place(a, 47.3, gh > -Infinity ? gh : 0, 0.8, 0.15);
       game.flags.gautamAtMetro = true;
       this.gautamUntil = game.clock.t + 4;                       // the guards are busy for four game hours
-      game.messages?.say('Far down the street, a voice you know, raised and ringing: "Open the gate! There are people down there!" The guards are shouting back.', { kind: 'story', ttl: 9 });
+      game.messages?.say('Far down the street, a voice you know, raised and ringing: "Open the shutters! There are people down there!" The guards at Dharavi Metro are shouting back.', { kind: 'story', ttl: 9 });
       game.events.emit('story:gautam-metro', {});
     }
     if (game.flags.gautamAtMetro) {
@@ -410,7 +418,7 @@ export class Director {
       const near = Math.hypot(game.player.pos.x - 45, game.player.pos.z - 10) < 90;
       if (live && near) game.hazards?.guards?.distract(3);
       // he waves his arms while he shouts
-      if (a.model && live && a.group.visible) { const t = game.time; a.model.armR.rotation.x = -1.1 + Math.sin(t * 6) * 0.45; a.model.armL.rotation.x = -0.8 + Math.sin(t * 5 + 1) * 0.4; }
+      if (a.model && live && a.group.visible) { a.model.setMood('shout'); a.model.setTalking(true); a.model.gesture('shout', 0.5); } else if (a.model) { a.model.setTalking(false); a.model.setMood('neutral'); }
       if (live && near) {
         this._gShout -= dt;
         if (this._gShout <= 0) {
@@ -418,7 +426,7 @@ export class Director {
           game.events.emit('sound:emit', { x: a.pos.x, y: a.pos.y + 1.4, z: a.pos.z, kind: 'mutter', loudness: 0.75, who: 'gautam' });
           if (Math.hypot(game.player.pos.x - a.pos.x, game.player.pos.z - a.pos.z) < 50) game.messages?.say(pickLine(this._gn = (this._gn ?? 0) + 1), { kind: 'clue', ttl: 5, speaker: 'Gautam' });
         }
-      } else if (!live && !this._gDone) { this._gDone = true; game.messages?.say('Gautam\'s voice cracks, and stops. The guards have stopped listening to him.', { kind: 'story', ttl: 6 }); }
+      } else if (!live && !this._gDone) { this._gDone = true; game.messages?.say('Gautam\'s voice cracks, and stops. The guards have stopped listening to him, and he has stopped pretending they will.', { kind: 'story', ttl: 6 }); }
     }
   }
 
@@ -448,7 +456,7 @@ export class Director {
     if (this.taraCallAt && game.clock.t >= this.taraCallAt && !f.bridgePermit) {
       this.taraCallAt = null; f.taraCallSent = true;
       this.grantPermit('call');
-      game.messages?.say(game.party?.jeetu ? 'Jeetu\'s phone buzzes, a number you do not know. "Madam Tara," he whispers. "She says the pier gate is yours."' : 'A hospital runner finds you with a folded note in Tara\'s hand: the pier gate on the east quay will open for you.', { kind: 'clue', ttl: 9 });
+      game.messages?.say(game.party?.jeetu ? 'Jeetu\'s phone buzzes, a number you do not know. "Madam Tara," he whispers. "She says the pier gate is yours."' : 'A hospital runner finds you with a folded note in Tara\'s hand: the pier gate on the Sewri quay will open for you.', { kind: 'clue', ttl: 9 });
     }
     // dogs near, food in the pack: the feed spot follows the nearest dog
     if (game.items.has('food') && game.hazards?.enabled) {
@@ -478,9 +486,10 @@ export class Director {
 
 const N_ = (text) => ({ narr: text });
 const GAUTAM_LINES = [
-  '"Open the gate! There are children under there!"',
-  '"Do you hear it? Do you hear them knocking?"',
-  '"Fine! Arrest me again! I will say it in the cell!"',
-  '"Every ticket booth, every shutter, and none of you can hear a child!"',
+  '"Open the shutters! There are children under there!"',
+  '"Do you hear it? Do you hear them knocking? Listen!"',
+  '"Fine! Arrest me again! I will say it from the cell!"',
+  '"Every ticket booth, every shutter, and not one of you can hear a child!"',
+  '"I have two hands! Give me a shovel and one hour, and I will be out of your way!"',
 ];
 function pickLine(i) { return GAUTAM_LINES[i % GAUTAM_LINES.length]; }

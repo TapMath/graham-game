@@ -14,6 +14,11 @@
 //     closable: true,                       // Esc closes it (default true)
 //   });
 //
+// Phase 8C: `spec.actor` (a cast actor) and `spec.memberIndex` hand the camera to the conversation camera (convocam.js): the view frames
+// whoever is talking, the speaker's mouth moves and they gesture (`line.mood`, `line.g`), and each line is spoken by that person's own
+// voice (voices.js) when the browser has one. Lines type out at a speakable pace (punctuation pauses; following the voice when there is
+// one). Any key / tap finishes a line, then moves on; Esc closes. `game.dialogue.cps = N` forces N chars/s (1e6 = instant, for tests).
+//
 // Keys: 1/2/3 choose, E / Enter / Space continue (or choose the highlighted option), Up/Down move the highlight, Esc closes.
 // Mouse / touch: click a choice (large targets), click the card or "continue" to advance. While a card is open the
 // pointer lock is RELEASED so the mouse works (and given back when the last card closes); `game.modal` is true.
@@ -24,6 +29,7 @@
 // Events: dialogue:open {speaker}, dialogue:line {speaker, index, text}, dialogue:choose {speaker, index, label}, dialogue:close {speaker}.
 // Debug: state().dialogue, do('dialogueChoose', i), do('dialogueAdvance').
 import { installStoryCss } from './story-css.js';
+import { ConversationCamera } from './convocam.js';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -52,7 +58,8 @@ export class DialogueSystem {
     game.dialogue = this;
     this.current = null;
     this.lineIdx = 0; this.typed = 0; this.typing = false; this.showChoices = false; this.sel = 0;
-    this.cps = 80;                       // typed characters per second (tests can set game.dialogue.cps = 1e6)
+    this.cps = 0;                        // 0: a speakable pace (voice or ~34 chars/s with pauses); tests can set game.dialogue.cps = 1e6
+    this.cam = new ConversationCamera(game);
     this._pointerHeld = 0; this._relock = false; this._timer = null; this.opened = 0;
     const el = this.el = document.createElement('div');
     el.id = 'convo'; el.hidden = true;
@@ -65,6 +72,8 @@ export class DialogueSystem {
   }
 
   get isOpen() { return !!this.current; }
+
+  update(dt) { this.cam?.update(dt); }
 
   // ------------------------------------------------------------------------------------------ pointer lock
   /** Release the pointer lock while any card/dialog is open so the mouse can click; give it back after. */
@@ -89,7 +98,7 @@ export class DialogueSystem {
       speaker: 'Someone', role: '', scrawl: '', portrait: 'man', portraitColor: '#ffdf9a', pos: null, lines: [], choices: [], closable: true,
       ...spec,
     };
-    s.lines = (s.lines ?? []).map((l) => (typeof l === 'string' ? { text: l } : { ...l }));
+    s.lines = (s.lines ?? []).filter(Boolean).map((l) => (typeof l === 'string' ? { text: l } : { ...l })).filter((l) => (l.text ?? l.narr) != null);
     if (!s.lines.length && !s.choices.length) s.lines = [{ text: '...' }];
     s.choices = (s.choices ?? []).map((c, i) => ({ hint: String(i + 1), enabled: true, ...c }));
     this.lineIdx = 0; this.sel = Math.max(0, s.choices.findIndex((c) => c.enabled !== false));
@@ -97,27 +106,100 @@ export class DialogueSystem {
     if (!prev) { g.modal = true; this.holdPointer(true); g.events.emit('dialogue:open', { speaker: s.speaker }); }
     this.opened++;
     this._render();
+    if (!prev && s.actor && g.settings?.get?.('convoCam') !== false) this.cam.begin({ actor: s.actor, memberIndex: s.memberIndex ?? 0 });
     this._startLine();
   }
 
   _lineOf() { return this.current.lines[this.lineIdx]; }
+
+  /** Who is talking this line: { name, mine (the controlled character), narr }. */
+  _speakerOf(l) {
+    const s = this.current, g = this.game;
+    if (l.narr) return { name: null, mine: false, narr: true };
+    const name = l.speaker ?? l.who ?? s.speaker;
+    const me = g.party?.active === 'jeetu' ? 'Jeetu' : 'Mithi';
+    return { name, mine: name === me, narr: false };
+  }
+
+  _modelOf(sp) {
+    const g = this.game;
+    if (sp.mine) return this.cam.player ?? g.view?.mithi ?? null;
+    if (sp.name === 'Jeetu' && g.party?.jeetuModel && g.party.active === 'mithi') return g.party.jeetuModel;
+    if (sp.name === 'Mithi' && g.party?.mithiModel && g.party.active === 'jeetu') return g.party.mithiModel;
+    return this.cam.model;
+  }
 
   _startLine() {
     const s = this.current; if (!s) return;
     const l = this._lineOf();
     if (!l) { this._finishLines(); return; }
     this.typed = 0; this.typing = true;
+    const g = this.game, text = this._text(l);
+    const sp = this._speakerOf(l);
+    // the picture: cut to whoever speaks; narration stays where it is
+    if (this.cam.active) {
+      if (!sp.narr) this.cam.shot(sp.mine ? 'player' : 'npc'); else if (this.cam.kind === 'wide') this.cam.shot('npc');
+      this.cam.speaker = sp.mine ? 'player' : 'npc';
+      for (const m of [this.cam.model, this.cam.player]) m?.setTalking?.(false);
+    }
+    const model = sp.narr ? null : this._modelOf(sp);
+    this._talker = model;
+    if (model) {
+      model.setMood?.(l.mood ?? (sp.mine ? 'neutral' : s.mood ?? 'neutral'));
+      model.setTalking?.(true);
+      if (l.g) model.gesture?.(l.g, Math.min(3.5, 1 + text.length / 40));
+    }
+    if (this.cam.active && !sp.narr) { const listener = sp.mine ? this.cam.model : this.cam.player; listener?.setMood?.(sp.mine ? (s.mood ?? 'neutral') : (l.listen ?? 'neutral')); }
     this._paint();
-    const g = this.game;
-    g.events.emit('dialogue:line', { speaker: l.speaker ?? s.speaker, index: this.lineIdx, text: l.text ?? l.narr ?? '' });
+    g.events.emit('dialogue:line', { speaker: l.speaker ?? s.speaker, index: this.lineIdx, text });
     if (s.pos && !l.narr && !l.who) g.events.emit('sound:emit', { x: s.pos.x, y: (s.pos.y ?? 0) + 1.2, z: s.pos.z, kind: 'mutter', loudness: 0.34 });
+    // the pace: the voice's own, else a speakable rhythm; tests can force it with cps
+    const instant = this.cps >= 1000;
+    this._voiceChar = 0; this._voiceDone = false;
+    let spoken = null;
+    if (!instant && !sp.narr) {
+      spoken = g.voices?.say({ who: sp.name, text, onBoundary: (i) => { this._voiceChar = Math.max(this._voiceChar, i); }, onEnd: () => { this._voiceDone = true; } });
+    }
+    const speaking = !!spoken?.speaking;
+    const dur = instant ? 0.001 : this.cps > 0 ? text.length / this.cps : Math.max(0.5, speaking ? spoken.duration : this._readTime(text));
+    this._times = this._schedule(text, dur);
+    this._t0 = performance.now(); this._speaking = speaking; this._tail = 0;
     clearInterval(this._timer);
-    this._timer = setInterval(() => {
-      const text = this._text(l);
-      this.typed = Math.min(text.length, this.typed + Math.max(1, Math.round(this.cps * 0.03)));
-      this._paintText();
-      if (this.typed >= text.length) { this.typing = false; clearInterval(this._timer); this._afterTyped(); }
-    }, 30);
+    this._timer = setInterval(() => this._tick(), 30);
+    if (instant) this._tick();
+  }
+
+  _readTime(text) {
+    const pauses = (text.match(/[.!?]/g)?.length ?? 0) * 0.28 + (text.match(/[,;:]/g)?.length ?? 0) * 0.1 + (text.match(/\.\.\.|\u2014|\u2026/g)?.length ?? 0) * 0.18;
+    return text.length / 34 + pauses;
+  }
+
+  /** The reveal time of every character: even, with a beat after punctuation. */
+  _schedule(text, dur) {
+    const w = []; let sum = 0;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], n = text[i + 1];
+      let x = 1;
+      if (/[.!?]/.test(c) && (!n || /\s/.test(n))) x = 7; else if (/[,;:]/.test(c)) x = 3; else if (c === '\u2014' || c === '\u2026') x = 4;
+      w.push(sum += x);
+    }
+    return w.map((v) => (v / sum) * dur);
+  }
+
+  _tick() {
+    const s = this.current; if (!s) return;
+    const l = this._lineOf(); if (!l) return;
+    const text = this._text(l), el = (performance.now() - this._t0) / 1000, T = this._times;
+    let n = 0; while (n < T.length && T[n] <= el) n++;
+    if (this._speaking) { n = Math.max(n, Math.min(text.length, this._voiceChar)); if (this._voiceDone && el > 0.4) n = text.length; }
+    this.typed = Math.min(text.length, Math.max(this.typed, n));
+    this._paintText();
+    if (this.typed >= text.length) { this.typing = false; clearInterval(this._timer); this._endTalk(); this._afterTyped(); }
+  }
+
+  _endTalk() {
+    const m = this._talker;
+    if (m) setTimeout(() => { if (this._talker === m && !this.typing) m.setTalking?.(false); }, this._speaking ? 250 : 120);
   }
 
   _text(l) { return l.narr ?? l.text ?? ''; }
@@ -137,7 +219,7 @@ export class DialogueSystem {
   /** Finish the typing of the current line at once (or, if done, go to the next line / pick the highlighted choice). */
   advance() {
     const s = this.current; if (!s) return;
-    if (this.typing) { this.typed = 1e9; this._paintText(); this.typing = false; clearInterval(this._timer); this._afterTyped(); return; }
+    if (this.typing) { this.typed = 1e9; this._paintText(); this.typing = false; clearInterval(this._timer); this.game.voices?.cancel(); this._endTalk(); this._afterTyped(); return; }
     if (this.lineIdx < s.lines.length - 1) { this.lineIdx++; this._startLine(); return; }
     if (!s.choices.length) { this.close(); return; }
     if (performance.now() - (this._shownAt ?? 0) < 350) return;      // a double-tap of E must not pick an answer unseen
@@ -147,7 +229,7 @@ export class DialogueSystem {
   /** Test aid: jump to the last line with the choices showing. */
   skip() {
     const s = this.current; if (!s) return;
-    clearInterval(this._timer); this.typing = false;
+    clearInterval(this._timer); this.typing = false; this.game.voices?.cancel(); this._endTalk();
     this.lineIdx = Math.max(0, s.lines.length - 1); this.typed = 1e9; this.showChoices = true;
     this._paint();
   }
@@ -167,7 +249,7 @@ export class DialogueSystem {
     try { next = c.onChoose?.(this); } catch (e) { console.error(e); }
     if (this.current !== keep) return;                 // onChoose opened (or closed) something itself
     if (next && typeof next === 'object') {
-      this.open({ speaker: s.speaker, role: s.role, scrawl: '', portrait: s.portrait, portraitColor: s.portraitColor, pos: s.pos, ...next });
+      this.open({ speaker: s.speaker, role: s.role, scrawl: '', portrait: s.portrait, portraitColor: s.portraitColor, pos: s.pos, actor: s.actor, memberIndex: s.memberIndex, mood: s.mood, ...next });
       return;
     }
     this.close();
@@ -183,6 +265,9 @@ export class DialogueSystem {
     clearInterval(this._timer);
     this.current = null; this.typing = false; this.showChoices = false;
     if (silent) return;
+    this.game.voices?.cancel();
+    this._talker?.setTalking?.(false); this._talker = null;
+    this.cam.end();
     this.el.hidden = true; this.el.innerHTML = '';
     this.game.modal = false;
     this.holdPointer(false);
@@ -250,7 +335,7 @@ export class DialogueSystem {
   _paint() {
     const s = this.current; if (!s || !this.textEl) return;
     const l = this._lineOf() ?? { text: '' };
-    this.textEl.className = 'cv-text' + (l.narr ? ' narr' : '') + (l.who === 'Mithi' ? ' mithi' : '');
+    this.textEl.className = 'cv-text' + (l.narr ? ' narr' : '') + (l.who === 'Mithi' || l.who === 'Jeetu' ? ' mithi' : '');
     if (l.speaker || l.who) { this.nameEl.textContent = l.speaker ?? l.who; } else this.nameEl.textContent = s.speaker;
     this._paintText();
     const n = s.lines.length;

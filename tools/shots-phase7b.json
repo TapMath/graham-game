@@ -27,7 +27,7 @@
  {
   "name": "jeetu-hands-the-conversation-to-mithi",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.teleport(-41.5, 0, 86.5, 0); B.d.step(0.5); await B.tab(); const before = G.party.active; A.do('talk', 'tara'); const after = G.party.active, open = G.dialogue.isOpen; await B.dialogue([]); ok(before === 'jeetu' && after === 'mithi' && open, 'talking while Jeetu is played swaps to Mithi: ' + before + ' -> ' + after); return { before, after, open };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };A.teleport(-41.5, 0, 86.5, 0); B.d.step(0.5); await B.tab(); const before = G.party.active; A.do('talk', 'tara'); const after = G.party.active, open = G.dialogue.isOpen; await B.dialogue([]); ok(before === 'jeetu' && after === 'jeetu' && open, 'Phase 8C: talking while Jeetu is played keeps Jeetu, who speaks as himself: ' + before + ' -> ' + after); if (G.party.active === 'jeetu') await B.tab(); ok(G.party.active === 'mithi', 'back to Mithi for the rest of the tour'); return { before, after, open };})()"
  },
  {
   "name": "night-shrine-heals",

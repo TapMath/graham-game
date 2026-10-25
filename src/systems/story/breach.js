@@ -14,14 +14,14 @@
 import { PA_LINES } from '../audio/pa.js';
 import { StorySfx } from './sfx.js';
 
-export const WARN_TEXT = 'Warn the city: Tara can get it on TV, or the Control Tower on L3';
+export const WARN_TEXT = 'Warn the city: Tara can put it on every channel, or use the MMRDA Disaster Control Tower on L3 at Wadala';
 
 export const EVAC = [
-  'Attention. This is an evacuation announcement. Residents of the lower tunnels and Sector Four are to move to the upper levels at once. For tonight, sunlight is free of charge.',
-  'Please proceed to the Upper Decks in an orderly manner. Do not run. Do not carry diyas into the tunnels. Please do not pick the roses.',
-  'A water event has been confirmed beneath the sea wall. Please remain calm. This is no longer a rumour.',
-  'Metro services are cancelled. Shelters are open along the Sunrise Bridge. Bring children. Bring neighbours. Bring your dead light-passes. They will be honoured.',
-  'Ground level residents: the lights are on for you tonight. Please walk toward them.',
+  'Attention. This is an evacuation announcement. Residents of Neeche Dharavi, Sion and the lower tunnels are to move to the upper levels at once. For tonight, sunlight is free of charge.',
+  'Please proceed to the upper decks in an orderly manner. Do not run. Do not carry diyas into the tunnels. Please do not pick the roses.',
+  'A water event has been confirmed beneath the sea wall at Mahim Creek. Please remain calm. This is no longer a rumour.',
+  'Dharavi Metro and the Harbour Line are cancelled. Shelters are open along the Atal Setu approach at Sewri. Bring children. Bring neighbours. Bring your expired light-passes. They will be honoured.',
+  'Ground level residents: the lights are on for you tonight. Please walk towards them.',
   'This message has been approved by the Ministry of Dawn. It is, for once, true.',
 ];
 
@@ -78,10 +78,10 @@ export class BreachSystem {
     g.screenfx?.glitch(520);
     g.screenfx?.flash('#7fcfff', 900, 0.22);
     g.audio?.play('vision-sting', null);
-    g.pa?.say('Attention, residents. There is no water in the lower tunnels. Water is a rumour. Please do not spread unregistered rumours.', { force: true });
+    g.pa?.say('Attention, residents. There is no water in the tunnels beneath Dharavi. Water is a rumour. Please do not spread unregistered rumours.', { force: true });
     const left = g.clock ? g.clock.hoursLeft : 24;
     setTimeout(() => {
-      g.messages?.say('The sea is inside the city. It has been counting down since before the festival began.', { kind: 'story', ttl: 10 });
+      g.messages?.say('The sea is inside the city. Under Dharavi, under Sion, under every lit window. It has been counting down since before the festival began.', { kind: 'story', ttl: 10 });
       g.messages?.say(`Flood in ${g.clock ? g.clock.fmtDuration(g.clock.hoursLeft) : '24h'}. Somebody has to be told.`, { kind: 'system', ttl: 10 });
     }, 2600);
     g.events.emit('breach:known', { via, hoursLeft: left });
@@ -121,7 +121,7 @@ export class BreachSystem {
     if (g.modal) return;
     if (g.flags.cityWarned) { g.messages?.say('The terminal shows the broadcast going out on every channel. Nothing left to do here.', { kind: 'system', ttl: 6 }); return; }
     if (!g.flags.breachKnown) {
-      g.messages?.say('The terminal hums, and asks politely what the emergency is. You have nothing to tell it yet.', { kind: 'story', ttl: 8 });
+      g.messages?.say('The terminal hums, and asks politely what the emergency is. You have nothing to tell it yet. (She hears the cursor wait, patient as a clerk.)', { kind: 'story', ttl: 8 });
       g.messages?.say('(Somewhere underground there is proof.)', { kind: 'hint', ttl: 7 });
       return;
     }

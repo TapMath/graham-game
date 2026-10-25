@@ -11,14 +11,14 @@
 import { STAGES } from './cast/conversations.js';
 
 const LEAD_TEXT = {
-  liftWreck: 'Setu fell with the maintenance lift: look east, along the old rails by the Metro, near the wrecked lift car.',
-  catacombs: 'Setu is in the catacomb homes to the west, with Aayat.',
-  boringSite: 'Setu is at the boring machine, north of the catacombs. Go quietly: the Big Man shouts.',
-  contractor: 'The Big Man sold Setu to a contractor: find him near the boring machine.',
-  clinic: 'The contractor took Setu to the underground doctor, south in the long tunnel.',
-  vent: 'Setu slipped out through a clinic air vent: look for the grille on the street east of the hospital.',
-  tents: 'Setu climbed out and went looking for you: try the triage tents near the collapse site.',
-  bridge: 'Setu went to wait at the Sunrise Bridge, east, where the sun comes up.',
+  liftWreck: 'Setu fell with the maintenance lift: look east, along the old rails by Dharavi Metro, near the wrecked lift car.',
+  catacombs: 'Setu is in the Neeche Dharavi catacomb homes to the west, with Aayat.',
+  boringSite: 'Setu is at the boring machine, north of the catacombs. Go quietly: Kaalu Seth shouts.',
+  contractor: 'Seth sold Setu to a contractor: find him near the boring machine.',
+  clinic: 'The contractor took Setu to the underground doctor, south in the long tunnel with the red lamp.',
+  vent: 'Setu slipped out through a clinic air vent: look for the grille on the street east of Sion Hospital.',
+  tents: 'Setu climbed out and went looking for you: try the triage tents at Sion Junction.',
+  bridge: 'Setu went to wait at the Atal Setu at Sewri, east, where the sun comes up.',
 };
 
 export function defineChain(game, d) {
@@ -27,18 +27,18 @@ export function defineChain(game, d) {
   const joined = () => !!game.party?.jeetu;
   const setuFound = () => !!(game.setu?.found || game.setu?.following);
 
-  O.define({ id: 'collapse', order: 10, text: 'Under the roar there is a moan, east, under the rubble. Find the old man and dig (hold E).',
+  O.define({ id: 'collapse', order: 10, text: 'Under the roar at Sion Junction there is a moan, east, under the rubble. Find the old man and dig (hold E).',
     when: () => true, done: () => f().oldManFreed || f().knowsHospital || f().visitedHospital || joined() || f().reachedBelow });
 
   O.define({ id: 'hospital', order: 20,
-    text: () => (f().jeetuCalled ? 'Jeetu is calling for you. Follow his voice to the bed by the east wall.' : 'Jeetu was taken to Sion General Hospital, south of the dead tree. Inside, sing or call out: he will answer.'),
+    text: () => (f().jeetuCalled ? 'Jeetu is calling for you. Follow his voice to the bed by the east wall.' : 'Jeetu was taken to Sion Hospital, south of the dead tree. Inside, sing or call out: he will answer.'),
     when: () => f().oldManFreed || f().knowsHospital || f().visitedHospital, done: () => joined() || f().reachedBelow });
 
   O.define({ id: 'below', order: 30,
     text: () => {
       if (has('jacket')) return 'Walk into the Metro in the jacket: do not run, do not sing, do not linger in a guard\'s light. Or take the maintenance shaft.';
       if (f().gautamAtMetro && game.clock.t < d.gautamUntil) return 'Gautam is shouting at the guards: slip into the Metro now, or take the maintenance shaft east of it.';
-      return 'Get below. The Metro is guarded. Jeetu knows the maintenance shaft behind the market hut; a blue Metro jacket from the neighbour\'s flat would get you through the main gate.';
+      return 'Get below. Dharavi Metro is guarded. Jeetu knows the maintenance shaft behind the market hut; a blue Metro jacket from the neighbour\'s flat in Dharavi would get you through the main gate.';
     },
     when: () => joined(), done: () => f().reachedBelow || setuFound() });
 
@@ -52,9 +52,9 @@ export function defineChain(game, d) {
 
   O.define({ id: 'bridge', order: 50,
     text: () => {
-      if (f().bridgePermit) return 'Take Setu to the Sunrise Bridge on the east edge. Tara\'s permit opens the pier gate on the east quay.';
-      if (f().taraFavour) return 'Take Setu to the Sunrise Bridge. Tara can arrange a permit: talk to her at the hospital. Or climb the gates (8 rays).';
-      return 'Take Setu to the Sunrise Bridge. The pier gate needs a permit; the way up through the towers needs 8 rays of light.';
+      if (f().bridgePermit) return 'Take Setu to the Atal Setu on the east edge, at Sewri. Tara\'s permit opens the pier gate on the quay.';
+      if (f().taraFavour) return 'Take Setu to the Atal Setu at Sewri. Tara can arrange a permit: talk to her at Sion Hospital. Or climb the gates (8 rays).';
+      return 'Take Setu to the Atal Setu at Sewri. The pier gate needs a permit; the way up through New Wadala needs 8 rays of light.';
     },
     when: () => setuFound(), done: () => false });
 

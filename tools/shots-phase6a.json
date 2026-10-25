@@ -261,7 +261,7 @@
  },
  {
   "name": "p6a-underground-objective-follows-the-lead",
-  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); if(G.dialogue.isOpen) A.do('dialogueChoose',0); A.step(0.9); stop(); const s=S();\nok(s.objectives.primary.id==='underground' || s.objectives.primary.id==='search','underground objective: '+s.objectives.primary.id); ok(/Sunrise Bridge/.test(s.objectives.primary.text),'its text follows the lead (bridge)');\n({primary:s.objectives.primary})",
+  "eval": "go(); A.do('dialogueChoose',0); A.step(0.2); if(G.dialogue.isOpen) A.do('dialogueChoose',0); A.step(0.9); stop(); const s=S();\nok(s.objectives.primary.id==='underground' || s.objectives.primary.id==='search','underground objective: '+s.objectives.primary.id); ok(/Atal Setu/.test(s.objectives.primary.text),'its text follows the lead (bridge)');\n({primary:s.objectives.primary})",
   "wait": 900
  },
  {

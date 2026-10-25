@@ -16,6 +16,10 @@
 //   sfx.firework(distance, muffled)     a launch whistle, a boom after the light, then crackle
 //   sfx.wind(seconds, gain)             a clean sea wind for the dawn
 //   sfx.swell(seconds, gain, root)      a warm pad swell (the sunrise)
+//   sfx.groan(seconds, gain)            steel and concrete under load: low saw wobble and scattered creaks (the opening)
+//   sfx.bell(gain)                      a temple bell, far off
+//   sfx.radio(seconds, gain)            a tinny transistor playing a slow tune (Mithi's room)
+//   sfx.murmur(seconds, gain)           a lane of people talking, no words
 import { filt, gainNode, noiseSrc, osc } from '../audio/synth.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -237,6 +241,67 @@ export class StorySfx {
     return this._do((ctx, out, t) => {
       const n = noiseSrc(ctx, 'white'), bp = filt(ctx, 'bandpass', 1200, 0.7), g = this._env(ctx, t, gain, 0.4, 0.2, 0.9, out);
       n.connect(bp); bp.connect(g); n.start(t, n.__off); n.stop(t + 2);
+    });
+  }
+
+  /** Steel and concrete under load: two low saws beating against each other, a band-pass sweeping down, creaks scattered through. */
+  groan(seconds = 5, gain = 0.5) {
+    return this._do((ctx, out, t) => {
+      const a = osc(ctx, 'sawtooth', 52), b = osc(ctx, 'sawtooth', 55.5), lp = filt(ctx, 'lowpass', 260, 1.4), g = this._env(ctx, t, gain, seconds * 0.4, seconds * 0.3, seconds * 0.3, out);
+      const lfo = osc(ctx, 'sine', 3.1), lg = gainNode(ctx, 6); lfo.connect(lg); lg.connect(a.frequency); lg.connect(b.frequency);
+      a.frequency.exponentialRampToValueAtTime(41, t + seconds); b.frequency.exponentialRampToValueAtTime(43, t + seconds);
+      a.connect(lp); b.connect(lp); lp.connect(g);
+      const send = gainNode(ctx, 0.5); g.connect(send); send.connect(this._verb());
+      a.start(t); b.start(t); lfo.start(t); this._stop([a, b, lfo], t + seconds + 1);
+      const n = Math.floor(seconds * 3.2);
+      for (let i = 0; i < n; i++) {
+        const c = t + (i / n) * seconds + rnd(0, 0.3), f = rnd(180, 640), d = rnd(0.12, 0.4);
+        const sq = osc(ctx, 'square', f), bp = filt(ctx, 'bandpass', f * 1.7, 6), cg = ctx.createGain();
+        sq.frequency.setValueAtTime(f, c); sq.frequency.exponentialRampToValueAtTime(f * rnd(0.6, 1.4), c + d);
+        cg.gain.setValueAtTime(0, c); cg.gain.linearRampToValueAtTime(gain * rnd(0.05, 0.2) * (0.4 + i / n), c + 0.02); cg.gain.setTargetAtTime(0, c + 0.03, d / 3);
+        sq.connect(bp); bp.connect(cg); cg.connect(out); sq.start(c); sq.stop(c + d + 0.3);
+      }
+    });
+  }
+
+  /** A temple bell, far off: inharmonic partials with long, uneven decays. */
+  bell(gain = 0.12) {
+    return this._do((ctx, out, t) => {
+      const f0 = 392 * rnd(0.97, 1.03), parts = [[1, 1, 3.2], [2.0, 0.6, 2.4], [2.76, 0.5, 1.8], [5.4, 0.25, 1.1], [8.93, 0.12, 0.7]];
+      const send = gainNode(ctx, 0.9); send.connect(this._verb());
+      for (const [m, a, dec] of parts) {
+        const o = osc(ctx, 'sine', f0 * m), g = ctx.createGain();
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * a, t + 0.004); g.gain.setTargetAtTime(0, t + 0.01, dec / 4);
+        o.connect(g); g.connect(out); g.connect(send); o.start(t); o.stop(t + dec * 1.8);
+      }
+    });
+  }
+
+  /** A transistor radio in the next room: a thin, band-limited tune with a flutter, between stations of hiss. */
+  radio(seconds = 8, gain = 0.07) {
+    return this._do((ctx, out, t) => {
+      const bp = filt(ctx, 'bandpass', 1300, 0.9), g = this._env(ctx, t, gain, 0.3, Math.max(0, seconds - 1.2), 1.0, out);
+      bp.connect(g);
+      const n = noiseSrc(ctx, 'white'), ng = gainNode(ctx, 0.25); n.connect(ng); ng.connect(bp); n.start(t, n.__off); n.stop(t + seconds + 1);
+      const scale = [196, 220, 261.6, 293.7, 329.6, 392], step = 0.55;
+      for (let i = 0; i < Math.floor(seconds / step); i++) {
+        const f = scale[(i * 5 + (i % 3)) % scale.length] * (i % 4 === 3 ? 0.5 : 1), c = t + i * step;
+        const o = osc(ctx, 'triangle', f), og = ctx.createGain(), vib = osc(ctx, 'sine', 5.5), vg = gainNode(ctx, f * 0.012);
+        vib.connect(vg); vg.connect(o.frequency);
+        og.gain.setValueAtTime(0, c); og.gain.linearRampToValueAtTime(0.5, c + 0.04); og.gain.setTargetAtTime(0, c + step * 0.55, 0.09);
+        o.connect(og); og.connect(bp); o.start(c); vib.start(c); o.stop(c + step); vib.stop(c + step);
+      }
+    });
+  }
+
+  /** A lane of people talking: no words, formant-filtered breath that comes and goes. */
+  murmur(seconds = 8, gain = 0.1) {
+    return this._do((ctx, out, t) => {
+      const n = noiseSrc(ctx, 'pink'), g = this._env(ctx, t, gain, 1.2, Math.max(0, seconds - 2.6), 1.4, out), sum = gainNode(ctx, 1);
+      for (const [f, q, gg] of [[420, 3, 1], [900, 4, 0.7], [2300, 5, 0.25]]) { const b = filt(ctx, 'bandpass', f, q), bg = gainNode(ctx, gg), lfo = osc(ctx, 'sine', rnd(2, 5)), lg = gainNode(ctx, f * 0.25); lfo.connect(lg); lg.connect(b.frequency); n.connect(b); b.connect(bg); bg.connect(sum); lfo.start(t); lfo.stop(t + seconds + 1); }
+      sum.connect(g);
+      const send = gainNode(ctx, 0.6); g.connect(send); send.connect(this._verb());
+      n.start(t, n.__off); n.stop(t + seconds + 1.5);
     });
   }
 }
