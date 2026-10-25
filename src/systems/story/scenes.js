@@ -6,9 +6,11 @@
 //   warning   sirens across the city, the evacuation announcement
 import * as THREE from '../../../vendor/three.module.js';
 import { EVAC } from './breach.js';
+import { buildRoom, buildLane, buildInterchange, Effects, LANE_PEOPLE } from './intro.js';
 
 const D2R = Math.PI / 180;
 const rnd = (a, b) => a + Math.random() * (b - a);
+const mix = (a, b, t) => a + (b - a) * t;
 
 // ----------------------------------------------------------------------------------------------------- helpers
 let _sunTex = null;
@@ -246,47 +248,12 @@ async function finale(cx, { M, S, J, sun, sea, seaColor0, warned, waiting, skyTo
   await cx.wait(2.8);
 }
 
-/**
- * The web of roads over the slum street: five stacked decks (concrete, ribbed undersides, lane lamps hung along both edges) on
- * pillars, as temporary props for the opening. `list[0]` is the lowest. Each deck is a group so the fall can tilt it.
- */
-function buildDecks(cx, x, zNear, len) {
-  const concrete = new THREE.MeshLambertMaterial({ color: 0x55585d, emissive: 0x2c2822 });
-  const rib = new THREE.MeshLambertMaterial({ color: 0x3c3e42, emissive: 0x211e19 });
-  const lamp = new THREE.MeshBasicMaterial({ color: 0xffbe6a });
-  const ys = [5.2, 10.6, 16.0, 21.4, 26.8], landY = [0.6, 1.8, 3.0, 4.2, 5.4];
-  const zc = zNear - len / 2, W = 11, m4 = new THREE.Matrix4();
-  const lampGeo = new THREE.BoxGeometry(0.55, 0.2, 0.55);
-  const list = ys.map((y, i) => {
-    const g = new THREE.Group();
-    g.add(new THREE.Mesh(new THREE.BoxGeometry(W, 1.1, len), concrete));
-    for (const sx of [-1, 1]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.1, len), rib); rail.position.set(sx * (W / 2 - 0.1), 1.1, 0); g.add(rail); }   // barriers on top
-    const n = Math.floor(len / 5);
-    for (let k = 0; k < Math.floor(len / 8); k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, 0.6, 0.9), rib); r.position.set(0, -0.85, -len / 2 + 4 + k * 8); g.add(r); }   // ribs under the deck
-    const lamps = new THREE.InstancedMesh(lampGeo, lamp, n * 3);                                                                                          // lane lamps hung under the deck: two edges and the middle
-    for (let k = 0; k < n; k++) [-1, 0, 1].forEach((sx, j) => { m4.makeTranslation(sx * (W / 2 - 0.9), -0.72, -len / 2 + 2.5 + k * 5 + j * 1.2); lamps.setMatrixAt(k * 3 + j, m4); });
-    lamps.frustumCulled = false; g.add(lamps);
-    g.position.set(x, y, zc);
-    cx.prop(g);
-    return { g, y, landY: landY[i], v: 0, done: false, tilt: (Math.random() - 0.5) * 0.7, roll: (Math.random() - 0.5) * 0.5, basey: y };
-  });
-  // pillars: one instanced mesh of fat columns from the street to the top deck
-  const pil = new THREE.InstancedMesh(new THREE.BoxGeometry(1.3, ys[ys.length - 1], 1.3), concrete, 8);
-  for (let i = 0; i < 8; i++) { m4.makeTranslation(x + (i % 2 ? 4.2 : -4.2), ys[ys.length - 1] / 2, zNear - 5 - Math.floor(i / 2) * 15); pil.setMatrixAt(i, m4); }
-  pil.frustumCulled = false; cx.prop(pil);
-  const out = { list, pillars: pil, tremble(amp, secs) {
-    const t0 = cx.t;
-    const f = cx.frame(() => {
-      const u = cx.t - t0;
-      if (u > secs) { cx.unframe(f); list.forEach((d) => { if (!d.done) d.g.position.x = x; }); return; }
-      list.forEach((d, i) => { if (!d.done) d.g.position.x = x + Math.sin(u * 47 + i * 1.7) * amp; });
-    });
-  } };
-  return out;
-}
-
 // =====================================================================================================  OPENING
-const HOME = { x: -94, z: -78, door: { x: -90, z: -78 } };
+// Phase 8C: restaged in the real place. 05:30, Dharavi: Mithi's room, a vision, the festival lane, and five levels of Sion Junction coming
+// down over the street. The sets live in intro.js; this is the direction. About 50 s; skippable (Esc / Enter).
+const HOME = { x: -94, z: -78 };
+const LANE_DZ = -12;                                // the lane dressing sits this far north of where it was authored
+const IC = { x: -75, zS: -108 };                    // the interchange: five decks over the street, the near end 30 m north of the door
 
 async function opening(cx) {
   const g = cx.game, p = g.player, sfx = g.sfx, spawn = g.world.spawn;
@@ -299,24 +266,46 @@ async function opening(cx) {
   cx.hideSetu = true;
   p.teleport(HOME.x + 0.6, 0, HOME.z + 0.2, -90 * D2R);
   p.frozen = true;
-  // Setu's mat, blanket and pillow, as he left them (the bag is gone: only dust shapes where his shoes stood)
-  const mkBox = (w, h, d, x, y, z, color, ry = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color, emissive: 0x1a140d })); m.position.set(x, y, z); m.rotation.y = ry; return cx.prop(m); };
-  mkBox(0.95, 0.04, 1.8, -95.0, 0.02, -79.2, 0xb8a47c, 0.12);
-  mkBox(0.7, 0.07, 0.5, -94.85, 0.075, -78.5, 0x3d5f8f, 0.5);
-  mkBox(0.5, 0.06, 0.4, -95.2, 0.07, -79.7, 0x365480, -0.3);
-  mkBox(0.3, 0.08, 0.2, -95.0, 0.08, -80.0, 0xd8d0b8, 0.1);
-  mkBox(0.22, 0.012, 0.3, -93.9, 0.01, -78.3, 0x1a1612, 0.2);
-  mkBox(0.22, 0.012, 0.3, -93.6, 0.01, -78.7, 0x1a1612, -0.1);
-  cx.hemiBoost = 2.6;
+  if (g.senses) g.senses.perceive = 0.28;           // the film shows the street in colour; the vision and the game still see through her ears
+  buildRoom(cx);
+  const lane = buildLane(cx, LANE_DZ);
+  const fx = new Effects(cx);
+  const ic = buildInterchange(cx, { x: IC.x, zS: IC.zS });
+  cx.frame((dt) => { fx.update(dt); ic.update(dt, fx); });
+  // the people of the lane
+  const folk = LANE_PEOPLE.map((d) => {
+    const a = cx.actor(d.spec, d.at[0], 0, d.at[1] + LANE_DZ, (d.yaw ?? 0) * D2R);
+    a.def = d; a.home = [d.at[0], d.at[1] + LANE_DZ]; a.leg = 0; a.panic = false;
+    a.char.setMood(d.id === 'chai' || d.id === 'dad' ? 'smile' : 'neutral');
+    if (d.doing === 'chai') { a.char.gesture('reach', 1e6); }
+    if (d.doing === 'cart') { a.char.gesture('explain', 1e6); a.char.setTalking(true); }
+    if (d.doing === 'brush') { a.char.gesture('face', 1e6); }
+    return a;
+  });
+  let folkOn = true;
+  cx.frame(() => {
+    if (!folkOn) return;
+    for (const a of folk) {
+      const d = a.def;
+      if (!d.to || a.goal || a.panic) continue;
+      a.leg ^= 1;
+      const to = a.leg ? [d.to[0], d.to[1] + LANE_DZ] : a.home;
+      cx.walk(a, to[0], to[1], d.speed, { face: true });
+    }
+  });
+  cx.hemiBoost = 1.9;
   const BED = [-95.0, 0.78, -75.3];
   cx.camSet(BED, [-92.5, 3.0, -76.5], 64, 0.14);
 
-  // ---- 1: 05:30. the vision
+  // ---- 1: 05:30. the stamp, the breath, the rain on the tin
   cx.mark('stamp');
-  cx.stamp('05:30', 'Mumbai, 2049. Before dawn.');
+  cx.stamp('05:30', 'Dharavi, Mumbai. The morning of Diwali. 2049.');
   g.audio?.play('breath', null);
+  cx.do(() => { sfx?.radio(9, 0.05); });
   await cx.wait(2.4);
   cx.stamp('', '', false);
+
+  // ---- 2: the vision
   cx.mark('vision');
   sfx?.siren(7, { gain: 0.2 }); sfx?.cries(5, 0.24); sfx?.roar(3.2, 0.4);
   const orig = g.messages?.say?.bind(g.messages);
@@ -324,9 +313,8 @@ async function opening(cx) {
   cx.onCleanup(() => { if (g.messages && orig) g.messages.say = orig; });
   cx.do(() => {
     const ok = g.senses?.vision?.({ reason: 'story', force: true, duration: 4.2, from: { x: -46, y: 4.6, z: -32, yaw: 70 * D2R }, caption: 'Screaming. Sirens. Rubble. Somewhere, a voice calling a name.' });
-    // it is her vision, not his: relabel the glitch overlay
     const root = document.getElementById('vision-fx');
-    if (ok && root) {
+    if (ok && root) {                               // it is her vision, not his: relabel the glitch overlay
       const lab = root.querySelector('.v-label'), k = root.querySelector('.v-cap .k');
       if (lab) lab.innerHTML = '<s>SUBJECT 0472</s> <i>mithi</i><br><b>2ND SIGHT</b> <em>REC</em><br>05:30 &nbsp;DAY 1';
       if (k) k.textContent = 'SHE HEARS';
@@ -336,118 +324,132 @@ async function opening(cx) {
   cx.black(0, 0.1);
   await cx.wait(4.9);
   cx.black(1, 0.15);
-  await cx.wait(0.5);
+  await cx.wait(0.4);
 
-  // ---- 2: she wakes. Setu's side of the room is cold
+  // ---- 3: she wakes. The room, small and cold. Setu's mat is empty
   cx.mark('wake');
-  cx.camSet(BED, [-92.5, 3.0, -76.5], 64, 0.14);
+  cx.hand(0.8);
+  cx.camSet([-96.5, 0.4, -76.4], [-92.6, 2.1, -79.4], 64, 0.12);
   g.audio?.play('breath', null);
-  cx.do(() => { g.canvas.style.transition = 'none'; g.canvas.style.filter = 'blur(9px)'; void g.canvas.offsetWidth; g.canvas.style.transition = 'filter 2.6s ease-out'; g.canvas.style.filter = 'blur(0px)'; });
-  cx.black(0, 1.2);
-  cx.cap('A vision. The same one. Louder.', { kind: 'scrawl', ttl: 2.8 });
-  await cx.wait(1.8);
-  cx.cam({ p: [-94.6, 1.2, -75.8], l: [-94.8, 0.2, -79.2], fov: 66, roll: 0, dur: 1.8, e: 'inout' });
-  await cx.wait(1.2);
-  cx.cap('Setu?', { who: 'Mithi', ttl: 1.6 });
-  await cx.wait(1.3);
-  cx.cam({ p: [-94.4, 0.55, -77.6], l: [-94.9, 0.06, -79.4], fov: 58, dur: 2.0, e: 'inout' });
-  cx.cap('The blanket is cold. His shoes are gone.', { kind: 'scrawl', ttl: 2.8 });
-  await cx.wait(2.7);
-
-  // ---- 3: she steps out into the rain, and looks up at the web of roads over the street
-  // Phase 7b: the collapse used to be five plain boxes falling out of frame into fog, so nothing read. Now the five levels are in
-  // view first (lit lane lamps along their undersides, ribs, pillars), the camera is tilted up at them, and they come down in
-  // sequence, lowest first, each one slamming onto the last, with the camera under the near edge.
-  cx.mark('street');
-  cx.hemiBoost = 1.6;
-  cx.cam({ p: [-91.4, 1.55, -78.0], l: [-85, 1.4, -78], fov: 70, dur: 1.5, e: 'inout' });
-  g.audio?.play('footstep', null);
-  const CX = -75, Z0 = -92, LEN = 62;                       // the street x = -75 (between the blocks), the roads run north along it, starting 12 m ahead
-  const decks = buildDecks(cx, CX, Z0, LEN);
-  await cx.wait(1.3);
-  cx.hemiBoost = 1;
-  cx.cam({ p: [-79.6, 1.6, -80.2], l: [CX - 1, 2.6, Z0 - 30], fov: 72, dur: 1.8, e: 'inout' });
-  cx.cap('SETU!', { who: 'Mithi', ttl: 1.4 });
-  await cx.wait(1.7);
-  cx.cap('Rain on the pillars. Over the street, five levels of road. And under her feet, a hum.', { kind: 'scrawl', ttl: 3.4 });
-  sfx?.rumble(8, 0.3);
-  cx.shake(0.12, 3);
-  cx.cam({ p: [-78.8, 1.6, -80.2], l: [CX + 1, 19, Z0 - 26], fov: 76, dur: 2.6, e: 'inout' });        // the camera tilts up the stack
-  decks.tremble(0.02, 2.6);
+  cx.do(() => { g.canvas.style.transition = 'none'; g.canvas.style.filter = 'blur(9px)'; void g.canvas.offsetWidth; g.canvas.style.transition = 'filter 2.4s ease-out'; g.canvas.style.filter = 'blur(0px)'; });
+  cx.black(0, 1.0);
+  cx.cap('A vision. The same one. Louder.', { kind: 'scrawl', ttl: 2.4 });
+  cx.cam({ p: [-96.4, 0.46, -76.7], l: [-95.2, 0.9, -79.0], fov: 60, roll: 0.05, dur: 2.6, e: 'inout' });
   await cx.wait(2.2);
-  cx.cap('Concrete ticks. Dust sifts down.', { kind: 'scrawl', ttl: 2.0 });
-  cx.do(() => { g.hazards?.dust?.(CX, 4, Z0 - 8, 8, 5, { size: 5, up: -0.4, life: 2.4, color: [0.3, 0.28, 0.25] }); });
-  decks.tremble(0.07, 1.8);
-  cx.shake(0.45, 1.8);
-  await cx.wait(1.7);
-
-  // ---- 4: the five levels fall
-  cx.mark('collapse');
-  sfx?.roar(8, 0.95);
-  g.screenfx?.glitch(300);
-  cx.shake(1.5, 8);
-  cx.setWhiteColor('#cfc6b2');
-  decks.pillars.visible = false;
-  const debris = [];
-  for (let i = 0; i < 26; i++) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(rnd(0.4, 1.8), rnd(0.3, 0.8), rnd(0.4, 1.8)), new THREE.MeshLambertMaterial({ color: 0x5a5a56, emissive: 0x15140f }));
-    m.position.set(CX + rnd(-4.5, 4.5), rnd(6, 30), Z0 - 4 - rnd(0, 36)); cx.prop(m);
-    debris.push({ m, v: rnd(-6, 0), delay: rnd(0, 2.4), done: false, sp: new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)) });
-  }
-  const t0f = cx.t, N = decks.list.length;
-  const fall = cx.frame((dt) => {
-    const t = cx.t - t0f;
-    decks.list.forEach((d, i) => {                          // i = 0 is the lowest: its supports go first
-      if (d.done || t < 0.5 + i * 0.5) return;
-      d.v += 17 * dt; d.g.position.y -= d.v * dt;
-      d.g.rotation.x += d.tilt * dt * 0.18; d.g.rotation.z += d.roll * dt * 0.12;
-      if (d.g.position.y <= d.landY) {
-        d.g.position.y = d.landY; d.done = true;
-        const k = 1 - i / N;
-        cx.shake(1.6 + k * 0.4, 2.2); sfx?.crash(0.7 + k * 0.3);
-        g.hazards?.dust?.(CX, 1.2 + d.landY, d.g.position.z + 24, 16, 9, { size: 14, up: 3.4, life: 6, color: [0.85, 0.79, 0.66] });
-        g.screenfx?.flash('#e6dcc4', 240, 0.22);
-        if (i === 0) cx.cap('The whole sky comes down.', { kind: 'scrawl', ttl: 2.4 });
-      }
-    });
-    for (const d of debris) {
-      if (d.done || t < d.delay) continue;
-      d.v += 24 * dt; d.m.position.y -= d.v * dt; d.m.rotation.x += d.sp.x * dt * 3; d.m.rotation.z += d.sp.z * dt * 3;
-      if (d.m.position.y < 0.5) { d.m.position.y = 0.5; d.done = true; if (Math.random() < 0.4) g.hazards?.dust?.(d.m.position.x, 0.6, d.m.position.z, 4, 3, { size: 5, up: 2, life: 4, color: [0.42, 0.38, 0.32] }); }
-    }
-  });
-  // the camera whips up and back as the near edges come down, then the dust wall rolls over her
-  cx.cam({ p: [-78.8, 1.7, -80.2], l: [CX, 15, Z0 - 20], fov: 80, dur: 1.2, e: 'out' });
+  cx.cap('Setu?', { who: 'Mithi', ttl: 1.5 });
+  await cx.wait(1.5);
+  cx.mark('mat');
+  cx.cam({ p: [-95.6, 0.62, -77.2], l: [-95.0, 0.07, -79.0], fov: 54, roll: 0, dur: 2.2, e: 'inout' });
+  cx.cap('The blanket is cold. His slippers are gone.', { kind: 'scrawl', ttl: 2.6 });
   await cx.wait(2.6);
-  cx.cam({ p: [-78.8, 1.5, -80.2], l: [CX - 0.5, 5.0, Z0 - 12], fov: 74, dur: 2.2, e: 'inout' });
-  await cx.wait(1.6);
-  cx.white(0.6, 1.6);
-  await cx.wait(1.2);
-  g.audio?.duck?.(0.9, 6);
-  cx.white(1.0, 1.1);
-  await cx.wait(1.2);
-  cx.unframe(fall);
+  cx.mark('bag');
+  cx.cam({ p: [-93.4, 1.05, -77.0], l: [-91.1, 0.35, -79.6], fov: 58, dur: 2.0, e: 'inout' });
+  cx.do(() => sfx?.bell(0.1));
+  await cx.wait(2.0);
 
-  // ---- 5: silence, then car alarms
+  // ---- 4: out of the door, into the lane (rain, lights, the whole street awake)
+  cx.mark('door');
+  cx.hemiBoost = 1.7;
+  cx.cam({ p: [-90.2, 1.5, -78.0], l: [-82, 1.7, -80], fov: 70, dur: 1.7, e: 'inout' });
+  g.audio?.play('footstep', null);
+  cx.do(() => { sfx?.murmur(9, 0.07); });
+  await cx.wait(1.6);
+  cx.mark('lane');
+  cx.camPath((k) => ({ p: [mix(-89.5, -80.6, k), 1.55, mix(-78.2, -79.4, k)], l: [-76, 2.0 + k * 1.4, -88 + k * -4], fov: 72 }), 4.6, 'inout');
+  cx.cap('Rain on tin. Frying oil. Marigolds, diyas, a radio singing. The whole lane is awake.', { kind: 'scrawl', ttl: 3.4 });
+  await cx.wait(2.6);
+  cx.cap('SETU!', { who: 'Mithi', ttl: 1.3 });
+  cx.do(() => { for (const a of folk.slice(0, 4)) a.char.lookAt({ x: -80, y: 1.5, z: -79 }); });
+  await cx.wait(2.0);
+
+  // ---- 5: the lane looks up. The web of roads, and under her feet a hum
+  cx.mark('look-up');
+  cx.hemiBoost = 1.35;
+  const eyeJ = { x: -77.4, y: 1.6, z: -91.0 };
+  cx.cam({ p: [eyeJ.x, eyeJ.y, eyeJ.z], l: [IC.x, 16, IC.zS - 30], fov: 78, dur: 2.4, e: 'inout' });
+  cx.cap('Over the lane, five levels of road. Sion Junction. And under her feet, a hum.', { kind: 'scrawl', ttl: 3.8 });
+  cx.do(() => { sfx?.rumble(8, 0.28); });
+  cx.shake(0.2, 3);
+  ic.tremble(0.02);
+  await cx.wait(2.2);
+  cx.hand(1.0);
+  cx.do(() => { for (const a of folk) { if (!a.def.to) continue; a.char.lookAt({ x: IC.x, y: 12, z: IC.zS - 12 }); } });
+  await cx.wait(0.6);
+  cx.cap('Concrete ticks. Dust sifts down.', { kind: 'scrawl', ttl: 2.2 });
+  cx.do(() => { sfx?.groan(6, 0.5); for (let i = 0; i < 6; i++) fx.puff(IC.x + rnd(-5, 5), rnd(6, 20), IC.zS - rnd(2, 40), 0, -0.6, 0, 1.5, 3, 3.5, 0.3); });
+  const trem0 = cx.t;
+  const trem = cx.frame(() => ic.tremble(0.06 * Math.min(1, (cx.t - trem0) / 2)));
+  cx.shake(0.5, 2.2);
+  cx.hemiBoost = 0.9;
+  await cx.wait(2.0);
+
+  // ---- 6: the interchange comes down, the far end first
+  cx.mark('collapse');
+  cx.unframe(trem);
+  folkOn = false;
+  lane.sign.visible = false;
+  cx.hand(2.6);
+  cx.hemiBoost = 1.6;
+  ic.start();
+  sfx?.roar(9, 0.95);
+  g.screenfx?.glitch(260);
+  cx.shake(1.1, 9);
+  cx.setWhiteColor('#cfc6b2');
+  cx.cam({ p: [eyeJ.x, eyeJ.y, eyeJ.z], l: [IC.x, 12, IC.zS - 38], fov: 70, dur: 1.4, e: 'out' });
+  // the people run south, past the camera
+  const run = (a, i) => {
+    a.panic = true; a.char.setMood(i % 3 ? 'scared' : 'shout');
+    a.char.lookAt(null);
+    if (a.def.doing) { a.char.gesture('rest', 0.1); }
+    const x = [-72.4, -73.8, -77.2, -70.6, -75.6, -71.4, -78.6, -74.4, -72.2, -73.2][i % 10];
+    cx.walk(a, x, -56 + rnd(-2, 2), 5.2 + (i % 4) * 0.5, { face: true });
+  };
+  cx.do(() => folk.forEach((a, i) => g.wait(0.15 + i * 0.12).then(() => run(a, i))));
+  cx.do(() => { sfx?.cries(7, 0.3); });
+  await cx.wait(2.2);
+  cx.cam({ p: [eyeJ.x, 1.45, eyeJ.z + 0.4], l: [IC.x + 1, 7, IC.zS - 18], fov: 76, dur: 2.0, e: 'inout' });
+  cx.cap('The whole sky comes down.', { kind: 'scrawl', ttl: 2.4 });
+  // dust rolls down the street toward the camera
+  cx.do(() => { for (let i = 0; i < 70; i++) { const z = IC.zS - rnd(2, 60); fx.puff(IC.x + rnd(-6, 6), rnd(0.5, 7), z, rnd(-1, 1), rnd(0, 1.2), rnd(10, 17), rnd(4, 8), rnd(14, 24), rnd(6, 10), 0.5); } });
+  await cx.wait(2.2);
+  cx.do(() => { for (let i = 0; i < 40; i++) fx.puff(IC.x + rnd(-6, 6), rnd(0.5, 6), IC.zS - rnd(2, 30), rnd(-1, 1), rnd(0, 1.5), rnd(12, 18), rnd(5, 9), rnd(16, 26), rnd(5, 8), 0.6); });
+  cx.cam({ p: [eyeJ.x, 1.4, eyeJ.z + 0.8], l: [IC.x, 3, IC.zS - 8], fov: 80, dur: 1.8, e: 'in' });
+  await cx.wait(1.7);
+  cx.white(0.5, 1.2);
+  await cx.wait(1.0);
+  g.audio?.duck?.(0.9, 6);
+  cx.white(1.0, 0.9);
+  await cx.wait(1.0);
+
+  // ---- 7: silence, then car alarms
   cx.mark('silence');
+  cx.hand(0.3);
   sfx?.ring(6, 0.08);
   cx.cap('Then nothing.', { kind: 'scrawl', ttl: 2.4 });
-  await cx.wait(2.4);
+  // the dust thins to the colour of the morning: the lane, the pile where the roads were, a few people who stayed on their feet
+  cx.do(() => {
+    cx.setWhiteColor('#a89c86');
+    cx.cam({ p: [eyeJ.x, 1.5, eyeJ.z + 1.5], l: [IC.x, 4.5, IC.zS - 10], fov: 66, dur: 0.1 });
+    folk.slice(0, 5).forEach((a, i) => { a.panic = true; a.goal = null; a.pos.x = -77.5 + i * 1.7 - (i % 2) * 3; a.pos.z = -84 - i * 1.3; a.speed = 0; a.yaw = Math.atan2(-(IC.x - a.pos.x), -(IC.zS - a.pos.z)) + (i % 2 ? 0.4 : -0.3); a.char.setMood(i % 2 ? 'pain' : 'sad'); a.char.gesture(i === 2 ? 'face' : 'rest', 5); });
+    for (let i = 0; i < 40; i++) fx.puff(IC.x + rnd(-6, 6), rnd(0.5, 5), IC.zS - rnd(2, 22), rnd(-0.5, 0.5), rnd(0, 0.6), rnd(0.5, 2.5), rnd(5, 9), rnd(10, 16), rnd(8, 12), 0.5);
+  });
+  cx.white(0.42, 2.6);
+  await cx.wait(2.2);
   cx.do(() => { sfx?.carAlarm(10, 0.1); setTimeout(() => sfx?.carAlarm(9, 0.07), 1400); });
   cx.cap('Car alarms. Dust settling. Somewhere a child is crying, and then many.', { kind: 'scrawl', ttl: 3.4 });
-  await cx.wait(3.0);
-  cx.black(1, 1.2); cx.white(0, 0.01);
-  await cx.wait(1.4);
+  await cx.wait(2.6);
+  cx.black(1, 1.0); cx.white(0, 0.01);
+  await cx.wait(1.2);
   cx.clearProps();
 
-  // ---- 6: the title
+  // ---- 8: the title
   cx.mark('title');
   cx.title('GRAHAN', 'the search for sunrise');
-  await cx.wait(4.4);
+  await cx.wait(4.0);
   cx.title('', '', false);
-  await cx.wait(1.2);
+  await cx.wait(1.0);
 
-  // ---- 7: gameplay at 05:40, in the dust of the collapse site
+  // ---- 9: gameplay at 05:40, in the dust of the collapse site
   cx.mark('play');
   cx.always(() => {
     p.frozen = wasFrozen;
@@ -460,6 +462,7 @@ async function opening(cx) {
   cx.setWhiteColor('#b8ae9a'); cx.white(0.9, 0.01);
   cx.letterbox(false);
   cx.clearProps();
+  cx.hand(0);
   cx.rig.on = false;
   cx.black(0, 2.0);
   await cx.wait(1.0);
