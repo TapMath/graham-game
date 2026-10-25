@@ -17,12 +17,12 @@
  {
   "name": "home-torch-and-food",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-60,-40],[-75,-58],[-84,-70],[-84,-78],[-91,-78],[-94,-78]]); await B.use('pick:remote'); await B.idle(0.5); await B.use('pick:food'); await B.idle(0.5); return B.report(\"batteries and food taken\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-60,-40],[-75,-50],[-75,-70],[-84,-72],[-84,-78],[-91,-78],[-94,-78]]);       /* across the Harbour Line at its level crossing (the bot waits behind the boom) */ await B.use('pick:remote'); await B.idle(0.5); await B.use('pick:food'); await B.idle(0.5); return B.report(\"batteries and food taken\");})()"
  },
  {
   "name": "walk-to-hospital",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-91,-78],[-84,-78],[-84,-70],[-75,-58],[-75,-30],[-75,0],[-75,40],[-75,60],[-60,64],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]); return B.report(\"in ward A\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-91,-78],[-84,-78],[-84,-72],[-75,-68],[-75,-30],[-75,0],[-75,40],[-75,60],[-60,64],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]); return B.report(\"in ward A\");})()"
  },
  {
   "name": "hospital-jeetu",
@@ -42,7 +42,7 @@
  {
   "name": "to-maintenance-shaft",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-45,93],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-10,-58],[40,-60],[45,-52],[52,-45],[52,-41],[52,-36.8],[52,-34.5],[52,-30],[52,-24.5],[52,-21],[54,-22]]); return B.report(\"at the wrecked lift\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-45,93],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-15,-46],[-15,-53.5],[44,-53.5],[52,-45],[52,-41],[52,-36.8],[52,-34.5],[52,-30],[52,-24.5],[52,-21],[54,-22]]);       /* the south pavement of the Harbour Line street (the line itself is fenced) */ return B.report(\"at the wrecked lift\");})()"
  },
  {
   "name": "find-setu",
@@ -52,7 +52,7 @@
  {
   "name": "to-breach-chamber",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[52,-24.5],[52,-30],[52,-34.5],[52,-36.8],[52,-41],[45,-52],[40,-60],[-10,-60],[-75,-60],[-75,-20],[-75,0],[-110,0],[-133,2],[-133,-3],[-133,-12],[-133,-27],[-125,-28]]); return { ...B.report(\"in the breach chamber\"), breachKnown: !!G.flags.breachKnown };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[52,-24.5],[52,-30],[52,-34.5],[52,-36.8],[52,-41],[45,-53.5],[-74,-53.5],[-75,-20],[-75,0],[-110,0],[-133,2],[-133,-3],[-133,-12],[-133,-27],[-125,-28]]); return { ...B.report(\"in the breach chamber\"), breachKnown: !!G.flags.breachKnown };})()"
  },
  {
   "name": "pump-station-clue",
@@ -77,12 +77,12 @@
  {
   "name": "to-the-pier-gate",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-10,-58],[40,-60],[105,-60],[140,-60],[155,-58],[156,-45],[156,-39]]); return B.report(\"at the pier gate\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-15,-46],[-15,-70]]);   /* over the level crossing of the Harbour Line at Sion */ const leg = await B.rideTrain('sion', 'wadala-road');                                                         /* and the 4 stops east by train: real inputs, doors and all */ await B.go([[100,-66.4],[105,-67],[105,-53.5],[150,-53.5],[156,-52],[156,-45],[156,-39]]);                     /* back over the crossing at Wadala (x 105) and along the south pavement to the pier */ return { ...B.report(\"at the pier gate\"), train: leg, crossingWaits: B.stats.crossingWaits ?? 0 };})()"
  },
  {
   "name": "bridge-lift",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[161,-39],[168,-39],[172,-39]]); B.tap('KeyE'); await B.idle(11); return B.report(\"lift to the bridge deck\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[161,-39],[166,-39]]); const lift = await B.rideLift('lift-bridge', 'top'); return { ...B.report(\"lift to the bridge deck\"), lift };})()"
  },
  {
   "name": "bridge-walk",

@@ -78,10 +78,12 @@ src/main.js           boot, system registration, the fixed-step loop
 src/game.js           the shared Game object (scene, camera, events, rng, systems, modes)
 src/debug.js          the debug / test API (window.__grahan with ?debug=1)
 src/core/             events, rng, params, input (keyboard, mouse, pointer lock, touch), physics, player
-src/world/            the city as data (map.js) and everything that builds it: structures, props, sky, sea, lifts, gates, sunlight, fx
+src/world/            the city as data (map.js) and everything that builds it: structures, props, rail (the Harbour Line's tracks, platforms, fence), sky, sea,
+                      lifts (multi-stop, solar battery), gates, sunlight, fx
 src/characters/       procedural low-poly people
 src/systems/          clock, health, Setu, vendors, hazards/, audio/ (a procedural Web Audio engine), senses/ (sing, ripples,
-                      visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings
+                      visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings,
+                      transit/ (the Harbour Line trains), crowds/ (instanced pedestrians and traffic), lifts/ (floor panels and charge)
 src/ui/               HUD, messages, dialogs, screen effects, title screen, pause menu, settings, how to play, touch controls
 src/styles.css        the whole stylesheet (OK Computer language: pale blue-white thin type, safety-card pictograms, scrawls)
 tools/smoke.mjs       headless test runner (Playwright)  tools/shots*.json  screenshot tours with assertions
@@ -111,7 +113,7 @@ Playwright is found through `NODE_PATH` or the global npm root.
 | `--no-autostart` | open without `autostart=1`, so the title screen shows |
 | `--mobile` | phone emulation (touch, 844x390; `--orientation portrait` for 390x844, or `--viewport WxH`) |
 
-The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
+The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase8b.json` (Mumbai signage, the Harbour Line, crowds, lifts and the draw-call worst case; built by `tools/build-phase8b.mjs`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
 
 `node tools/audio-check.mjs` renders every synthesised sound offline and flags silence, NaN and clipping (`--wav dir` writes WAV files to listen to).
 

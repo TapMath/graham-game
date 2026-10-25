@@ -20,12 +20,12 @@ await B.go([[-38,-26]]); B.hold('KeyE', 3.6); await B.dialogue([]);
 return ${rep('old man dug out')};`;
 
 const HOME = `
-await B.go([[-60,-40],[-75,-58],[-84,-70],[-84,-78],[-91,-78],[-94,-78]]);
+await B.go([[-60,-40],[-75,-50],[-75,-70],[-84,-72],[-84,-78],[-91,-78],[-94,-78]]);       /* across the Harbour Line at its level crossing (the bot waits behind the boom) */
 await B.use('pick:remote'); await B.idle(0.5); await B.use('pick:food'); await B.idle(0.5);
 return ${rep('batteries and food taken')};`;
 
 const HOSPITAL_WALK = `
-await B.go([[-91,-78],[-84,-78],[-84,-70],[-75,-58],[-75,-30],[-75,0],[-75,40],[-75,60],[-60,64],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]);
+await B.go([[-91,-78],[-84,-78],[-84,-72],[-75,-68],[-75,-30],[-75,0],[-75,40],[-75,60],[-60,64],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]);
 return ${rep('in ward A')};`;
 
 const JEETU = `
@@ -49,7 +49,7 @@ await B.go([[-44.5,90],[-45,93],[-45,96]]); await B.healUp();
 return { ...${rep('healed in the depot shaft')}, inSun: A.state().world.inSun };`;
 
 const TO_SHAFT = `
-await B.go([[-45,93],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-10,-58],[40,-60],[45,-52],[52,-45],[52,-41],[52,-36.8],[52,-34.5],[52,-30],[52,-24.5],[52,-21],[54,-22]]);
+await B.go([[-45,93],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-15,-46],[-15,-53.5],[44,-53.5],[52,-45],[52,-41],[52,-36.8],[52,-34.5],[52,-30],[52,-24.5],[52,-21],[54,-22]]);       /* the south pavement of the Harbour Line street (the line itself is fenced) */
 return ${rep('at the wrecked lift')};`;
 
 const FIND_SETU = `
@@ -57,7 +57,7 @@ await B.use('setu'); await B.idle(1);
 return ${rep('Setu found')};`;
 
 const TO_CHAMBER = `
-await B.go([[52,-24.5],[52,-30],[52,-34.5],[52,-36.8],[52,-41],[45,-52],[40,-60],[-10,-60],[-75,-60],[-75,-20],[-75,0],[-110,0],[-133,2],[-133,-3],[-133,-12],[-133,-27],[-125,-28]]);
+await B.go([[52,-24.5],[52,-30],[52,-34.5],[52,-36.8],[52,-41],[45,-53.5],[-74,-53.5],[-75,-20],[-75,0],[-110,0],[-133,2],[-133,-3],[-133,-12],[-133,-27],[-125,-28]]);
 return { ...${rep('in the breach chamber')}, breachKnown: !!G.flags.breachKnown };`;
 
 const PUMPS = `
@@ -90,13 +90,15 @@ await B.watch(6);
 return { ...${rep('Tara warns the city')}, cityWarned: !!G.flags.cityWarned, via: G.flags.cityWarnedVia };`;
 
 const TO_PIER_GATE = `
-await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-10,-58],[40,-60],[105,-60],[140,-60],[155,-58],[156,-45],[156,-39]]);
-return ${rep('at the pier gate')};`;
+await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-15,-46],[-15,-70]]);   /* over the level crossing of the Harbour Line at Sion */
+const leg = await B.rideTrain('sion', 'wadala-road');                                                         /* and the 4 stops east by train: real inputs, doors and all */
+await B.go([[100,-66.4],[105,-67],[105,-53.5],[150,-53.5],[156,-52],[156,-45],[156,-39]]);                     /* back over the crossing at Wadala (x 105) and along the south pavement to the pier */
+return { ...${rep('at the pier gate')}, train: leg, crossingWaits: B.stats.crossingWaits ?? 0 };`;
 
 const BRIDGE_LIFT = `
-await B.go([[161,-39],[168,-39],[172,-39]]);
-B.tap('KeyE'); await B.idle(11);
-return ${rep('lift to the bridge deck')};`;
+await B.go([[161,-39],[166,-39]]);
+const lift = await B.rideLift('lift-bridge', 'top');
+return { ...${rep('lift to the bridge deck')}, lift };`;
 
 const BRIDGE_WALK = `
 await B.go([[172,-33],[190,-30],[203,-30]]);
@@ -142,13 +144,13 @@ export const seed1 = [
 // Gautam's bail with TIME (two hours of forms: that is the waiting; no clock jump is used), so the guards at the Metro gate are
 // busy and she can walk in by the front stairs; by then Setu has left the wrecked lift, so she follows the leads below.
 const BAIL = `
-await B.go([[-38,-26],[-38,-12],[-24,-8],[-10,5],[-10,-30],[-10,-58],[18,-62],[18,-74],[18,-79],[15,-79.4]]);
+await B.go([[-38,-26],[-38,-12],[-24,-8],[-10,5],[-10,-30],[-12,-46],[-12,-70],[10,-70],[18,-74],[18,-79],[15,-79.4]]);          /* north over the level crossing at Sion Junction to the police station */
 await B.talk('gautam', ['in time'], { at: [15, -80.2] });
 await B.watch(3);
 return { ...${rep('Gautam freed; two hours of forms')}, gautamFree: !!G.flags.gautamFree };`;
 
 const S2_TO_HOSPITAL = `
-await B.go([[15,-79.4],[18,-74],[18,-62],[-10,-58],[-10,-30],[-10,5],[-24,8],[-24,55],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]);
+await B.go([[15,-79.4],[18,-74],[10,-70],[-12,-70],[-12,-46],[-10,-30],[-10,5],[-24,8],[-24,55],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]);
 return ${rep('in ward A')};`;
 
 const S2_METRO_GATE = `
