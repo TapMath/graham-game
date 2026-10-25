@@ -25,8 +25,8 @@ export class ObjectiveSystem {
     const f = this.game.flags;
     if (this.game.setu?.dead) return 'Setu is gone.';
     if (!f.setuFollowing) return 'Find Setu before his breath runs out.';
-    if (f.breachKnown && !f.cityWarned) return 'Warn the authorities at the Control Tower, then take Setu to the Sunrise Bridge.';
-    return 'Take Setu to the Sunrise Bridge on the east edge. He has never seen a sunrise.';
+    if (f.breachKnown && !f.cityWarned) return 'Warn the authorities at the MMRDA Control Tower in Wadala, then take Setu to the Atal Setu at Sewri.';
+    return 'Take Setu to the Atal Setu at Sewri, on the east edge. He has never seen a sunrise.';
   }
 
   _refresh() {

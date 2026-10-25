@@ -16,37 +16,37 @@ const _yq = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0);
 const TRAIL = {
   liftWreck: {
     chalk: ['1  2  3', '.... 31 ->'], arrowTo: 'catacombs',
-    bark: { who: 'a man sifting the wreck', text: '"A little boy, blue shirt? He kept counting out loud, sixty-one, sixty-two. Went west, toward the old ring tunnel."' },
+    bark: { who: 'a man sifting the wreck', text: '"Yellow shirt? Thin, with a tin thing in his pocket? He walked out of that lift counting out loud, sixty-one, sixty-two, as if he had a train to catch. West, towards the old ring tunnel. Do not shout, he will run."' },
     object: { name: 'inhaler cap', color: 0x59a8ff, prompt: 'Pick up the small blue cap',
       text: 'An inhaler cap, still warm from a small hand. Setu. A trail of chalk ticks leads off to the west, counting, counting.' },
   },
   catacombs: {
     chalk: ['|||| ||||', '112 ->'], arrowTo: 'boringSite',
-    bark: { who: 'a woman in the dark', text: '"Aayat took him to see the machine. Please. Do not tell Seth I said so."' },
+    bark: { who: 'a woman in the dark', text: '"Aayat took him to see the machine. Please. If Seth asks, you did not hear it from me. I have two of my own behind that wire."' },
     object: { name: 'snuffed diya', color: 0xffa040, prompt: 'Touch the snuffed diya',
       text: 'A diya, put out with a thumb. In the dust beside it, two sets of bare feet: one child-sized, one smaller. They went toward the grinding.' },
   },
   boringSite: {
     chalk: ['204', '||||  ||||  ->'], arrowTo: 'clinic',
-    bark: { who: 'a child at the cages', text: '"The new boy had a mouth organ. The contractor took it. Took him too. South, the long tunnel, to the doctor."' },
+    bark: { who: 'a child at the cages', text: '"The new boy had a tin music thing. Seth\'s man took it. Took him too. South, the long tunnel, to the doctor with the red lamp. He was coughing. Everybody looked the other way."' },
     object: { name: 'chalk stub', color: 0xeeeede, prompt: 'Pick up the stub of chalk',
       text: 'A stub of chalk worn to nothing, and a tally scratched on a cage bar: forty, forty-one, forty-two. Someone took the boy south, down the long tunnel.' },
   },
   clinic: {
     chalk: ['vent', '388 ->'], arrowTo: 'ventExit',
-    bark: { who: 'the doctor', text: '"He asked which way the air comes from. I told him the vents. I should have bitten my tongue."' },
+    bark: { who: 'the doctor', text: '"He asked which way the air comes from. I told him: the vents. I should have bitten my tongue. Do not tell Seth I let him go. Do not tell Seth I told you."' },
     object: { name: 'pill strip', color: 0xe8e8ff, prompt: 'Pick up the empty pill strip',
       text: 'An empty blister strip and a clinic token stamped 18:40. On the back, in a child\'s pencil: "VENT" and an arrow. He is climbing out.' },
   },
   ventExit: {
     chalk: ['4  0  0', '->  tents'], arrowTo: 'triageTents',
-    bark: { who: 'a volunteer by the stack', text: '"Something small came out of that grille an hour ago. Coughing. It went toward the tents."' },
+    bark: { who: 'a volunteer by the stack', text: '"Something small came out of that grille an hour ago, black as a chimney sweep, coughing like an old man. I shouted. He did not stop. He ran for the tents at Sion Junction."' },
     object: { name: 'bent grille', color: 0x9aa0a8, prompt: 'Feel the bent grille',
       text: 'The grille hangs open, bent from the inside. Small soot-black handprints on the rim, and under them, scratched with a fingernail: a count, four hundred steps.' },
   },
   triageTents: {
     chalk: ['MITHI', 'DIDI ?  ->'], arrowTo: 'bridge',
-    bark: { who: 'a nurse', text: '"He asked everyone for his sister. We told him the bodies were over there. God forgive me. He walked east, toward the bridges, counting."' },
+    bark: { who: 'a nurse', text: '"He asked everyone for his sister. Mithi Didi, Mithi Didi. We told him the bodies were by the north wall. God forgive me, I was so tired. He went and he looked. Then he walked east, towards Sewri, towards the bridge, counting."' },
     object: { name: 'tent pole', color: 0xffe08a, prompt: 'Touch the chalk on the tent pole',
       text: 'On the tent pole, in a child\'s chalk: MITHI DIDI? with an arrow pointing east. The volunteers have not rubbed it out. He thinks you are dead, and he is going to the bridge anyway.' },
   },

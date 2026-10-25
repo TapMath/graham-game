@@ -1,0 +1,433 @@
+[
+ {
+  "name": "i8c-pause",
+  "eval": "window.__grahan.set('invulnerable',true); window.__grahan.do('pause',true); JSON.stringify(window.__grahan.state().story6b.cine)",
+  "wait": 300
+ },
+ {
+  "name": "i8c-stamp",
+  "eval": "window.__grahan.do('cineAdvance',1.6).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-vision",
+  "eval": "window.__grahan.do('cineAdvance',3.8).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-wake",
+  "eval": "window.__grahan.do('cineAdvance',3.4).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-mat",
+  "eval": "window.__grahan.do('cineAdvance',4.6).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-bag",
+  "eval": "window.__grahan.do('cineAdvance',2.4).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-door",
+  "eval": "window.__grahan.do('cineAdvance',2).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-lane",
+  "eval": "window.__grahan.do('cineAdvance',3.2).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-look-up",
+  "eval": "window.__grahan.do('cineAdvance',2.8).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-tremble",
+  "eval": "window.__grahan.do('cineAdvance',2.4).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-fall1",
+  "eval": "window.__grahan.do('cineAdvance',2.2).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-fall2",
+  "eval": "window.__grahan.do('cineAdvance',1.6).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-fall3",
+  "eval": "window.__grahan.do('cineAdvance',1.6).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-dust",
+  "eval": "window.__grahan.do('cineAdvance',2.4).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-white",
+  "eval": "window.__grahan.do('cineAdvance',2.2).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-silence",
+  "eval": "window.__grahan.do('cineAdvance',3.4).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-title",
+  "eval": "window.__grahan.do('cineAdvance',5).then(function(x){return JSON.stringify({t:x.t,active:x.active,marks:x.marks})})",
+  "wait": 1500
+ },
+ {
+  "name": "i8c-end",
+  "eval": "window.__grahan.do('cineSkip'); window.__grahan.do('cineAdvance',1.2).then(function(x){return JSON.stringify({last:x.last, active:x.active})})",
+  "wait": 600
+ },
+ {
+  "name": "p8c-setup",
+  "eval": "window.A=__grahan; window.G=A.game;\nwindow.ok=(c,m)=>{ if(!c) throw new Error('ASSERT FAILED: '+m); return true; };\nwindow.go=()=>{ A.do('pause',false); if(!G.setu.found && !G.setu.dead && G.setu.health<80) G.setu.setHealth(100); if(G.visionSystem && !G.visionSystem.active) G.visionSystem.queue.length=0; if(!G.dialogue.isOpen && !G.visionSystem.active && !G.hazards.detaining) G.modal=false; };\nwindow.stop=()=>A.do('pause',true);\nwindow.maxCalls=0; window.sample=()=>{ const c=A.state().render.calls; if(c>maxCalls) maxCalls=c; return c; };\nG.dialogue.cps=1e6; A.set('invulnerable',true); A.set('hazards',false); A.setTime(12); A.set('perceive',0); A.step(0.3);\nok(G.characterStyle && G.characterStyle.proportions.adultHeads===7.5,'game.characterStyle'); ok(G.voices && G.banter,'voices and banter'); ({calls:sample(), style:Object.keys(G.characterStyle)})",
+  "wait": 600
+ },
+ {
+  "name": "p8c-full-tara",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','tara',3.4); A.step(0.9); stop(); const a=G.cast.get('tara'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-tara",
+  "eval": "go(); A.set('perceive',0); A.do('cast','tara',2.8); A.step(0.4); A.do('talk','tara'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-tara-reverse",
+  "eval": "go(); A.set('perceive',0); A.do('cast','tara',2.8); A.step(0.4); A.do('talk','tara'); for(let i=0;i<2;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-jeetu",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','jeetu',3.2); A.step(0.9); stop(); const a=G.cast.get('jeetu'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-jeetu",
+  "eval": "go(); A.set('perceive',0); A.do('cast','jeetu',2.6); A.step(0.4); A.do('talk','jeetu'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-gautam",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','gautam',4.2); A.step(0.9); stop(); const a=G.cast.get('gautam'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-gautam-reverse",
+  "eval": "go(); A.set('perceive',0); A.do('cast','gautam',3.6); A.step(0.4); A.do('talk','gautam'); for(let i=0;i<3;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-sameer",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','sameer',3); A.step(0.9); stop(); const a=G.cast.get('sameer'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-sameer",
+  "eval": "go(); A.set('perceive',0); A.do('cast','sameer',2.6); A.step(0.4); A.do('talk','sameer'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-nurses",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','nurses',4); A.step(0.9); stop(); const a=G.cast.get('nurses'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-nurses",
+  "eval": "go(); A.set('perceive',0); A.do('cast','nurses',2.6); A.step(0.4); A.do('talk','nurses'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-rescuers-collapse",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','rescuers-collapse',4); A.step(0.9); stop(); const a=G.cast.get('rescuers-collapse'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-rescuers-collapse",
+  "eval": "go(); A.set('perceive',0); A.do('cast','rescuers-collapse',2.6); A.step(0.4); A.do('talk','rescuers-collapse'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-rescuers-triage",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','rescuers-triage',4); A.step(0.9); stop(); const a=G.cast.get('rescuers-triage'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-rescuers-triage",
+  "eval": "go(); A.set('perceive',0); A.do('cast','rescuers-triage',2.6); A.step(0.4); A.do('talk','rescuers-triage'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-oldman-buried",
+  "eval": "go(); A.set('perceive',0); A.do('cast','oldman',2.4); A.step(0.5); stop(); ({calls:sample()})",
+  "wait": 600
+ },
+ {
+  "name": "p8c-oldman-freed",
+  "eval": "go(); A.do('dig'); A.step(0.2); A.do('dialogueSkip'); A.step(2.2); stop(); ok(G.cast.get('oldman').model.group.visible,'the freed man stands'); ({line:A.state().dialogue6a.line.slice(0,60)})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-torchBoys",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','torchBoys',4); A.step(0.9); stop(); const a=G.cast.get('torchBoys'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-torchBoys",
+  "eval": "go(); A.set('perceive',0); A.do('cast','torchBoys',2.8); A.step(0.4); A.do('talk','torchBoys'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-aayat",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','aayat',3); A.step(0.9); stop(); const a=G.cast.get('aayat'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-aayat",
+  "eval": "go(); A.set('perceive',0); A.do('cast','aayat',2.6); A.step(0.4); A.do('talk','aayat'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-kaalu",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','kaalu',4); A.step(0.9); stop(); const a=G.cast.get('kaalu'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-kaalu",
+  "eval": "go(); A.set('perceive',0); A.do('cast','kaalu',3.2); A.step(0.4); A.do('talk','kaalu'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-contractor",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','contractor',3.4); A.step(0.9); stop(); const a=G.cast.get('contractor'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-contractor",
+  "eval": "go(); A.set('perceive',0); A.do('cast','contractor',3); A.step(0.4); A.do('talk','contractor'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-doctor",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','doctor',3.2); A.step(0.9); stop(); const a=G.cast.get('doctor'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-talk-doctor",
+  "eval": "go(); A.set('perceive',0); A.do('cast','doctor',2.8); A.step(0.4); A.do('talk','doctor'); for(let i=0;i<0;i++) A.do('dialogueAdvance'); A.step(2.6); stop(); const s=A.state().dialogue6a; ok(s, 'conversation open'); ok(G.dialogue.cam.active,'conversation camera'); ({speaker:s.speaker, line:(s.line||'').slice(0,70), shot:G.dialogue.cam.kind, calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-full-sleepers",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','sleepers',3); A.step(0.9); stop(); const a=G.cast.get('sleepers'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-full-patients",
+  "eval": "go(); A.set('view','first'); A.set('perceive',0); G.dialogue.cam.end?.(); const r=A.do('cast','patients',4); A.step(0.9); stop(); const a=G.cast.get('patients'); ({visible:a.group.visible, calls:sample(), kind:a.kind})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-jeetu-joins",
+  "eval": "go(); A.do('jeetuJoin'); A.step(0.5); A.do('switch','jeetu'); A.step(0.8); stop(); ok(G.party.active==='jeetu','playing Jeetu'); ({active:G.party.active})",
+  "wait": 500
+ },
+ {
+  "name": "p8c-as-jeetu-tara",
+  "eval": "go(); A.set('perceive',0); A.do('cast','tara',2.8); A.step(0.4); A.do('talk','tara'); A.step(2.8); stop(); const s=A.state().dialogue6a; ok(G.party.active==='jeetu','still Jeetu while talking (no swap)'); ok(/Jeetu|boy|Beta|your didi/i.test(s.line),'Tara speaks to Jeetu: '+s.line); ({line:s.line.slice(0,90), choices:s.choices})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-as-jeetu-tara-2",
+  "eval": "go(); A.do('dialogueAdvance'); A.do('dialogueAdvance'); A.step(2.2); stop(); ({line:A.state().dialogue6a.line.slice(0,90)})",
+  "wait": 500
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-as-jeetu-kaalu",
+  "eval": "go(); A.set('perceive',0); A.do('cast','kaalu',3.2); A.step(0.4); A.do('talk','kaalu'); A.step(2.8); stop(); ({line:A.state().dialogue6a.line.slice(0,90), choices:A.state().dialogue6a.choices})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-as-jeetu-doctor",
+  "eval": "go(); A.set('perceive',0); A.do('cast','doctor',2.8); A.step(0.4); A.do('talk','doctor'); A.step(2.8); stop(); ({line:A.state().dialogue6a.line.slice(0,90)})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-as-jeetu-aayat",
+  "eval": "go(); A.set('perceive',0); A.do('cast','aayat',2.6); A.step(0.4); A.do('talk','aayat'); A.step(2.8); stop(); ({line:A.state().dialogue6a.line.slice(0,90)})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-close",
+  "eval": "go(); G.dialogue.close(); A.step(1.0); stop(); ok(!G.dialogue.cam.active,'camera handed back'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-back-to-mithi",
+  "eval": "go(); A.do('switch','mithi'); A.step(0.6); stop(); ok(G.party.active==='mithi','Mithi again'); 1",
+  "wait": 300,
+  "shot": false
+ },
+ {
+  "name": "p8c-mithi-front",
+  "eval": "go(); A.set('view','third'); A.set('perceive',0); A.teleport(-44,0,-30); A.look(0,0); A.set('viewOrbit',180); A.set('viewBack',3.2); A.step(0.9); stop(); ({calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-mithi-side",
+  "eval": "go(); A.set('viewOrbit',90); A.step(0.5); stop(); 1",
+  "wait": 500
+ },
+ {
+  "name": "p8c-mithi-back",
+  "eval": "go(); A.set('viewOrbit',0); A.step(0.5); stop(); 1",
+  "wait": 500
+ },
+ {
+  "name": "p8c-mithi-walk",
+  "eval": "go(); A.set('viewOrbit',60); A.run('KeyW',1.6); stop(); ({speed:A.state().speed})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-setu-with-mithi",
+  "eval": "go(); A.set('viewOrbit',150); A.do('setuFind'); A.do('setuTeleportToPlayer',2); A.step(1.2); stop(); ({calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-view-first",
+  "eval": "go(); A.set('viewOrbit',0); A.set('view','first'); A.step(0.3); stop(); 1",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "p8c-lineup",
+  "eval": "go(); A.set('view','third'); A.set('viewOrbit',180); A.set('viewBack',9); A.do('npcLineup',7); A.step(0.6); stop(); ({calls:sample()})",
+  "wait": 800
+ },
+ {
+  "name": "p8c-lineup-off",
+  "eval": "go(); A.do('npcLineup'); A.set('view','first'); A.set('viewBack',0); A.set('viewOrbit',0); stop(); 1",
+  "wait": 200,
+  "shot": false
+ },
+ {
+  "name": "p8c-vendor",
+  "eval": "go(); A.set('perceive',0); A.do('tpVendor'); A.step(0.8); stop(); ({calls:sample()})",
+  "wait": 700
+ },
+ {
+  "name": "p8c-budget",
+  "eval": "ok(maxCalls<150,'draw calls stay under the budget: '+maxCalls); ({maxCalls})",
+  "wait": 100,
+  "shot": false
+ }
+]

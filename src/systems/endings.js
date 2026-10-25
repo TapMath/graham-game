@@ -18,22 +18,22 @@ const TEXT = {
   1: {
     title: 'SUNRISE', kicker: 'Dawn reunion', tone: 'gold',
     body: ['"Didi... is that it? Is that the sun?"', 'The light comes over the sea like something being forgiven. Setu has never seen it. You have never seen it. You both feel it.'],
-    warned: 'The city was warned in time. Millions were evacuated.',
+    warned: 'Mumbai was warned in time. Millions were evacuated.',
     unwarned: '',
   },
   2: {
     title: 'THE LIGHT, TOO LATE', kicker: 'Setu found, city lost', tone: 'dusk',
-    body: ['Setu is with you. The sun is coming up over the bridge, the first clear sky of your life.', 'Behind you, under the towers, the sea finds the last of the tunnels. Nobody was told.'],
+    body: ['Setu is with you. The sun is coming up over the Atal Setu, the first clear sky of your life.', 'Behind you, under Dharavi and Sion and every lit window, the sea finds the last of the tunnels. Nobody was told.'],
     warned: '', unwarned: 'The city was never warned.',
   },
   3: {
     title: 'SETU LOST', kicker: 'Mithi cannot find Setu', tone: 'night',
-    body: ['The cough does not come again.', 'Somewhere under the city a boy keeps counting his steps in the dark, and nobody is there to count with him.'],
+    body: ['The cough does not come again.', 'Somewhere under Dharavi a boy keeps counting his steps in the dark, and nobody is there to count with him.'],
     warned: '', unwarned: '',
   },
   4: {
     title: 'THE LIGHT RAN OUT', kicker: 'Mithi dies', tone: 'night',
-    body: ['The light you were rationed ran out first.', 'Far above, the festival of lights goes on without you. Fireworks, marigolds, diyas on every step. Nobody looks down.'],
+    body: ['The light you were rationed ran out first.', 'Far above, Diwali goes on without you. Fireworks over New Wadala, marigolds, diyas on every step. Nobody looks down.'],
     warned: '', unwarned: '',
   },
 };
