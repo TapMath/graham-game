@@ -25,9 +25,9 @@ export function populate(sys) {
     const lat0 = (o.lat ?? 0) + (rng.next() - 0.5) * (o.spread ?? 1.0);
     const a = {
       mode: 'lane', lane: L, s, dir, speed: (kid ? 1.7 : 0.95 + rng.next() * 0.65) * (o.speedMul ?? 1), lat: lat0, lat0, woman, kid, rich: !!o.rich,
-      phase: rng.next() * 6.28, amp: 1, scale: 1, level: L.level, x: 0, y: L.y, z: 0, yaw: 0, pose: 0, umbrellaChance: o.umbrella ?? 0.6,
+      phase: rng.next() * 6.28, amp: 1, level: L.level, x: 0, y: L.y, z: 0, yaw: 0, pose: 0, umbrellaChance: o.umbrella ?? 0.6, worker: !!o.worker && !woman && !kid,
     };
-    sys.look(a, { woman, kid, rich: o.rich, umbrella: o.umbrella ?? 0.6 });
+    sys.look(a, { woman, kid, rich: o.rich, worker: a.worker, umbrella: o.umbrella ?? 0.6 });
     a.x = L.ax + L.ux * s + L.px * lat0; a.z = L.az + L.uz * s + L.pz * lat0;
     A.push(a);
     return a;
@@ -35,10 +35,11 @@ export function populate(sys) {
   const stander = (x, y, z, yaw, level, o = {}) => {
     const woman = o.woman ?? rng.next() < 0.42, kid = o.kid ?? rng.next() < 0.08;
     const a = {
-      mode: o.mode ?? 'stand', woman, kid, rich: !!o.rich, x, y, z, yaw, level, phase: rng.next() * 6.28, amp: o.amp ?? 0.05, scale: 1, pose: o.pose ?? 0,
+      mode: o.mode ?? 'stand', woman, kid, rich: !!o.rich, x, y, z, yaw, level, phase: rng.next() * 6.28, amp: o.amp ?? 0.05, pose: o.pose ?? 0,
       home: { x, y, z, yaw }, station: o.station, platformSide: o.side, umbrellaChance: o.umbrella ?? 0.5,
+      worker: !!o.worker && !woman && !kid, mood: o.mood ?? 'neutral', talk: o.talk ?? (rng.next() < 0.16),
     };
-    sys.look(a, { woman, kid, rich: o.rich, umbrella: o.umbrella ?? 0.5 });
+    sys.look(a, { woman, kid, rich: o.rich, worker: a.worker, umbrella: o.umbrella ?? 0.5 });
     A.push(a);
     return a;
   };
@@ -99,20 +100,20 @@ export function populate(sys) {
   for (let i = 0; i < 38; i++) {
     const a = rng.next() * 6.28, r = 13 + rng.next() * 12, x = -44 + Math.cos(a) * r * 1.2, z = -30 + Math.sin(a) * r * 0.75;
     if (Math.abs(x + 44) < 3 && Math.abs(z + 30) < 3) continue;
-    stander(x, 0, z, faceTo(x, z, -44, -30), 'G', { umbrella: 0.35, amp: 0.1 });
+    stander(x, 0, z, faceTo(x, z, -44, -30), 'G', { umbrella: 0.35, amp: 0.1, worker: rng.next() < 0.42, mood: 'worry' });
   }
-  for (const z of [-48, -13]) { const L = addLane(-66, z, -27, z, 0, 'G'); for (let i = 0; i < 6; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { speedMul: 1.25, spread: 1.5, umbrella: 0.3 }); }
-  for (const x of [-67, -25]) { const L = addLane(x, -46, x, -14, 0, 'G'); for (let i = 0; i < 5; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { speedMul: 1.25, spread: 1.5, umbrella: 0.3 }); }
+  for (const z of [-48, -13]) { const L = addLane(-66, z, -27, z, 0, 'G'); for (let i = 0; i < 6; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { speedMul: 1.25, spread: 1.5, umbrella: 0.3, worker: rng.next() < 0.45 }); }
+  for (const x of [-67, -25]) { const L = addLane(x, -46, x, -14, 0, 'G'); for (let i = 0; i < 5; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { speedMul: 1.25, spread: 1.5, umbrella: 0.3, worker: rng.next() < 0.45 }); }
   // the triage tents
-  for (let i = 0; i < 16; i++) { const x = -62 + rng.next() * 30, z = -8 + rng.next() * 13; stander(x, 0, z, rng.next() * 6.28, 'G', { umbrella: 0.2 }); }
+  for (let i = 0; i < 16; i++) { const x = -62 + rng.next() * 30, z = -8 + rng.next() * 13; stander(x, 0, z, rng.next() * 6.28, 'G', { umbrella: 0.2, worker: rng.next() < 0.4, mood: 'worry' }); }
 
   // -------------------------------------------------------------------------------- the hospital queue, the Metro entrances, the police station
-  for (let i = 0; i < 16; i++) stander(-52 + i * 0.9 + (rng.next() - 0.5) * 0.3, 0, 67 + (i % 3) * 0.7 + rng.next() * 0.5, Math.PI, 'G', { umbrella: 0.6 });
+  for (let i = 0; i < 16; i++) stander(-52 + i * 0.9 + (rng.next() - 0.5) * 0.3, 0, 67 + (i % 3) * 0.7 + rng.next() * 0.5, Math.PI, 'G', { umbrella: 0.6, mood: 'worry', talk: false });
   for (const [x, z] of [[45, -3.5], [45, 52.5]]) for (let i = 0; i < 12; i++) stander(x - 5 + rng.next() * 10, 0, z + (z < 0 ? 1 : -1) * rng.next() * 3, rng.next() * 6.28, 'G', { umbrella: 0.6 });
   for (let i = 0; i < 8; i++) stander(10 + rng.next() * 16, 0, -73 - rng.next() * 3, Math.PI * (rng.next() < 0.5 ? 1 : 0), 'G', { umbrella: 0.5 });
   // a chai stall and its regulars at a few street corners
   for (const [x, z] of [[-70, 12], [-20, 12], [40, 12], [100, 12], [-70, -12], [100, -112], [-20, 66], [40, 66]]) {
-    for (let k = 0; k < 5; k++) { const a = k * 1.256 + rng.next() * 0.4; stander(x + Math.cos(a) * 1.6, 0, z + Math.sin(a) * 1.6, a + Math.PI, 'G', { umbrella: 0.55 }); }
+    for (let k = 0; k < 5; k++) { const a = k * 1.256 + rng.next() * 0.4; stander(x + Math.cos(a) * 1.6, 0, z + Math.sin(a) * 1.6, a + Math.PI, 'G', { umbrella: 0.35, talk: k % 2 === 0 }); }
   }
 
   // -------------------------------------------------------------------------------- the stations: people waiting along the platforms, hawkers, someone asleep on a bench
@@ -145,8 +146,9 @@ export function populate(sys) {
   // -------------------------------------------------------------------------------- L3: the well-dressed, strolling the gardens
   for (const g of map.gardens) {
     const L1 = addLane(g.x0 + 3, g.z0 + 3, g.x1 - 3, g.z0 + 3, 38, 'L3'), L2 = addLane(g.x0 + 3, g.z1 - 3, g.x1 - 3, g.z1 - 3, 38, 'L3'), L3 = addLane(g.x0 + 3, g.z0 + 3, g.x0 + 3, g.z1 - 3, 38, 'L3');
-    for (const L of [L1, L2, L3]) for (let i = 0; i < 2; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { rich: true, speedMul: 0.7, umbrella: 0, woman: rng.next() < 0.5, spread: 1.2 });
-    for (let i = 0; i < 3; i++) stander(g.x0 + 8 + rng.next() * (g.x1 - g.x0 - 16), 38, g.z0 + 8 + rng.next() * (g.z1 - g.z0 - 16), rng.next() * 6.28, 'L3', { rich: true, umbrella: 0 });
+    for (const L of [L1, L2, L3]) for (let i = 0; i < 3; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { rich: true, speedMul: 0.7, umbrella: 0, woman: rng.next() < 0.5, spread: 1.2 });
+    for (let i = 0; i < 4; i++) stander(g.x0 + 8 + rng.next() * (g.x1 - g.x0 - 16), 38, g.z0 + 8 + rng.next() * (g.z1 - g.z0 - 16), rng.next() * 6.28, 'L3', { rich: true, umbrella: 0 });
+    { /* a couple talking under the trees */ const cx = g.x0 + 10 + rng.next() * (g.x1 - g.x0 - 20), cz = g.z0 + 10 + rng.next() * (g.z1 - g.z0 - 20); for (let k = 0; k < 3; k++) { const a = k * 2.1 + 0.4; stander(cx + Math.cos(a) * 0.9, 38, cz + Math.sin(a) * 0.9, a + Math.PI, 'L3', { rich: true, umbrella: 0, talk: k !== 1, mood: 'smile' }); } }
   }
   { const L = addLane(156, -30, 202, -30, 38, 'L3'); for (let i = 0; i < 4; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { rich: true, speedMul: 0.7, umbrella: 0, spread: 3 }); }
 
