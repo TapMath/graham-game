@@ -29,6 +29,7 @@ import { AdScreens, Rain, Searchlights, DiyaFlicker } from './fx.js';
 import { Labels } from './labels.js';
 import { GateSystem } from './gates.js';
 import { Sunlight } from './sunlight.js';
+import { Guidance } from './guidance.js';
 import { Sea } from './sea.js';
 import { buildRail, reserveRailCorridor } from './rail.js';
 
@@ -135,6 +136,9 @@ export class CitySystem {
     world.solarLamps = this.sun.lamps;
     world.isNearSolarLamp = (p) => !!this.sun.lampNear(p);
     this._buildSolarLamps(game, map);
+    // Phase 8A: sunlight guidance (beacons through the smog, painted arrows and signs on the ways up); needs the colliders, so it comes last
+    this.guidance = new Guidance(game, map, ctx); this.guidance.build();
+    world.guidance = this.guidance; world.upRoutes = this.guidance.routes;
     world.gates = this.gates.gates;
     world.gate = (id) => this.gates.get(id);
     world.lifts = game.lifts.lifts;
@@ -160,7 +164,7 @@ export class CitySystem {
       level: g.player.level, hour: +g.sky.hour.toFixed(2), phase: g.sky.phase,
       inSun: world.isInSunlight(g.player.pos), nearSolarLamp: world.isNearSolarLamp(g.player.pos), shaftIntensity: +world.sunShafts.intensity.toFixed(2),
       gates: this.gates.snapshot(), focus: g.interactables?.focus ? { id: g.interactables.focus.id, prompt: g.interactables.focus.promptText } : null,
-      inSea: world.inSea(g.player.pos), stats: world.stats,
+      inSea: world.inSea(g.player.pos), stats: world.stats, guidance: this.guidance.stats,
     }));
     world.validatePOIs = () => this.validatePOIs();
     game.debug?.addAction('validatePOIs', () => this.validatePOIs());
@@ -419,6 +423,7 @@ export class CitySystem {
   update(dt, game) {
     this.gates.update(dt);
     this.sun.update(dt);
+    this.guidance.update(dt);
     this.sea.update(dt);
     const fx = this.fx;
     fx.ads.update(dt); fx.rain.update(dt); fx.searchlights.update(dt); fx.diyaFlicker.update(dt);

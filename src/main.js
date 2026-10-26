@@ -47,6 +47,7 @@ import { ScreenFxSystem } from './ui/screenfx.js';
 import { HudSystem } from './ui/hud.js';
 import { OverlaySystem, startTitleScene } from './ui/overlay.js';
 import { SettingsSystem, applyBootParams } from './ui/settings.js';
+import { MapSystem } from './ui/map.js';
 import { TouchSystem } from './ui/touch.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
@@ -109,6 +110,7 @@ function boot() {
   game.addSystem('pa', guarded(new PASystem(), 'pa'));
   game.addSystem('settings', new SettingsSystem());           // after audio and the PA: it applies the stored settings to them in init
   game.addSystem('hud', new HudSystem());
+  if (!params.arena) game.addSystem('map', guarded(new MapSystem(), 'map'));          // Phase 8A: the minimap, the full map (M) and the warmth cue (after the HUD: it mounts into it)
   // Phase 6a story layer: the cast and the objective chain. After the HUD (the items row and the optional objectives mount into its DOM);
   // `party` is last of them so its sighted-rendering override of the fog lands after the senses grade.
   game.addSystem('voices', new VoiceSystem());                    // per-character speech (before the cards that use it)

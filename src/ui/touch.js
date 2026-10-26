@@ -19,6 +19,7 @@ const ICON = {
   swap: '<svg viewBox="0 0 24 24"><path d="M4 8 H19 M15 4 L19 8 L15 12 M20 16 H5 M9 12 L5 16 L9 20"/></svg>',
   view: '<svg viewBox="0 0 24 24"><path d="M2.5 12 C6 6 18 6 21.5 12 C18 18 6 18 2.5 12 Z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path d="M8 5 V19 M16 5 V19"/></svg>',
+  map: '<svg viewBox="0 0 24 24"><path d="M3.5 6.5 L9 4.5 L15 6.5 L20.5 4.5 V17.5 L15 19.5 L9 17.5 L3.5 19.5 Z M9 4.5 V17.5 M15 6.5 V19.5"/></svg>',
 };
 const BUTTONS = [
   { id: 'jump', code: 'Space', icon: ICON.jump, key: '', label: 'Jump' },
@@ -47,6 +48,7 @@ export class TouchSystem {
       `<div id="t-stick" hidden><i class="ring"></i><i class="edge"></i><i class="knob"></i></div>` +
       `<div class="t-btns">${BUTTONS.map((b) => `<button type="button" class="t-btn t-${b.id}" data-code="${b.code}" aria-label="${b.label}"><span class="ic">${b.icon}</span>${b.key ? `<b>${b.key}</b>` : ''}</button>`).join('')}</div>` +
       `<button type="button" id="t-pause" aria-label="Pause">${ICON.pause}</button>` +
+      `<button type="button" id="t-map" aria-label="City map">${ICON.map}</button>` +
       `<button type="button" id="t-skip">Skip</button>`;
     document.body.appendChild(root);
     this.stickEl = root.querySelector('#t-stick'); this.knobEl = this.stickEl.querySelector('.knob'); this.ghostEl = root.querySelector('#t-ghost');
@@ -60,13 +62,14 @@ export class TouchSystem {
     root.addEventListener('contextmenu', (e) => e.preventDefault());
     for (const b of root.querySelectorAll('.t-btn')) this._wireButton(b);
     root.querySelector('#t-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); game.menu?.pause(); });
+    root.querySelector('#t-map').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); game.map?.open(); });
     root.querySelector('#t-skip').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); game.input.tap('Enter', 90); });
 
     // no page scroll or pinch zoom on the game surface; the menus and cards that scroll opt in
     document.addEventListener('gesturestart', (e) => e.preventDefault());
     document.addEventListener('touchmove', (e) => {
       if (!this.enabled) return;
-      if (e.target.closest?.('.panel-scroll, .cv-card, .fr-paper, #ending, .set-body, .htp-grid, #dialog')) return;
+      if (e.target.closest?.('.panel-scroll, .cv-card, .fr-paper, #ending, .set-body, .htp-grid, #dialog, .fm-side, .fm-sheet')) return;
       if (e.cancelable) e.preventDefault();
     }, { passive: false });
     document.addEventListener('dblclick', (e) => { if (this.enabled) e.preventDefault(); });
