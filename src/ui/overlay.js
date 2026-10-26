@@ -71,7 +71,7 @@ export class OverlaySystem {
     this._dirty = 3;
     game.render = () => {
       if (this.titleActive) return;
-      if (game.mode === 'paused' && this.visible && this._dirty <= 0) return;
+      if (game.mode === 'paused' && (this.visible || game.map?.isOpen) && this._dirty <= 0) return;   // the full map is a sheet over the frozen frame
       this._dirty--;
       render();
     };
@@ -175,6 +175,7 @@ export class OverlaySystem {
     const g = this.game, mode = g.mode;
     this._dirty = 3;
     if (mode === 'playing' || mode === 'ending') { this._hide(); return; }
+    if (mode === 'paused' && g.map?.isOpen) { this._hide(); return; }                  // the full map (src/ui/map.js) pauses the game without the pause card
     if (mode === 'paused') { if (!this.visible || this.screen === null || this.origin !== 'pause') this._show('pause', 'pause'); return; }
     // menu
     if (g.params.autostart && !this.begun) { this._hide(); return; }

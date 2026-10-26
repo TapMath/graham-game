@@ -23,6 +23,7 @@
 //                                        applies from the NEXT run; ?minutes=N in the URL always wins.
 //   reduceFlash                          tones glitches, flashes and visions down (body.reduce-flash in the stylesheet, and
 //                                        screenfx.glitch becomes a no-op). Defaults to on when the OS asks for reduced motion.
+//   minimap                              the local map in the corner of the HUD (src/ui/map.js; on by default)
 //   viewDefault                          'first' | 'third': game.view.set() when a run begins
 //
 // Phase 7b: read `game.settings?.get?.('key')` with a default; nothing here is required to exist.
@@ -48,6 +49,7 @@ export const DEFS = {
   volMusic: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.5, label: 'Music', fmt: 'pct' },
   volSfx: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.95, label: 'Sound effects', fmt: 'pct' },
   volVoice: { group: 'sound', type: 'range', min: 0, max: 1, step: 0.05, def: 0.95, label: 'Voices and singing', fmt: 'pct' },
+  speech: { group: 'sound', type: 'toggle', def: true, label: 'Character voices', hint: 'The people you meet speak their lines. The words always appear on screen.' },
   paVoice: { group: 'sound', type: 'toggle', def: true, label: 'PA announcer voice', hint: 'The municipal voice. The words always appear on screen.' },
   captions: { group: 'sound', type: 'toggle', def: true, label: 'Captions for sounds', hint: '[ A dog barks ] lines in the feed.' },
   mouseSens: { group: 'controls', type: 'range', min: 0.4, max: 2.5, step: 0.05, def: 1, label: 'Mouse sensitivity', fmt: 'x' },
@@ -55,6 +57,7 @@ export const DEFS = {
   invertY: { group: 'controls', type: 'toggle', def: false, label: 'Invert Y axis' },
   fov: { group: 'display', type: 'range', min: 60, max: 100, step: 1, def: 75, label: 'Field of view', fmt: 'deg' },
   quality: { group: 'display', type: 'choice', options: [['low', 'Low'], ['medium', 'Medium'], ['high', 'High']], def: 'high', label: 'Graphics quality', hint: 'Resolution and draw distance.' },
+  minimap: { group: 'display', type: 'toggle', def: true, label: 'Minimap', hint: 'A small map of the level you are on, turning with your view. M opens the full map.' },
   reduceFlash: { group: 'display', type: 'toggle', def: false, label: 'Reduce flashing', hint: 'Tones down glitches, flashes and visions.' },
   viewDefault: { group: 'display', type: 'choice', options: [['first', 'First person'], ['third', 'Third person']], def: 'first', label: 'Default view', hint: 'V switches in game.' },
   runMinutes: { group: 'run', type: 'choice', options: [[24, '24 min'], ['standard', `${Math.round(DEFAULT_MINUTES)} min`], [45, '45 min'], [60, '60 min']], def: 'standard', label: 'Run length', hint: 'Real minutes from first light to the flood. Applies to the next run.' },
@@ -192,6 +195,7 @@ export class SettingsSystem {
         case 'invertY': g.input.invertY = !!v; break;
         case 'fov': this.applyCamera(); break;
         case 'quality': this.applyQuality(); break;
+        case 'minimap': g.map?.setMinimap?.(!!v); break;
         case 'reduceFlash': document.body.classList.toggle('reduce-flash', !!v); break;
         case 'viewDefault': if (g.mode === 'menu') this._applyViewDefault(); break;
         case 'runMinutes': break;                       // read at the next boot (applyBootParams)

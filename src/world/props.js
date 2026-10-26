@@ -171,7 +171,7 @@ export function scatterStreets(ctx) {
       const lane = rnd.pick(lanes);
       const x = alongX ? d.x0 + t : d.x0 + lane, z = alongX ? d.z0 + lane : d.z0 + t;
       if (d.id === 'road-h' && ((x > 62 && x < 94) || (x > 122 && x < 150))) continue;   // keep the lift lobbies' side lanes clear
-      if (!prop(ctx, 'car', { x, y: d.y, z, yaw: alongX ? Math.PI / 2 : 0, sy: 1.65, color: rnd.pick(CAR_COLORS) }, { tag: 'vehicle' })) continue;
+      // Phase 8B: the cars on the flyovers are now moving traffic (src/systems/crowds), not parked props; the jersey barriers stay
       if (rnd() < 0.2) prop(ctx, 'cube', { x: alongX ? x + 4 : x, y: d.y, z: alongX ? z : z + 4, sx: alongX ? 2.2 : 0.7, sy: 0.9, sz: alongX ? 0.7 : 2.2, color: 0x8a8a80 }, { tag: 'barrier', walkable: true });
     }
   }
@@ -401,6 +401,7 @@ export function buildLandmarks(ctx) {
           b.instance('pool', { x: lx, y: -8 + 0.03, z: lz, sx: 12, sz: 12, color: 0x3a6a62 });
         }
       } else {
+        b.box([x - 0.025, -3.1, z - 0.025], [x + 0.025, -2.0, z + 0.025], { color: 0x2a2f30, ...vis });          // a cable up to the ceiling (the lamp hung in mid-air)
         b.instance('cube', { x, y: -3.1, z, sx: 0.5, sy: 0.18, sz: 0.5, color: 0x2a2f30 });
         b.instance('glow', { x, y: -3.32, z, sx: 0.36, sy: 0.2, sz: 0.36, color: 0xffa040 });
         b.instance('pool', { x, y: -8 + 0.03, z, sx: 8, sz: 8, color: 0x7a5018 });
@@ -432,6 +433,7 @@ export function buildLandmarks(ctx) {
   }
   for (let i = 0; i < 6; i++) prop(ctx, 'cube', { x: -134 + rnd() * 34, y: -8, z: -49 + rnd() * 22, yaw: rnd() * 3, sx: 1, sy: 0.9, sz: 1, color: 0x5a5440 }, { tag: 'crate', walkable: true });
   for (const [x, z] of [[-104, -34], [-120, -48], [-132, -28], [-112, -28], [-100, -46]]) {
+    b.box([x - 0.025, -3.0, z - 0.025], [x + 0.025, -2.0, z + 0.025], { color: 0x2a2f30, ...vis });
     b.instance('glow', { x, y: -3.3, z, sx: 0.45, sy: 0.3, sz: 0.45, color: 0xffa040 });
     b.instance('pool', { x, y: -8 + 0.03, z, sx: 10, sz: 10, color: 0x7a5018 });
   }

@@ -18,6 +18,8 @@ It is based on *Grahan (Children of the Sun)*, a story by Sarat T. Rao, and a co
 - **Listen for the mouth organ.** Setu plays it when you sing and now and then on his own. Gold rings show where it comes from, even through walls.
 - **Tab** swaps between Mithi and Jeetu once he joins you. Jeetu can read signs and documents, climb, and carry a torch. He cannot sing.
 - **V** switches between first and third person.
+- **The map.** A round minimap in the corner turns with your view and shows the level you are on: streets, decks, stairs, ramps and lifts (with their battery), gates and their ray thresholds, the Harbour Line with the next train, and the **sunlight patches active right now**. **M** opens the full city map: a transit sheet of the slice of Mumbai (Dharavi, Sion Junction, King's Circle, New Wadala, Sewri, Atal Setu, Mahim Bay, the Mithi River), one tab per level, with the lifts, gates, trains, sunlight (and when it returns), places you have found and a "you are here".
+- **Finding the light.** Mithi feels the sun on her skin: a soft glow on the edge of the screen points the way to the nearest sunlight you can reach (the same level, or the nearest stairs or lift up), and grows as you near it. Pale columns of light stand out of the smog from afar, and painted arrows and **धूप ↑ SUN ↑** signs mark the ways up.
 - **The clock and the flood.** Time runs from before dawn to dawn the next day, in real time (about 30 minutes by default). Something is wrong with the water below. Once you know, a flood timer appears.
 - **D-shots** are illegal health jabs from black-market sellers. Each one has a different price in time and a different risk.
 
@@ -35,13 +37,14 @@ The in-game "How to play" screen has the same cards with pictograms.
 | Sing / second sight | `Q` (hold 2 s) | Q button (hold) |
 | Switch character | `Tab` | switch button (after Jeetu joins) |
 | Third person | `V` | V button |
+| Map (full city map, pauses the game) | `M` (`Esc` or `M` closes it; `1`-`5` or the arrows change level; `+` `-` zoom; `C` centres on you) | tap the little map, or the map button when the minimap is off |
 | Pause | `Esc` | pause button |
 
 Conversation answers and cards are clickable and tappable. The touch layer appears on touch devices (or after the first touch).
 
 ### Settings
 
-Pause menu or title screen, saved in `localStorage`: master, music, effects and voice volume; PA voice; captions for sounds; mouse and touch sensitivity; invert Y; field of view; quality (resolution and draw distance); reduce flashing (also on by default when the OS asks for reduced motion); default view; run length (24, 30, 45 or 60 minutes, applied on the next run).
+Pause menu or title screen, saved in `localStorage`: master, music, effects and voice volume; PA voice; captions for sounds; mouse and touch sensitivity; invert Y; field of view; quality (resolution and draw distance); reduce flashing (also on by default when the OS asks for reduced motion); the minimap (on or off); default view; run length (24, 30, 45 or 60 minutes, applied on the next run).
 
 ## Run it locally
 
@@ -78,11 +81,14 @@ src/main.js           boot, system registration, the fixed-step loop
 src/game.js           the shared Game object (scene, camera, events, rng, systems, modes)
 src/debug.js          the debug / test API (window.__grahan with ?debug=1)
 src/core/             events, rng, params, input (keyboard, mouse, pointer lock, touch), physics, player
-src/world/            the city as data (map.js) and everything that builds it: structures, props, sky, sea, lifts, gates, sunlight, fx
+src/world/            the city as data (map.js) and everything that builds it: structures, props, rail (the Harbour Line's tracks, platforms, fence), sky, sea,
+                      lifts (multi-stop, solar battery), gates, sunlight, fx
 src/characters/       procedural low-poly people
 src/systems/          clock, health, Setu, vendors, hazards/, audio/ (a procedural Web Audio engine), senses/ (sing, ripples,
-                      visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings
-src/ui/               HUD, messages, dialogs, screen effects, title screen, pause menu, settings, how to play, touch controls
+                      visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings,
+                      transit/ (the Harbour Line trains), crowds/ (instanced pedestrians and traffic), lifts/ (floor panels and charge)
+src/ui/               HUD, messages, dialogs, screen effects, title screen, pause menu, settings, how to play, touch controls, the minimap, the full map and the warmth cue
+                      (map.js, minimap.js, fullmap.js, maprender.js, mapdata.js, warmth.js)
 src/styles.css        the whole stylesheet (OK Computer language: pale blue-white thin type, safety-card pictograms, scrawls)
 tools/smoke.mjs       headless test runner (Playwright)  tools/shots*.json  screenshot tours with assertions
 tools/audio-check.mjs offline render of every synthesised sound
@@ -111,7 +117,7 @@ Playwright is found through `NODE_PATH` or the global npm root.
 | `--no-autostart` | open without `autostart=1`, so the title screen shows |
 | `--mobile` | phone emulation (touch, 844x390; `--orientation portrait` for 390x844, or `--viewport WxH`) |
 
-The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
+The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase8b.json` (Mumbai signage, the Harbour Line, crowds, lifts and the draw-call worst case; built by `tools/build-phase8b.mjs`), `shots-phase8a.json` (the minimap and the full map on every level and on phone-sized screens, the warmth cue and its bearing, sun beacons, painted arrows and signs, the minimap setting; built by `tools/build-phase8a.mjs`) and `shots-phase8a-mobile.json` (real touch: tapping the minimap, the tabs, zoom and pan; run with `--mobile --query "seed=1&touch=1"`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
 
 `node tools/audio-check.mjs` renders every synthesised sound offline and flags silence, NaN and clipping (`--wav dir` writes WAV files to listen to).
 

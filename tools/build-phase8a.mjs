@@ -1,0 +1,311 @@
+// Builds tools/shots-phase8a.json (desktop, with phone-sized viewports for the full map) and tools/shots-phase8a-mobile.json (real touch, run
+// with --mobile), the Phase 8A tours: the minimap on every level, at a station with a train arriving and near a lift; the full map on every
+// tab (desktop, landscape phone, portrait phone); the warmth cue and its bearing; the sun beacons; the painted arrows and signs; the
+// minimap setting; the stray panel at the boring site. Every step asserts with ok(); a failed assertion throws and fails the run.
+//
+//   node tools/build-phase8a.mjs
+//   node tools/smoke.mjs --shots tools/shots-phase8a.json --wait 2500 --query seed=1
+//   node tools/smoke.mjs --mobile --query "seed=1&touch=1" --shots tools/shots-phase8a-mobile.json --wait 2500            (landscape)
+//   node tools/smoke.mjs --mobile --orientation portrait --query "seed=1&touch=1" --shots tools/shots-phase8a-mobile.json --wait 2500
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const PRE = `const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));
+const M=()=>A.state().map; const R1=(v)=>Math.round(v*10)/10;
+/* the bearing of (x,z) from the player, relative to where the view faces, clockwise in degrees (0 = ahead, 90 = on the right) */
+const rel=(x,z)=>{ const s=A.state(), y=s.yaw*Math.PI/180, dx=x-s.pos.x, dz=z-s.pos.z; const sx=dx*Math.cos(y)-dz*Math.sin(y), sy=dx*Math.sin(y)+dz*Math.cos(y); return Math.atan2(sx,-sy)*180/Math.PI; };
+const angDiff=(a,b)=>{ let d=a-b; while(d>180)d-=360; while(d<-180)d+=360; return Math.abs(d); };
+const nearestShaft=()=>{ const s=A.state(); let b=null,bd=1e9; for(const h of G.world.sunShafts){ if(h.level!==s.level) continue; const d=Math.max(0,Math.hypot(h.x-s.pos.x,h.z-s.pos.z)-h.r); if(d<bd){bd=d;b=h;} } return b&&{id:b.id,x:b.x,z:b.z,dist:bd}; };
+const settle=()=>{ A.step(0.4); };`;
+const step = (name, code, wait = 700, extra = {}) => ({ name, wait, ...extra, eval: `(async()=>{${PRE}${code.trim().replace(/\n\s*/g, ' ')}})()` });
+const plain = (name, wait = 700, extra = {}) => ({ name, wait, ...extra });
+
+// ---------------------------------------------------------------------------------------------------------------------------- desktop
+export const desktop = [
+  step('setup', `
+    A.set('manual', true); A.set('invulnerable', true); A.set('hazards', false); A.setTime(10); A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1);
+    const m = M();
+    ok(m.minimap === true && m.minimapShown === true, 'the minimap is on by default and showing: ' + JSON.stringify([m.minimap, m.minimapShown]));
+    ok(m.size[0] >= 150, 'the minimap has a size: ' + m.size);
+    const gs = G.world.guidance.stats;
+    ok(gs.beacons === G.world.sunShafts.length && gs.arrows >= 40 && gs.signs >= 15, 'beacons, arrows and signs were placed: ' + JSON.stringify(gs));
+    const bad = A.do('validatePOIs'); ok(bad.length === 0, 'POIs stand on walkable ground: ' + JSON.stringify(bad));
+    return { guidance: gs, map: m.mini, routes: G.world.upRoutes.length };`, 1200),
+
+  // ---- the minimap at G, L1, U, L3, a station with a train arriving, and near a lift
+  step('mini-g-spawn', `
+    A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1);
+    const m = M(); ok(m.level === 'G' && m.minimapShown, 'minimap on G');
+    ok(m.mini.cacheBuilds >= 1 && m.mini.redraws >= 1, 'it was drawn: ' + JSON.stringify(m.mini));
+    const c = G.map.collect('G'); ok(c.objectives.length >= 1 && c.objectives.some((o) => o.label === 'the old man'), 'the first objective (the old man) is marked: ' + JSON.stringify(c.objectives.map((o) => o.label)));
+    ok(!c.party.length, 'nobody is with her yet');
+    return { level: m.level, objectives: c.objectives.map((o) => o.label), sun: c.sun.length };`, 1300),
+  step('mini-g-street-dharavi', `A.teleport(-95, 0, -62, 20); A.look(20, 0); A.step(1); return { level: M().level, redraw: M().mini.redraws };`, 1100),
+  step('mini-l1-bazaar', `
+    A.teleport(10, 12, -25, -20); A.look(-20, 0); A.step(1);
+    const c = G.map.collect('L1'); ok(M().level === 'L1', 'on L1');
+    ok(c.lifts.some((l) => l.id === 'lift-12-bazaar') && c.lifts.some((l) => l.id === 'lift-g1-skywalk'), 'the lifts of the bazaar are on the map: ' + c.lifts.map((l) => l.id));
+    ok(c.sun.length >= 2, 'sunlight patches on L1 are marked: ' + c.sun.length);
+    return { lifts: c.lifts.map((l) => [l.id, l.chargePct]), sun: c.sun.map((s) => s.id) };`, 1300),
+  step('mini-u-metro', `
+    A.teleport(45, -8, -30, 0); A.look(180, 0); A.step(1);
+    const m = M(); ok(m.level === 'U', 'underground'); ok(G.map.collect('U').sun.length === 0, 'no sunlight is marked underground');
+    ok(m.warmth && m.warmth.kind === 'route' && m.warmth.to === 'G', 'underground the warmth points to a way up: ' + JSON.stringify(m.warmth));
+    return m.warmth;`, 1300),
+  step('mini-l3-decks', `
+    A.teleport(100, 38, -90, 90); A.look(90, 0); A.step(1);
+    const m = M(); ok(m.level === 'L3', 'on L3'); const c = G.map.collect('L3');
+    ok(c.sun.length >= 5, 'the garden shafts are marked: ' + c.sun.length);
+    return { sun: c.sun.length, warmth: m.warmth };`, 1300),
+  step('mini-station-train-arriving', `
+    A.setTime(10); A.teleport(-45, 0.5, -67.6, 0); A.look(-90, 0); A.step(1);
+    const w = A.do('transitWait', 'sion', 'east', 300); ok(w, 'a train stands at Sion');
+    const t = G.transit.trains.find((x) => x.id === w.train);
+    A.step(0.5);
+    const c = G.map.collect('G'); ok(c.trains.length >= 1, 'live trains are on the map: ' + c.trains.length);
+    ok(c.eta && /SION/.test(c.eta), 'the next-train caption names the station: ' + c.eta);
+    return { eta: c.eta, trains: c.trains.map((x) => [x.id, Math.round(x.x), x.state]) };`, 1400),
+  step('mini-near-lift', `
+    A.teleport(15, 0, 6, -90); A.look(-90, 0); A.step(1);
+    const c = G.map.collect('G'); ok(c.lifts.some((l) => l.id === 'lift-g1-skywalk'), 'the skywalk lift near (20, 0) is on the map');
+    A.do('liftSetCharge', 'lift-g1-skywalk', 24); A.step(0.3);
+    const l = G.map.collect('G').lifts.find((x) => x.id === 'lift-g1-skywalk'); ok(l.chargePct <= 26, 'its charge shows: ' + l.chargePct);
+    return { lift: [l.id, l.chargePct, l.panel], gates: 'none here' };`, 1300),
+  step('mini-gate-threshold', `
+    A.teleport(-1, 12, 38, 0); A.look(0, 0); A.step(1);
+    ok(M().level === 'L1', 'on L1 under the EEH stairs');
+    const gates = G.world.gates.filter((g) => Math.hypot(g.x + 1, g.z - 43.5) < 5); ok(gates.length === 1 && gates[0].min === 5, 'the gate with its threshold of 5 is right there');
+    return { gate: gates[0].id, min: gates[0].min };`, 1300),
+
+  // ---- people with her, Setu's last lead (never his real position), found fragments, places learned
+  step('mini-party-and-leads', `
+    A.teleport(-58, 0, 86, 180); A.look(180, 0); A.step(1);
+    A.do('jeetuJoin'); A.step(0.5);
+    let c = G.map.collect('G'); ok(c.party.some((p) => p.tag === 'J'), 'Jeetu shows once he has joined');
+    ok(!c.party.some((p) => p.tag === 'S'), 'Setu does not show while he has not been found');
+    ok(c.lead === null, 'no lead yet');
+    /* someone at the wrecked lift said "west": the map keeps the LAST LEAD (a faint ?), whatever the truth is by now */
+    G.events.emit('story:learn', { topic: 'setu', who: 'test', stage: 0, lead: 'liftWreck' }); A.step(0.2);
+    c = G.map.collect('U'); ok(c.lead && c.lead.id === 'liftWreck' && c.lead.level === 'U', 'the lead marks the lift wreck on U: ' + JSON.stringify(c.lead));
+    const real = { x: G.setu.pos.x, z: G.setu.pos.z };
+    ok(Math.hypot(c.lead.x - real.x, c.lead.z - real.z) > 30, 'it is a stale lead, not his live position (he is at ' + G.setu.windowId + ')');
+    for (const l of ['U', 'G', 'L1', 'L2', 'L3']) ok(!G.map.collect(l).party.some((p) => p.tag === 'S'), 'Setu never shows on ' + l + ' while unfound');
+    G.events.emit('trail:points', { id: 'liftWreck', to: 'catacombs', x: -97.5, y: -8, z: 12 }); A.step(0.2);
+    ok(G.map.lead.id === 'catacombs', 'a trail clue moves the lead on: ' + G.map.lead.id);
+    return { lead: G.map.lead, party: G.map.collect('G').party.map((p) => p.tag), setuAt: G.setu.windowId };`, 1400),
+  step('mini-following-and-fragments', `
+    A.do('setuFind'); A.step(0.5);
+    let c = G.map.collect('G'); ok(G.setu.following && c.party.some((p) => p.tag === 'S'), 'once found and following, Setu is on the map');
+    ok(G.map.collect('G').lead === null, 'and the lead is dropped');
+    G.fragments.found.add('frag-phone-rubble'); G.fragments.found.add('frag-memo-site'); A.step(0.2);
+    ok(G.map.collect('G').fragments.length === 2, 'the two fragments found are marked: ' + G.map.collect('G').fragments.length);
+    ok(G.map.collect('U').fragments.length === 0, 'only on their own level');
+    return { party: c.party.map((p) => p.tag), fragments: G.map.collect('G').fragments.map((f) => f.id) };`, 1300),
+  step('places-are-discovered', `
+    ok(G.map.discovered.has('hospital') && G.map.discovered.has('police') && G.map.discovered.has('metro'), 'Sion Hospital, the police station and the Metro are on the sheet from the start');
+    ok(!G.map.discovered.has('control'), 'the Control Tower is not known yet');
+    A.teleport(142, 38, -86, 0); A.look(0, 0); A.step(1);
+    ok(G.map.discovered.has('control'), 'standing under the MMRDA Control Tower finds it');
+    ok(G.map.discovered.has('dharavi') && G.map.discovered.has('mahim-bay') && G.map.discovered.has('st-sion'), 'districts, water and stations are known from the start');
+    return [...G.map.discovered].filter((id) => !/^st-/.test(id));`, 1000),
+
+  // ---- the warmth cue: it must point to the nearest reachable light
+  step('warmth-points-to-the-nearest-shaft', `
+    A.set('rays', 6); A.teleport(-70, 0, -10, 0);
+    const yaws = [0, 90, 180, -90, 35];
+    const out = [];
+    for (const y of yaws) {
+      A.look(y, 0); A.step(0.3);
+      const w = M().warmth, n = nearestShaft();
+      ok(w && w.kind === 'shaft', 'a shaft on this level is the target: ' + JSON.stringify(w));
+      ok(w.id === n.id, 'the nearest shaft is the target: ' + w.id + ' vs ' + n.id);
+      const e = rel(n.x, n.z);
+      ok(angDiff(w.bearingDeg, e) < 1.6, 'bearing ' + w.bearingDeg + ' matches the geometry ' + R1(e) + ' at yaw ' + y);
+      out.push([y, w.bearingDeg, R1(e)]);
+    }
+    return { target: nearestShaft(), checks: out };`, 1100),
+  step('warmth-grows-as-you-near', `
+    A.set('rays', 6);
+    const at = (z) => { A.teleport(25, 0, z, 0); A.look(0, 0); A.step(0.4); return M().warmth; };
+    at(-90);                                  /* the cue sticks to its last target unless another is clearly nearer: start beside the clover shaft */
+    const far = at(-35), mid = at(-80), near = at(-95);
+    ok(far.id === 'sh-g-clover' && mid.id === 'sh-g-clover' && near.id === 'sh-g-clover', 'the same shaft all the way: ' + [far.id, mid.id, near.id]);
+    ok(far.strength < mid.strength && mid.strength < near.strength, 'stronger as you get closer: ' + [far.strength, mid.strength, near.strength]);
+    ok(near.alpha > far.alpha, 'and brighter on screen: ' + [far.alpha, near.alpha]);
+    ok(Math.abs(near.bearingDeg) < 4 && Math.abs(far.bearingDeg) < 4, 'with the light straight ahead the glow sits at the top: ' + [far.bearingDeg, near.bearingDeg]);
+    return { far, mid, near };`, 1200),
+  step('warmth-quiet-in-the-light', `
+    const sh = G.world.sunShafts.find((s) => s.id === 'sh-g-rubble'); A.teleport(sh.x, 0, sh.z, 0); A.step(0.5);
+    ok(G.world.isInSunlight(A.state().pos), 'standing in the shaft'); const w = M().warmth;
+    ok(w.alpha === 0 && w.inSun, 'no cue while she stands in the light: ' + JSON.stringify(w));
+    return w;`, 1000),
+  step('warmth-routes-underground-and-at-night', `
+    A.set('rays', 5); A.teleport(0, -8, -40, 0); A.step(0.4); const u = M().warmth;
+    ok(u.kind === 'route' && u.to === 'G', 'underground: the nearest way up: ' + JSON.stringify(u));
+    const route = G.world.upRoutes.filter((r) => r.from === 'U').map((r) => [r.id, Math.hypot(r.x - 0, r.z + 40)]).sort((a, b) => a[1] - b[1])[0];
+    ok(u.id === route[0], 'the nearest stairs or ramp up is the target: ' + u.id + ' vs ' + route[0]);
+    ok(angDiff(u.bearingDeg, rel(u.x, u.z)) < 1.6, 'bearing is right: ' + u.bearingDeg + ' vs ' + R1(rel(u.x, u.z)));
+    A.setTime(23); A.step(0.3);
+    A.teleport(-20, 0, 20, 0); A.look(0, 0); A.step(0.4); const g = M().warmth;
+    ok(g.kind === 'route', 'at night the street has no light: the cue points to a way up (' + g.id + ')');
+    A.teleport(100, 38, -90, 90); A.look(90, 0); A.step(0.4); const l3 = M().warmth;
+    ok(M().level === 'L3' && l3.kind === 'lamp', 'on the Upper Decks at night the solar lamps glow: ' + JSON.stringify(l3));
+    A.setTime(10); A.step(0.3);
+    return { u, g, l3 };`, 1200),
+  step('warmth-hint-when-rays-run-low', `
+    G.flags.warmthHint = false; A.set('rays', 6); A.teleport(-70, 0, -10, 0); A.look(0, 0); A.step(0.5);
+    ok(!G.flags.warmthHint, 'no hint at 6 rays'); A.set('rays', 3); A.step(0.5);
+    ok(G.flags.warmthHint === true, 'the hint fires when the rays drop low');
+    const feed = document.querySelector('.hud-feed').textContent; ok(/Warmth, up there\\. Find the light\\./.test(feed), 'the line is on screen: ' + feed.slice(0, 120));
+    return { rays: A.state().rays, warmth: M().warmth };`, 1500),
+
+  step('jeetu-points-out-the-light', `
+    ok(G.party.jeetu && G.party.active === 'mithi', 'Jeetu is with her'); G.map._jeetuAt = -999; A.set('rays', 3); A.teleport(-70, 0, -10, 0); A.look(0, 0); A.step(0.6);
+    const feed = document.querySelector('.hud-feed').textContent; ok(/Jeetu: "Didi! Sunlight, /.test(feed), 'with her rays low and Jeetu beside her he points out the nearest light: ' + feed.slice(-160));
+    return { feed: feed.slice(-120) };`, 1200),
+
+  // ---- sun beacons from afar
+  step('beacon-uniforms-follow-the-rays-and-the-day', `
+    const gd = G.world.guidance; A.setTime(10); A.set('rays', 12); A.step(1.5); const calm = gd.mat.uniforms.uI.value;
+    A.set('rays', 2); A.step(2.5); const low = gd.mat.uniforms.uI.value;
+    ok(low > calm * 1.3, 'brighter when she is low on rays: ' + [calm, low].map(R1));
+    A.setTime(23); A.step(0.5); ok(gd.mesh.visible === false, 'gone at night');
+    A.setTime(10); A.set('rays', 7); A.step(0.5); ok(gd.mesh.visible, 'back by day');
+    return { calm, low };`, 600),
+  step('beacons-from-the-street', `
+    A.setTime(10); A.set('rays', 4); A.teleport(-44, 0, -30, -90); A.look(-30, 22); A.step(1.2);
+    const bd = A.drawBreakdown(); ok(bd.groups.some((g) => g[0] === 'sun-beacons'), 'the beacon mesh is drawn');
+    return { calls: A.state().render.calls };`, 1400),
+  step('beacons-from-l1', `A.teleport(-95, 12, -18, -90); A.look(-80, 24); A.step(1); return 1;`, 1300),
+  step('beacons-from-l3', `A.teleport(100, 38, -90, 90); A.look(30, 24); A.step(1); return 1;`, 1300),
+
+  // ---- the painted arrows and signs
+  step('arrows-at-the-plaza-stairs', `
+    A.set('rays', 7); A.teleport(-20, 0, 8, 0); A.look(0, -26); A.step(1);
+    const near = G.world.guidance.placed.arrows.filter((a) => Math.hypot(a.x + 20, a.z + 6) < 12); ok(near.length >= 2, 'arrows lead to the plaza stairs: ' + near.length);
+    ok(near.every((a) => Math.abs(Math.sin(a.yaw)) < 0.05 && Math.cos(a.yaw) > 0.9), 'and they point up the stairs (north)');
+    return { arrows: near.map((a) => [a.x, R1(a.z)]) };`, 1300),
+  step('sign-at-the-foot-of-the-stairs', `A.teleport(-20, 0, 6, 0); A.look(8, 8); A.step(1); const s = G.world.guidance.placed.signs.filter((q) => Math.hypot(q.x + 20, q.z + 4) < 10); ok(s.length >= 1, 'a sign stands by the stairs'); return s.length;`, 1300),
+  step('arrows-underground', `A.teleport(45, -8, -36, 0); A.look(180, -24); A.step(1); const s = G.world.guidance.placed.arrows.filter((a) => a.y < -7 && Math.hypot(a.x - 45, a.z + 26) < 14); ok(s.length >= 2, 'arrows lead out of the metro: ' + s.length); return s.length;`, 1300),
+  step('arrows-at-a-lift', `A.teleport(10, 0, 4, -90); A.look(-90, -22); A.step(1); const s = G.world.guidance.placed.arrows.filter((a) => Math.hypot(a.x - 17, a.z) < 8); ok(s.length >= 1, 'arrows by the skywalk lift'); return s.length;`, 1300),
+  step('arrows-at-a-crossroads', `A.teleport(-75, 0, 4, 0); A.look(0, -20); A.step(1); return G.world.guidance.placed.arrows.filter((a) => Math.hypot(a.x + 75, a.z - 0) < 4).length;`, 1300),
+
+  // ---- the full map: every tab, paused (for real: the live loop runs), closed with M
+  step('full-map-prepare', `
+    A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1); A.set('manual', false);
+    const t0 = G.time; for (let i = 0; i < 100 && G.time === t0; i++) await wait(200); ok(G.time > t0, 'the live loop runs before the map opens (' + t0 + ' -> ' + G.time + ')');
+    ok(A.state().mode === 'playing', 'playing'); return 1;`, 300),
+  step('full-map-m-key', `return 1;`, 1200, { key: 'm' }),
+  step('full-map-g', `
+    ok(M().open === true && A.state().mode === 'paused', 'the map is open and the game is paused: ' + JSON.stringify([M().open, A.state().mode]));
+    ok(M().tab === 'G', 'it opens on the level she is on'); ok(A.state().ui.screen === null && document.getElementById('overlay').hidden, 'the pause card does not show');
+    const t = G.time, f0 = G.renderer.info.render.frame; for (let i = 0; i < 100 && G.renderer.info.render.frame < f0 + 2; i++) await wait(200);
+    ok(G.time === t, 'the simulation is frozen while it is open (' + (G.renderer.info.render.frame - f0) + ' frames passed): ' + t + ' vs ' + G.time);
+    const sec = M().full.sections.join('|'); ok(/Sunlight/.test(sec) && /Harbour Line/.test(sec) && /Lifts/.test(sec) && /Places/.test(sec), 'the side notes: ' + sec);
+    const txt = document.querySelector('.fm-side').textContent; ok(/Mahim Jn/.test(txt) && /Sewri/.test(txt), 'stations with their times');
+    ok(document.pointerLockElement === null, 'the pointer is free');
+    return { full: M().full };`, 600),
+  step('full-map-g-zoom-sion', `A.do('mapView', { cx: -45, cz: -48, zoom: 3.3 }); return M().full;`, 1300),
+  step('full-map-g-zoom-wadala', `A.do('mapView', { cx: 90, cz: -62, zoom: 2.6 }); return M().full;`, 1300),
+  step('full-map-l1', `A.do('mapTab', 'L1'); ok(M().full.level === 'L1', 'tab L1'); const txt = document.querySelector('.fm-side').textContent; ok(/Bazaar flyover lift/.test(txt) && /EEH flyover stairs/.test(txt) && /5 rays/.test(txt), 'lifts and gates with their thresholds are listed'); return M().full;`, 1500),
+  step('full-map-l2', `A.do('mapTab', 'L2'); const txt = document.querySelector('.fm-side').textContent; ok(/Upper Decks lift/.test(txt) && /8 rays/.test(txt), 'L2 lists the gates up to L3'); return M().full;`, 1500),
+  step('full-map-l3', `A.do('mapTab', 'L3'); return M().full;`, 1500),
+  step('full-map-u', `A.do('mapTab', 'U'); const txt = document.querySelector('.fm-side').textContent; ok(/No sky reaches this deep/.test(txt), 'the underground says there is no sky'); return M().full;`, 1500),
+  step('full-map-key-3', `ok(M().full.level === 'L1', 'key 3 is L1: ' + M().full.level); return 1;`, 500, { key: '3' }),
+  step('full-map-key-arrow', `ok(M().full.level === 'L2', 'ArrowRight goes up a tab: ' + M().full.level); return 1;`, 500, { key: 'ArrowRight' }),
+  step('full-map-m-closes', `ok(M().open === false && A.state().mode === 'playing', 'M closes it and the game runs again: ' + A.state().mode); const t = G.time; for (let i = 0; i < 100 && G.time === t; i++) await wait(200); ok(G.time > t, 'time moves'); ok(document.getElementById('overlay').hidden, 'no menu'); A.set('manual', true); return 1;`, 600, { key: 'm' }),
+  step('full-map-click-minimap', `ok(M().open, 'a click on the minimap opens it'); return M().full.level;`, 900, { click: '.minimap', force: true }),
+  step('full-map-esc', `ok(!M().open && A.state().mode === 'playing', 'Esc closes it and does not open the pause menu: ' + A.state().mode + ' ' + A.state().ui.screen); return 1;`, 700, { key: 'Escape' }),
+  step('full-map-m-again', `ok(M().open, 'open again'); return 1;`, 700, { key: 'm' }),
+  step('full-map-close-button', `ok(!M().open && A.state().mode === 'playing', 'the close button closes it'); return 1;`, 700, { click: '.fm-close', force: true }),
+  step('full-map-cannot-open-in-a-dialogue', `
+    ok(!M().open, 'closed by the button');
+    G.modal = true; const ok1 = G.map.open(); G.modal = false; ok(ok1 === false && !M().open, 'it does not open while a dialogue or card holds the game');
+    return 1;`, 400),
+
+  // ---- the full map at night (the lamps, and where the light returns) and with a lift run down
+  step('full-map-night-l3', `
+    A.setTime(23); A.step(0.5); A.do('liftSetCharge', 'lift-23-west', 12); A.set('rays', 9);
+    A.teleport(100, 38, -90, 90); A.step(0.5); G.map.open('L3'); const txt = document.querySelector('.fm-side').textContent;
+    ok(/solar lamps/.test(txt) && /dashed rings/.test(txt), 'at night the notes say where the light will return: ' + txt.slice(0, 200));
+    return { full: M().full };`, 1700),
+  step('full-map-night-closes', `G.map.close(); A.setTime(10); A.do('liftSetCharge', 'lift-23-west', 85); A.step(0.3); return A.state().mode;`, 300),
+
+  // ---- phone-sized sheets (the CSS follows the viewport; touch is in the mobile tour)
+  step('full-map-landscape-phone', `A.teleport(10, 12, -25, -20); A.look(-20, 0); A.step(1); G.map.open('L1'); return M().full.size;`, 1700, { viewport: [844, 390] }),
+  step('full-map-landscape-phone-g', `A.do('mapTab', 'G'); return M().full.size;`, 1500),
+  step('full-map-portrait-phone', `G.map.close(); A.step(0.3); G.map.open('L1'); return M().full.size;`, 1700, { viewport: [390, 844] }),
+  step('full-map-portrait-phone-sidebar', `document.querySelector('.fm-body').scrollTop = 520; return document.querySelector('.fm-body').scrollTop;`, 900),
+  step('minimap-portrait-phone', `G.map.close(); A.step(0.5); ok(M().minimapShown, 'minimap on a phone'); return M().size;`, 1400),
+  step('minimap-landscape-phone', `A.step(0.3); return M().size;`, 1200, { viewport: [844, 390] }),
+  step('back-to-desktop', `A.step(0.3); return 1;`, 600, { viewport: [1280, 720] }),
+
+  // ---- the minimap setting
+  step('minimap-toggle-off', `
+    ok(M().minimapShown, 'on'); A.do('menu', 'pause'); await wait(200); A.do('menu', 'open', 'settings'); await wait(400);
+    const row = document.querySelector('.set-row[data-key="minimap"]'); ok(row, 'the settings panel has a Minimap row'); row.scrollIntoView({ block: 'center' }); ok(row.querySelector('.tog').getAttribute('aria-checked') === 'true', 'it is on by default');
+    return { label: row.querySelector('label').textContent };`, 700),
+  step('minimap-toggle-click', `return 1;`, 500, { click: '.set-row[data-key="minimap"] .tog', force: true }),
+  step('minimap-toggle-is-off', `
+    ok(G.settings.get('minimap') === false, 'the setting turned off'); ok(M().minimap === false && M().minimapShown === false, 'and so did the minimap: ' + JSON.stringify([M().minimap, M().minimapShown]));
+    ok(document.querySelector('.minimap').hidden, 'its element is hidden');
+    A.do('menu', 'resume'); await wait(200); A.step(0.5); return A.state().mode;`, 900),
+  step('minimap-off-m-still-opens-the-map', `return 1;`, 500, { key: 'm' }),
+  step('minimap-off-map-open', `ok(M().open, 'M still opens the map with the minimap off'); G.map.close(); A.step(0.2); return M().open;`, 500),
+  step('minimap-toggle-back-on', `G.settings.set('minimap', true); A.step(0.5); ok(M().minimapShown, 'the minimap is back'); const stored = JSON.parse(localStorage.getItem('grahan.settings.v1') || '{}'); ok(stored.minimap === true, 'and stored'); return stored.minimap;`, 900),
+
+  // ---- the stray panel at the boring site
+  step('boring-site-kaalu-front', `A.teleport(-67.5, -8, -54.5, 0); A.look(0, 8); A.step(1); return 1;`, 1300),
+  step('boring-site-kaalu-side', `A.teleport(-72, -8, -56.5, -90); A.look(-90, 6); A.step(1); return 1;`, 1300),
+  step('boring-site-no-floating-panel', `
+    /* every instanced glow near Kaalu is a small caged lamp or a window pane now; nothing pale and large hangs in the air */
+    const T = await import('/vendor/three.module.js'); const m = new T.Matrix4(); const found = []; let lamps = 0;
+    G.scene.updateMatrixWorld(true);
+    G.scene.traverse((o) => { if (!o.isInstancedMesh || o.name !== 'city:inst:glow') return; for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); const e = m.elements; const x = e[12], y = e[13], z = e[14]; if (x > -92 && x < -60 && z > -66 && z < -44 && y > -8 && y < -2.5) { const sx = Math.hypot(e[0], e[1], e[2]), sz = Math.hypot(e[8], e[9], e[10]); if (sx > 1.2 || sz > 1.2) found.push([x, y, z, sx, sz]); else lamps++; } } });
+    ok(found.length === 0, 'no big pale panel left near the boring site: ' + JSON.stringify(found)); ok(lamps >= 7, 'the lamps and windows are there: ' + lamps);
+    return { lamps };`, 900),
+
+  // ---- the budget
+  step('budget-worst-case-viewpoints', `
+    A.set('view', 'third'); A.set('rays', 7);
+    const spots = [[10, 12, -12, 0, 5], [-45, 0.5, -67.6, -90, 4], [-20, 0, 14, 0, 6], [0, 24, -60, -90, 3], [100, 38, -60, 90, 4], [45, -8, 10, 0, 3], [105, 0, -48, 0, 5], [-100, 0, -80, 20, 4], [75, 0, -66, 0, 3], [150, 0, -40, 40, 4]];
+    const out = []; let max = 0;
+    for (const [x, y, z, yaw, pitch] of spots) { A.teleport(x, y, z, yaw); A.look(yaw, pitch); A.step(0.6); const t = A.drawBreakdown().total; max = Math.max(max, t); out.push([x, y, z, t]); }
+    ok(max <= 150, 'worst case under the budget of 150 draw calls: ' + max + ' ' + JSON.stringify(out));
+    A.set('view', 'first');
+    return { max, out };`, 3000),
+  step('budget-bazaar-third-person', `
+    A.set('view', 'third'); A.set('rays', 7); A.teleport(10, 12, -25, -20); A.look(-20, 5); A.step(1.2);
+    const bd = A.drawBreakdown(); ok(bd.total <= 150, 'under the budget of 150 draw calls: ' + bd.total);
+    A.set('view', 'first');
+    return { total: bd.total, rendered: A.state().render.calls, mine: bd.groups.filter((g) => /^sun-/.test(g[0])) };`, 1400),
+];
+
+// ---------------------------------------------------------------------------------------------------------------------------- touch
+export const mobile = [
+  step('setup', `
+    A.set('manual', true); A.set('invulnerable', true); A.set('hazards', false); A.setTime(10); A.teleport(10, 12, -25, -20); A.look(-20, 0); A.step(1);
+    ok(document.body.classList.contains('touch'), 'touch controls on'); ok(M().minimapShown, 'minimap shown'); return { size: M().size, touch: document.body.classList.contains('touch') };`, 1400),
+  step('tap-the-minimap', `return 1;`, 900, { tap: '.minimap' }),
+  step('map-open-by-touch', `ok(M().open && A.state().mode === 'paused', 'a tap on the minimap opens the full map and pauses'); return M().full;`, 1400),
+  ...['U', 'L1', 'L2', 'L3', 'G'].flatMap((l) => [
+    step('tap-tab-' + l.toLowerCase(), `return 1;`, 800, { tap: `.fm-tab[data-level="${l}"]` }),
+    step('tab-' + l.toLowerCase(), `ok(M().full.level === '${l}', 'tapping a tab switches it: ' + M().full.level); const txt = document.querySelector('.fm-side').textContent; ok(txt.length > 100, 'the notes follow'); return M().full;`, 1100),
+  ]),
+  step('tap-zoom-in', `return 1;`, 700, { tap: '.fm-tools [data-z="in"]' }),
+  step('zoomed', `ok(M().full.zoom > 0, 'zoomed'); return M().full;`, 1200),
+  step('pan-by-touch', `return 1;`, 1000, { touch: [{ t: 'start', id: 1, x: 300, y: 220 }, { t: 'move', id: 1, x: 240, y: 190, wait: 60 }, { t: 'move', id: 1, x: 170, y: 160, wait: 60 }, { t: 'end', id: 1 }] }),
+  step('panned', `return M().full;`, 900),
+  step('tap-close', `return 1;`, 800, { tap: '.fm-close' }),
+  step('closed-by-touch', `ok(!M().open && A.state().mode === 'playing', 'the close button resumes: ' + A.state().mode); ok(document.body.classList.contains('touch'), 'still touch'); return A.state().mode;`, 1000),
+  step('minimap-off-then-the-map-button', `G.settings.set('minimap', false); A.step(0.5); ok(!M().minimapShown, 'minimap off'); const b = document.getElementById('t-map'); ok(b && getComputedStyle(b).display !== 'none', 'the touch map button shows when the minimap does not'); return 1;`, 900),
+  step('tap-map-button', `return 1;`, 900, { tap: '#t-map' }),
+  step('map-open-by-button', `ok(M().open, 'the touch button opens the map'); G.map.close(); G.settings.set('minimap', true); A.step(0.3); return 1;`, 900),
+];
+
+fs.writeFileSync(path.join(here, 'shots-phase8a.json'), JSON.stringify(desktop, null, 1));
+fs.writeFileSync(path.join(here, 'shots-phase8a-mobile.json'), JSON.stringify(mobile, null, 1));
+console.log('wrote tools/shots-phase8a.json (' + desktop.length + ' steps) and tools/shots-phase8a-mobile.json (' + mobile.length + ' steps)');
+void plain;

@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>charlab</title>
+<style>html,body{margin:0;background:#222}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from '../vendor/three.module.js';
+import { buildCharacter, MITHI, SETU, NPC_PRESETS, characterMaterial } from '../src/characters/humanoid.js';
+import { SPECS } from '../src/systems/story/cast/roster.js';
+import { faceAtlas } from '../src/characters/face.js';
+window.__atlas = (look, name) => faceAtlas().cell(look, name);
+
+const W = 1280, H = 720;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x3a4046);
+scene.fog = new THREE.Fog(0x3a4046, 18, 60);
+const hemi = new THREE.HemisphereLight(0xe8eef4, 0x40404a, 2.0);
+const sun = new THREE.DirectionalLight(0xffe8c8, 2.2); sun.position.set(-3, 5, -6);
+const rim = new THREE.DirectionalLight(0x6fb0d0, 0.8); rim.position.set(4, 3, 5);
+scene.add(hemi, sun, rim);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshLambertMaterial({ color: 0x4a4c50 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const cam = new THREE.PerspectiveCamera(35, W / H, 0.05, 200);
+const game = { materials: { all: [] }, scene };
+const ALL = { mithi: MITHI, setu: SETU, ...NPC_PRESETS, ...SPECS };
+let chars = [];
+const clear = () => { for (const c of chars) { scene.remove(c.group); } chars = []; };
+
+window.lab = {
+  THREE, ALL, scene, cam, chars: () => chars,
+  show(names, o = {}) {
+    clear();
+    const gap = o.gap ?? 1.0;
+    names.forEach((n, i) => {
+      const spec = typeof n === 'string' ? ALL[n] : n;
+      if (!spec) throw new Error('no spec ' + n);
+      const c = buildCharacter(spec, game);
+      c.group.position.x = (i - (names.length - 1) / 2) * gap;
+      c.group.rotation.y = o.yaw ?? 0;
+      scene.add(c.group);
+      if (o.mood) c.setMood(o.mood);
+      if (o.talking) c.setTalking(true);
+      chars.push(c);
+    });
+    return chars.length;
+  },
+  step(dt, n = 1, speed = 0, opts = {}) { for (let i = 0; i < n; i++) for (const c of chars) c.update(dt, speed, opts); },
+  look(pos, target, fov = 35) { cam.position.set(...pos); cam.lookAt(...target); cam.fov = fov; cam.updateProjectionMatrix(); },
+  render() { renderer.render(scene, cam); return renderer.info.render.calls; },
+};
+window.labReady = true;
+</script>

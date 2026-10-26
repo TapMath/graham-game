@@ -55,7 +55,7 @@ export class Guards {
       g.alertT = T.alertSeconds; g.alertAt = { x: pos.x, z: pos.z };
       this.h.sound('guard-shout', g, 0.55);
     }
-    if (this.guards.some((g) => g.alertT > 0)) this.h.say('"Who is that singing?" a guard barks. "Unregistered singing is an offence!"', 'story', 6);
+    if (this.guards.some((g) => g.alertT > 0)) this.h.say('"Kaun gaa raha hai?" a guard barks. "Who is singing? Unregistered singing is an offence!"', 'story', 6);
   }
 
   update(dt) {
@@ -102,7 +102,7 @@ export class Guards {
           g.watch += dt; g.state = 'warn';
           if (g.warnCd <= 0 && h.game.time - h.guardWarnT > 2.5) {
             g.warnCd = T.warnGap; h.guardWarnT = h.game.time; this.stats.warnings++;
-            h.sound('guard-shout', g, 0.95); h.say('"Oi! Station\'s closed!"', 'system', 4, 'Guard');
+            h.sound('guard-shout', g, 0.95); h.say(h.rng.pick(['"Oi! Station\'s closed! Peeche, peeche!"', '"Closed! Closed! Go back, madam, nothing here for you!"', '"Hey! Metro band hai! Move!"']), 'system', 4, 'Guard');
             if (dh < 9) { h.kick(g.x, g.z, 9, 0.32); h.shake(0.3, 0.3); h.say('A hand in your chest shoves you back from the gate.', 'story', 4); }
           }
           if (g.watch >= T.watchSeconds) { this.stats.detained++; g.watch = 0; h.detain('guard', { guard: g.id, why: 'seen' }); }
@@ -137,7 +137,7 @@ export class Guards {
     const h = this.h;
     g.state = 'blown'; g.blownT = GUARD_TUNING.blownSeconds; this.stats.blown++;
     h.sound('guard-shout', g, 1);
-    h.say(why === 'singing' ? '"That voice. You\'re not staff!"' : '"You\'re not staff!"', 'system', 4, 'Guard');
+    h.say(why === 'singing' ? '"That voice. You\'re not staff! Kaun hai tu?"' : '"Hey! You\'re not staff! Stop right there!"', 'system', 4, 'Guard');
   }
 
   stand_down() { for (const g of this.guards) { g.watch = 0; g.linger = 0; g.blownT = 0; g.state = 'idle'; g.alertT = 0; } }

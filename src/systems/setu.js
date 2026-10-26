@@ -26,18 +26,18 @@ import { Follower, turnToward } from './follower.js';
 import { buildSchedule, windowAt, breathRate, BREATH } from './setu-schedule.js';
 
 const LINES = {
-  100: ['Setu. Setu, where are you?'],
-  75: ['Somewhere below, a cough echoes off the pillars. Setu.', 'That cough again, thinner now. It is him.'],
-  50: ['The coughing has changed. Shorter. Wetter. Hurry, Mithi.', 'His breath whistles in your memory. Half of him is gone already.'],
-  25: ['You can barely hear him breathe. It sounds like a kettle far away.', 'The whistle in his chest is the only sound you can find.'],
-  10: ['Quiet. Too quiet. Then one small wheeze, and nothing.', 'Setu... please. One more breath. One more.'],
+  100: ['Setu. Setu, where are you? (Her own voice sounds too small in all this concrete.)'],
+  75: ['Somewhere below, a cough echoes off the pillars. Thinner than it was this morning. Setu.', 'That cough again. It sounds like a door that will not quite shut.'],
+  50: ['The coughing has changed. Shorter. Wetter. Hurry, Mithi.', 'His breath whistles in your memory. Half of him is gone already. Do not think it.'],
+  25: ['You can barely hear him breathe. It sounds like a kettle, far away, in another flat.', 'The whistle in his chest is the only sound you can find in the whole city.'],
+  10: ['Quiet. Too quiet. Then one small wheeze, and nothing.', 'Setu... please. One more breath. One more. I will take you to the bridge on my back.'],
 };
 const CLUES = {
-  liftWreck: 'Small footprints in the grit beside the wrecked lift, already cold. "The boy went west," a voice says. "Coughing."',
+  liftWreck: 'Small footprints in the grit beside the wrecked lift, still damp. A woman at a shutter: "The little boy went west, beta. Coughing. Counting."',
   catacombs: 'The alcove still smells of a snuffed diya. "He left an hour ago," someone whispers. "Coughing. They took the children toward the big machine."',
   boringSite: 'The cutter head ticks as it cools. "The little one? The contractor took him down the long tunnel, south. To the doctor."',
-  clinic: '"He slipped out while I was busy," the doctor says, tired. "Asked about a vent. He is small enough to fit."',
-  ventExit: 'A grille hangs open on the stack, bent from the inside. Something small crawled out here, coughing.',
+  clinic: '"He slipped out while I was busy," the doctor says, tired. "Asked about a vent. He is small enough to fit. I did not tell you that."',
+  ventExit: 'A grille hangs open on the stack, bent from the inside. Something small crawled out here, coughing, and ran.',
   triageTents: '"A boy asked for his sister," a volunteer says without looking up. "We sent him toward the bodies. Then I think he walked east."',
 };
 const OBSERVED_DIST = 28, MAX_DEFER = 0.4, CLUE_RANGE = 11, CLUE_WINDOW = 2.5;
@@ -251,7 +251,7 @@ export class SetuSystem {
     this.pending = null;
     g.flags.setuFound = true; g.flags.setuFollowing = true;
     this.follower.reset();
-    g.messages?.say('You press the pill into his palm and the inhaler to his lips. He breathes. "Didi... you came."', { kind: 'story', ttl: 9 });
+    g.messages?.say('You press the pill into his palm and the inhaler to his lips. He breathes in, long and ragged, and a small hand finds your sleeve. "Didi... you came. I counted. I counted everything. I did not stop counting."', { kind: 'story', ttl: 9 });
     g.events.emit('setu:found', { health: this.health, via: opts.via ?? 'interact', window: this.windowId });
     g.events.emit('setu:following', { following: true });
     return true;

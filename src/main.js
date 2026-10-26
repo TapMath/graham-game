@@ -7,6 +7,9 @@ import { LiftSystem } from './world/lift.js';
 import { SkySystem } from './world/sky.js';
 import { arenaSystem } from './world/arena.js';
 import { CitySystem } from './world/city.js';
+import { LiftPanelSystem } from './systems/lifts/panel.js';
+import { TransitSystem } from './systems/transit/index.js';
+import { CrowdSystem } from './systems/crowds/index.js';
 import { InteractableSystem } from './systems/interactables.js';
 import { ClockSystem } from './systems/clock.js';
 import { AirSystem } from './systems/air.js';
@@ -26,6 +29,8 @@ import { SetuVoice } from './systems/senses/organ.js';
 import { VisionSystem } from './systems/senses/vision.js';
 import { guarded } from './systems/senses/guard.js';
 import { DialogueSystem } from './systems/story/dialogue.js';
+import { VoiceSystem } from './systems/story/voices.js';
+import { Banter } from './systems/story/banter.js';
 import { ItemSystem } from './systems/story/items.js';
 import { ObjectiveBoard } from './systems/story/objectives.js';
 import { CastSystem } from './systems/story/cast/index.js';
@@ -42,9 +47,11 @@ import { ScreenFxSystem } from './ui/screenfx.js';
 import { HudSystem } from './ui/hud.js';
 import { OverlaySystem, startTitleScene } from './ui/overlay.js';
 import { SettingsSystem, applyBootParams } from './ui/settings.js';
+import { MapSystem } from './ui/map.js';
 import { TouchSystem } from './ui/touch.js';
 import { DebugHudSystem } from './ui/debughud.js';
 import { DebugApi } from './debug.js';
+import { installCharacterStyle } from './characters/humanoid.js';
 
 function fatal(msg) {
   const el = document.getElementById('fatal');
@@ -54,6 +61,7 @@ function fatal(msg) {
 function boot() {
   const params = applyBootParams(parseParams(location.search));   // the stored run length applies unless ?minutes= is given
   const game = new Game({ canvas: document.getElementById('game'), params });
+  installCharacterStyle(game);          // game.characterStyle: the palette and proportions of the people (the crowd matches them)
 
   // Registration order == update order. Lifts and sky must exist before the world builds;
   // lifts must update before the player so platforms move first.
@@ -64,6 +72,8 @@ function boot() {
   game.addSystem('dialog', new DialogSystem());
   game.addSystem('screenfx', new ScreenFxSystem());
   game.addSystem('world', params.arena ? arenaSystem : new CitySystem());   // the city; the Phase 1 test arena stays behind ?arena=1
+  if (!params.arena) game.addSystem('liftpanel', new LiftPanelSystem());   // Phase 8B: E panels, floor choice, solar charge (after the world, before the player)
+  if (!params.arena) game.addSystem('transit', new TransitSystem());       // Phase 8B: the Harbour Line trains (they must move before the player is carried)
   game.addSystem('player', new Player());
   // Phase 3 core loop. Order is update order: the clock first, then health, Setu, vendors, endings, the view
   // (it moves the camera after the player did), and the HUD last (it only reads).
@@ -78,6 +88,7 @@ function boot() {
   game.addSystem('objective', new ObjectiveSystem());
   game.addSystem('view', new ViewSystem());
   if (!params.arena) game.addSystem('hazards', new HazardSystem());   // Phase 4 perils (after the view so the camera shake lands on the final camera)
+  if (!params.arena) game.addSystem('crowds', guarded(new CrowdSystem(), 'crowds'));   // Phase 8B: instanced pedestrians and traffic (after the player, so they part around her)
   // Phase 6b narrative layer: the breach and the warning (game.story), fragments, Setu's trail, the festival fireworks and the
   // cinematics. After the hazards, so the cinematic camera has the last word; before audio (its listener follows the camera).
   if (!params.arena) {
@@ -99,8 +110,10 @@ function boot() {
   game.addSystem('pa', guarded(new PASystem(), 'pa'));
   game.addSystem('settings', new SettingsSystem());           // after audio and the PA: it applies the stored settings to them in init
   game.addSystem('hud', new HudSystem());
+  if (!params.arena) game.addSystem('map', guarded(new MapSystem(), 'map'));          // Phase 8A: the minimap, the full map (M) and the warmth cue (after the HUD: it mounts into it)
   // Phase 6a story layer: the cast and the objective chain. After the HUD (the items row and the optional objectives mount into its DOM);
   // `party` is last of them so its sighted-rendering override of the fog lands after the senses grade.
+  game.addSystem('voices', new VoiceSystem());                    // per-character speech (before the cards that use it)
   game.addSystem('dialogue', new DialogueSystem());
   if (!params.arena) {
     game.addSystem('items', new ItemSystem());
@@ -108,6 +121,7 @@ function boot() {
     game.addSystem('cast', new CastSystem());
     game.addSystem('director', new Director());
     game.addSystem('party', new PartySystem());
+    game.addSystem('banter', new Banter());
   }
   game.addSystem('touch', new TouchSystem());                  // the touch layer (stick, look, buttons); a no-op without touch
   game.addSystem('debughud', new DebugHudSystem());

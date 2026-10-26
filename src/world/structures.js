@@ -69,8 +69,8 @@ export class Ctx {
   }
 
   /** True if a solid overlaps the XZ footprint within the vertical range (ignores floors at/below y0). */
-  blocked(x, z, hx, hz, y0, y1) {
-    for (const c of this.clear) if (x + hx > c.x0 && x - hx < c.x1 && z + hz > c.z0 && z - hz < c.z1 && y1 > c.y0 && y0 < c.y1) return true;
+  blocked(x, z, hx, hz, y0, y1, ignoreClear = false) {
+    if (!ignoreClear) for (const c of this.clear) if (x + hx > c.x0 && x - hx < c.x1 && z + hz > c.z0 && z - hz < c.z1 && y1 > c.y0 && y0 < c.y1) return true;
     const list = this.phys.query(x - hx, z - hz, x + hx, z + hz);
     for (let i = 0; i < list.length; i++) {
       const c = list[i];
@@ -402,20 +402,27 @@ export function buildPillars(ctx) {
     const long = d.x1 - d.x0 >= d.z1 - d.z0 ? 'x' : 'z';
     const len = long === 'x' ? d.x1 - d.x0 : d.z1 - d.z0, wid = long === 'x' ? d.z1 - d.z0 : d.x1 - d.x0;
     const n = Math.max(1, Math.round(len / (d.kind === 'road' ? 16 : 14)));
-    const across = wid >= 8 ? [1.3, wid - 1.3] : [wid / 2];
+    const across0 = d.pillarAcross ?? (wid >= 8 ? [1.3, wid - 1.3] : [wid / 2]);
     const pw = d.kind === 'road' ? 1.2 : 0.9;
+    // `pillarSize: [along, across]` makes blade pillars (the Harbour Line corridor under road-h needs them at the deck edge);
+    // `pillarOverrides: [{x0, x1, across, size}]` replaces the rows of the pillars that fall in an x range (the stations' platforms)
+    const size0 = d.pillarSize ?? [pw, pw];
     const bottom = d.y - d.th;
     for (let i = 0; i < n; i++) {
       const t = (i + 0.5) * len / n;
+      const ov = long === 'x' ? d.pillarOverrides?.find((o) => d.x0 + t > o.x0 && d.x0 + t < o.x1) : null;
+      const across = ov ? ov.across : across0, size = ov ? ov.size : size0;
+      const pa = size[0], pc = size[1];
+      const hx = (long === 'x' ? pa : pc) / 2, hz = (long === 'x' ? pc : pa) / 2;
       for (const a of across) {
         const x = long === 'x' ? d.x0 + t : d.x0 + a, z = long === 'x' ? d.z0 + a : d.z0 + t;
         if (ctx.inCut(x, z, 0.8)) continue;
-        const base = ctx.phys.groundHeightAt(x, z, bottom - 0.2, 0, pw / 2 + 0.05);
+        const base = ctx.phys.groundHeightAt(x, z, bottom - 0.2, 0, Math.max(hx, hz) + 0.05);
         if (!(base > -Infinity)) continue;
         if (bottom - base < 2) continue;
-        if (ctx.blocked(x, z, pw / 2, pw / 2, base + 0.1, bottom)) continue;
-        b.instance('pillar', { x, y: base, z, sx: pw, sy: bottom - base, sz: pw, color: 0x6c7270 });
-        ctx.phys.addBox([x - pw / 2, base, z - pw / 2], [x + pw / 2, bottom, z + pw / 2], { solid: true, walkable: false, tag: 'pillar' });
+        if (ctx.blocked(x, z, hx, hz, base + 0.1, bottom, !!ov)) continue;
+        b.instance('pillar', { x, y: base, z, sx: hx * 2, sy: bottom - base, sz: hz * 2, color: 0x6c7270 });
+        ctx.phys.addBox([x - hx, base, z - hz], [x + hx, bottom, z + hz], { solid: true, walkable: false, tag: 'pillar' });
         ctx.pillarsPlaced++;
       }
     }
@@ -517,9 +524,13 @@ export function buildLift(ctx, l) {
   const { b, game } = ctx;
   const tone = TONE[l.tone] ?? 0xffb347;
   const [cx, cz] = l.center, [w, d] = l.size;
-  const lift = game.lifts.add({ id: l.id, center: l.center, size: l.size, yBottom: l.yBottom + 0.04, yTop: l.yTop, speed: 4, dwell: 3, auto: false, exits: l.exits });
+  // stops: explicit (multi-stop lifts) or the classic bottom/top pair; the lowest car position sits 0.04 m above its floor (no z-fighting)
+  const stops = (l.stops ?? [{ id: 'bottom', y: l.yBottom, exit: l.exits.bottom, ...(l.stopMeta?.bottom ?? {}) }, { id: 'top', y: l.yTop, exit: l.exits.top, ...(l.stopMeta?.top ?? {}) }])
+    .map((s, i) => ({ ...s, y: i === 0 ? s.y + 0.04 : s.y }));
+  const lift = game.lifts.add({ id: l.id, center: l.center, size: l.size, stops, speed: 4, dwell: 3, auto: false, label: l.label, panel: l.panel, start: l.start });
+  lift.def = l;
   ctx.lifts.push(lift);
-  const exitSides = new Set([l.exits.bottom, l.exits.top]);
+  const exitSides = new Set(stops.map((s) => s.exit));
   const th = 0.3, top = l.yTop + 3.6, bot = l.yBottom - 0.2;
   const walls = { '-x': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx - w / 2, top, cz + d / 2 + th]], '+x': [[cx + w / 2, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz + d / 2 + th]],
     '-z': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz - d / 2]], '+z': [[cx - w / 2 - th, bot, cz + d / 2], [cx + w / 2 + th, top, cz + d / 2 + th]] };
@@ -553,8 +564,12 @@ export function buildLift(ctx, l) {
     }
     void gate;
   }
+  // the solar cell on the cap: tilted toward the east, a dark blue panel with a bright frame (lit lifts recharge fast by day)
+  const cell = (l.panel ?? 'sun') === 'sun';
+  b.box([cx - w / 2 - 0.5, top + 0.4, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.52, cz + d / 2 + 0.5], { color: cell ? 0x1b3556 : 0x2c3030, tag: 'lift-solar', walkable: false, solid: false, noTint: true });
+  b.box([cx - w / 2 - 0.5, top + 0.52, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.545, cz - d / 2 - 0.42], { mat: 'emissive', color: cell ? 0x6fb4ff : 0x4a4a42, solid: false, walkable: false, noTint: true });
   // openings so rails are not generated across the doorways
-  for (const y of [l.yBottom, l.yTop]) ctx.openings.push({ x0: cx - w / 2 - 0.3, z0: cz - d / 2 - 0.3, x1: cx + w / 2 + 0.3, z1: cz + d / 2 + 0.3, y });
+  for (const y of stops.map((st) => st.y)) ctx.openings.push({ x0: cx - w / 2 - 0.3, z0: cz - d / 2 - 0.3, x1: cx + w / 2 + 0.3, z1: cz + d / 2 + 0.3, y });
   return lift;
 }
 

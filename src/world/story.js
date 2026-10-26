@@ -139,9 +139,23 @@ export function buildStory(ctx) {
     put('cube', { x: cx, y: -8, z: cz + 0.4, sx: 1.4, sy: 0.18, sz: 0.6, color: 0x7a6a50 }, false);
     b.instance('glow', { x: cx, y: -5.7, z: cz, sx: 0.25, sy: 0.12, sz: 0.25, color: 0xffa040 });
   }
-  put('cube', { x: -64.5, y: -8, z: -61.5, sx: 3, sy: 3, sz: 3, color: 0x6a6a58 });
-  b.instance('glow', { x: -64.5, y: -6.2, z: -59.97, sx: 1.6, sy: 0.7, sz: 0.05, color: 0xffd890 });
-  for (const [x, z] of [[-90, -50], [-72, -50], [-66, -52], [-84, -62], [-76, -60]]) { b.instance('glow', { x, y: -3.4, z, sx: 0.5, sy: 0.3, sz: 0.5, color: 0xff9a30 }); b.instance('pool', { x, y: -8 + 0.03, z, sx: 11, sz: 11, color: 0x7a5018 }); }
+  // the foreman's cabin: a lighter hut with a roof lip, a door and one amber window in a frame, and a caged lamp over the door. It used to be one big pale
+  // glowing quad on a dark box, which read as a panel hanging in the air next to Kaalu Seth.
+  put('cube', { x: -64.5, y: -8, z: -61.5, sx: 3, sy: 3, sz: 3, color: 0x8a8672 });
+  b.box([-66.3, -5.1, -63.3], [-62.7, -4.95, -59.6], { color: 0x4a4a42, ...vis });                                  // the roof lip
+  b.instance('cube', { x: -65.55, y: -8, z: -59.96, sx: 0.95, sy: 2.05, sz: 0.07, color: 0x2e2c26 });               // the door
+  b.instance('cube', { x: -65.55, y: -8, z: -59.92, sx: 1.1, sy: 0.08, sz: 0.06, color: 0x56524a });                // its step
+  b.instance('glow', { x: -63.55, y: -6.7, z: -59.97, sx: 0.95, sy: 0.55, sz: 0.04, color: 0xc88030 });             // the window
+  for (const [cx, cy, sx, sy] of [[-63.55, -6.76, 1.15, 0.07], [-63.55, -6.1, 1.15, 0.07], [-64.08, -6.75, 0.07, 0.72], [-63.0, -6.75, 0.07, 0.72], [-63.55, -6.75, 0.05, 0.65]]) b.instance('cube', { x: cx, y: cy, z: -59.94, sx, sy, sz: 0.06, color: 0x3a3830 });
+  b.box([-65.9, -5.45, -59.95], [-65.2, -5.35, -59.55], { color: 0x2a2f30, ...vis });                              // a bracket and a caged lamp over the door
+  b.instance('glow', { x: -65.55, y: -5.75, z: -59.72, sx: 0.28, sy: 0.22, sz: 0.28, color: 0xff9a30 });
+  // the work lamps over the cavern: caged bulbs on a cable from the ceiling (they hung in mid-air, flat orange boxes)
+  for (const [x, z] of [[-90, -50], [-72, -50], [-66, -52], [-84, -62], [-76, -60]]) {
+    b.box([x - 0.025, -3.4 + 0.3, z - 0.025], [x + 0.025, -2.0, z + 0.025], { color: 0x2a2f30, ...vis });
+    b.instance('cube', { x, y: -3.4 + 0.27, z, sx: 0.64, sy: 0.06, sz: 0.64, color: 0x2a2f30 });
+    b.instance('glow', { x, y: -3.4, z, sx: 0.36, sy: 0.27, sz: 0.36, color: 0xff9a30 });
+    b.instance('pool', { x, y: -8 + 0.03, z, sx: 11, sz: 11, color: 0x7a5018 });
+  }
   b.instance('pool', { x: -79, y: -8 + 0.03, z: -55, sx: 14, sz: 12, color: 0x5a3a14 });
 
   // ---------------- underground clinic

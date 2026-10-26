@@ -1,0 +1,239 @@
+// Builds tools/shots-phase8b.json, the Phase 8B regression tour: Mumbai signage, the Harbour Line (waiting, boarding, riding, alighting,
+// the level crossings, a strike), crowds, the lifts (floor panel, drained cell, palm, recharge by day and at night), and the draw-call
+// worst case. Run:  node tools/build-phase8b.mjs   then   node tools/smoke.mjs --shots tools/shots-phase8b.json --wait 2500 --query seed=1
+// Every step asserts with ok(); a failed assertion throws and fails the run.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const PRE = "const A=__grahan,B=A.bot,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));";
+const step = (name, code, wait = 600) => ({ name, wait, eval: `(async()=>{${PRE}${code.trim().replace(/\n\s*/g, ' ')}})()` });
+const R3 = (v) => Math.round(v * 100) / 100;
+
+export const tour = [
+  step('setup', `
+    A.set('manual', true); A.set('invulnerable', true); A.set('hazards', false); A.setTime(10); A.teleport(-44, 0, -30, 0); A.step(1);
+    const bad = A.do('validatePOIs'); ok(bad.length === 0, 'every POI (the five stations too) stands on walkable ground: ' + JSON.stringify(bad));
+    const T = G.transit, W = G.world;
+    ok(T.stations.map((s) => s.name).join(',') === "Mahim Jn,King's Circle,Sion,Wadala Road,Sewri", 'the five stations, west to east');
+    ok(W.map.landmarks.some((l) => /Sion Junction/.test(l.name)) && W.map.landmarks.some((l) => /Atal Setu/.test(l.name)) && W.map.landmarks.some((l) => /Dharavi/.test(l.name)), 'Mumbai names in the landmarks');
+    return { stations: T.stations.map((s) => [s.id, s.x]), lifts: G.lifts.lifts.map((l) => [l.id, l.stops.map((x) => x.id).join('/')]), people: A.state().crowds.agents, vehicles: A.state().crowds.vehicles, trains: T.trains.filter((t) => t.active).length };`),
+
+  // ------------------------------------------------------------------------------------------------ Mumbai signage
+  step('sign-sion-junction', `A.teleport(-44, 0, -25, -90); A.look(-90, 46); A.step(0.5); return { at: 'spawn, looking at the fallen SkyGrid: SION JUNCTION' };`, 900),
+  step('sign-dharavi-90-feet-road', `A.teleport(-105, 0, -88, 0); A.look(0, 22); A.step(0.5); return { at: 'Dharavi, 90 Feet Road' };`, 900),
+  step('sign-kumbharwada', `A.teleport(-113, 0, 90, 180); A.look(180, 26); A.step(0.5); return { at: 'Kumbharwada potters lane' };`, 900),
+  step('sign-sion-hospital', `A.teleport(-45, 0, 60, 180); A.look(180, 12); A.step(0.5); return { at: 'Sion Hospital' };`, 900),
+  step('sign-dharavi-metro', `A.teleport(45, 0, 10, 0); A.look(0, 14); A.step(0.5); return { at: 'Dharavi Metro, Aqua Line' };`, 900),
+  step('sign-station-sion-boards', `A.teleport(-45, 0.5, -52.4, 0); A.look(0, 10); A.step(0.5); return { at: 'the Sion platform boards, seen from the south platform' };`, 900),
+  step('sign-sewri-and-atal-setu', `A.teleport(161, 0, -37, 35); A.look(35, 28); A.step(0.5); return { at: 'Sewri waterfront' };`, 900),
+
+  // ------------------------------------------------------------------------------------------------ the train: timetable, boarding, riding, alighting
+  step('timetable-and-etas', `
+    A.setTime(10); A.step(1);
+    const s = A.state().transit;
+    const eta = (id, d) => G.transit.nextArrival(id, d).eta;
+    const day = { served: s.served, activeTrains: s.trains.filter((t) => t.active).length, sionEast: R(eta('sion', 'east')), sionWest: R(eta('sion', 'west')) };
+    ok(day.served === 3 && day.activeTrains === 3, 'three trains run by day');
+    ok(isFinite(eta('sion', 'east')) && isFinite(eta('sion', 'west')) && eta('sion', 'east') < 160, 'every station has an ETA both ways, a train within a few minutes: ' + eta('sion', 'east'));
+    A.setTime(23); A.step(0.2); const night = A.state().transit.served; A.setTime(2); A.step(0.2); const dead = A.state().transit.served; A.setTime(5); A.step(0.2); const dawn = A.state().transit.served; A.setTime(10); A.step(0.2);
+    ok(night === 1 && dead === 0 && dawn === 1, 'sparser at night (1), none from 01:00 to 04:00 (0), one again before dawn: ' + [night, dead, dawn]);
+    return { day, night, dead, dawn, etas: s.stations.map((x) => [x.id, x.eta.east, x.eta.west]) };
+    function R(v) { return Math.round(v * 10) / 10; }`),
+  step('train-approaches-sion', `
+    A.teleport(-45, 0.5, -67.6, 0); A.look(-90, 4); A.set('view', 'first');
+    const w = A.do('transitWait', 'sion', 'east', 300); ok(w, 'an eastbound train stands at Sion');
+    const t = G.transit.trains.find((x) => x.id === w.train);
+    ok(t.doorsOpen === 'north' && t.dir === 1, 'its doors open on the platform side (north) only: ' + t.doorsOpen);
+    return { train: w.train, doors: t.doorsOpen, x: R3(t.x), z: R3(t.z), people: A.state().crowds.drawn };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 1200),
+  step('train-doors-open-crowd', `
+    const t = G.transit.trains.find((x) => x.state === 'dwell' && x.at === 'sion' && x.dir === 1);
+    A.teleport(-45, 0.5, -67.6, 180); A.look(180, -2); A.step(0.3);
+    return { doors: t.doorsOpen, riders: A.state().crowds.drawn.riders, platformCrowd: G.crowds.near(-45, -67.6, 14).length };`, 1200),
+  step('board-the-train', `
+    const t = G.transit.trains.find((x) => x.state === 'dwell' && x.at === 'sion' && x.dir === 1);
+    A.teleport(t.x + 2.4, 0.5, -67.0, 180);  /* on the platform at a door, facing the track */
+    A.look(180, 0); A.set('invulnerable', true);
+    B.d.run('KeyW', 1.1);                          /* real key: walk in through the open door */
+    const s = A.state(), r = s.transit.ride;
+    ok(r && r.train === t.id && s.pos.y > 0.45 && s.groundTag === 'train-floor', 'walking in through the open doors puts you on the carriage floor: ' + JSON.stringify(r) + ' ' + s.groundTag);
+    return { ride: r, pos: s.pos, ground: s.groundTag, prompt: s.world.focus && s.world.focus.prompt };`, 1200),
+  step('riding-the-carriage-moves-you', `
+    const t = G.transit.trains.find((x) => x.id === A.state().transit.ride.train);
+    const rel0 = A.state().pos.x - t.x, x0 = A.state().pos.x, clock0 = G.clock.t;
+    let n = 0; while (n++ < 3000 && t.state !== 'run') B.d.step(0.05);
+    B.d.step(8);
+    const s = A.state(), rel1 = s.pos.x - t.x;
+    ok(Math.abs(s.pos.x - x0) > 15 && Math.abs(rel1 - rel0) < 0.6, 'the carriage carries you: moved ' + R3(s.pos.x - x0) + ' m, your place in the car changed by only ' + R3(rel1 - rel0));
+    ok(s.groundTag === 'train-floor' && s.transit.ride, 'still standing on the floor while it runs');
+    return { movedM: R3(s.pos.x - x0), relativeX: [R3(rel0), R3(rel1)], trainV: R3(t.v), trainX: R3(t.x), state: t.state, ride: s.transit.ride };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 1200),
+  step('inside-the-moving-carriage', `
+    A.look(-90, 2); B.d.step(2);
+    const t = G.transit.trains.find((x) => x.id === A.state().transit.ride.train);
+    return { v: R3(t.v), people: A.state().crowds.drawn, calls: A.state().render.calls };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 1200),
+  step('ride-on-and-alight-at-wadala-road', `
+    const t = G.transit.trains.find((x) => x.id === A.state().transit.ride.train);
+    const c0 = G.clock.t;
+    let n = 0; while (n++ < 6000 && !(t.state === 'dwell' && t.at === 'wadala-road')) B.d.step(0.05);
+    ok(t.at === 'wadala-road' && t.doorsOpen, 'the train stops at Wadala Road with its doors open');
+    const hours = G.clock.t - c0;
+    const side = t.doorsOpen === 'north' ? 1 : -1;
+    A.look(side > 0 ? 0 : 180, 0); B.d.run('KeyW', 1.3);       /* walk out of the door onto the platform */
+    const s = A.state();
+    ok(!s.transit.ride && s.pos.y > 0.45 && s.groundTag === 'platform', 'stepped off onto the platform: ' + s.groundTag);
+    ok(hours > 0.05, 'a ride costs a little game time: ' + hours.toFixed(3) + ' h');
+    return { at: t.at, platformPos: s.pos, hoursOfYourDay: R3(hours), clock: s.clock.hhmm };
+    function R3(v) { return Math.round(v * 1000) / 1000; }`, 1500),
+
+  // ------------------------------------------------------------------------------------------------ level crossings and the line
+  step('level-crossing-closes-for-a-train', `
+    A.teleport(-15, 0, -50, 0); A.look(0, 6); A.set('hazards', false);
+    const cr = () => G.transit.crossings.find((c) => c.id === 'crossing-sx1');
+    let n = 0; while (n++ < 12000 && cr().state !== 'closed') B.d.step(0.05);
+    ok(cr().state === 'closed', 'the crossing at Sion closes for a train');
+    B.d.step(2.2);
+    const z0 = A.state().pos.z; B.d.run('KeyW', 2.5);
+    const z1 = A.state().pos.z;
+    ok(z1 > -54.4, 'the boom is solid: you cannot walk onto the line while it rings: z ' + z1);
+    return { crossing: { id: cr().id, state: cr().state, angle: cr().angle, blocked: cr().blocked }, z: [R3(z0), R3(z1)], people: A.state().crowds.drawn.people };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 1200),
+  step('crowd-waits-behind-the-boom', `
+    A.look(0, 5); B.d.step(0.5);
+    const waiting = G.crowds.near(-15, -52, 22).filter((a) => a.mode === 'lane' && a.amp === 0).length;
+    return { waitingAtTheBoom: waiting, crossing: G.transit.crossings.find((c) => c.id === 'crossing-sx1').state };`, 1500),
+  step('crossing-reopens-and-you-cross', `
+    const cr = () => G.transit.crossings.find((c) => c.id === 'crossing-sx1');
+    let n = 0; while (n++ < 6000 && cr().state !== 'open') B.d.step(0.05);
+    ok(cr().state === 'open', 'the booms rise again once the train is through');
+    B.d.step(1.5); B.d.run('KeyW', 3.4);
+    const s = A.state();
+    ok(s.pos.z < -66, 'you crossed the line at the crossing: z ' + s.pos.z);
+    return { z: R3(s.pos.z), crossing: cr().state };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 900),
+  step('the-fence-keeps-you-off-the-line', `
+    A.teleport(0, 0, -52.8, 0); A.look(0, 0); B.d.run('KeyW', 3);
+    const s = A.state();
+    ok(s.pos.z > -54.5, 'between the crossings and the stations the line is fenced: z ' + s.pos.z);
+    return { z: R3(s.pos.z) };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 600),
+  step('a-train-clips-you-if-you-stand-on-the-track', `
+    A.set('invulnerable', true); A.set('rays', 7);
+    A.teleport(20, 0, -63.7, 90); A.look(90, 0);                       /* inside the fence, on the northern track, between Sion and Wadala Road */
+    const r0 = A.state().rays, s0 = G.transit.stats.strikes; let m = 0;
+    while (m++ < 24000 && G.transit.stats.strikes === s0) B.d.step(0.05);
+    const s = A.state();
+    ok(G.transit.stats.strikes === s0 + 1 && s.rays === r0 - 1 && Math.abs(s.pos.z + 63.7) > 1.5, 'standing on the track costs a ray and throws you clear: rays ' + r0 + ' -> ' + s.rays + ', z ' + s.pos.z);
+    A.set('invulnerable', true);
+    return { rays: [r0, s.rays], z: R3(s.pos.z), strikes: G.transit.stats.strikes, waitedSeconds: R3(m * 0.05) };
+    function R3(v) { return Math.round(v * 100) / 100; }`, 900),
+  step('mahim-junction-on-the-viaduct', `A.teleport(-150, 0.5, -52.4, 0); A.look(0, 6); B.d.step(1); return { people: A.state().crowds.drawn, calls: A.state().render.calls };`, 1500),
+  step('sewri-end-of-the-line', `A.teleport(138, 0.5, -52.4, 0); A.look(-90, 6); B.d.step(1); return { people: A.state().crowds.drawn };`, 1500),
+
+  // ------------------------------------------------------------------------------------------------ crowds
+  step('crowd-at-a-station', `
+    A.set('view', 'first'); A.teleport(-45, 0.5, -67.6, 0); A.look(0, 0);
+    const w = A.do('transitWait', 'sion', 'east', 300); A.look(90, 0); B.d.step(0.6);
+    const d = A.state().crowds;
+    const near = A.do('crowdNear', 30); ok(near > 40, 'a station platform is packed: ' + near + ' people within 30 m, ' + d.drawn.people + ' drawn');
+    return { train: w && w.train, drawn: d.drawn, byLevel: d.byLevel };`, 1500),
+  step('crowd-dharavi-lane', `A.teleport(-113, 0, -80, 0); A.look(0, 2); B.d.step(1.5); return { near: A.do('crowdNear', 18), drawn: A.state().crowds.drawn };`, 1500),
+  step('crowd-sion-junction-rescue', `A.teleport(-44, 0, -12, 0); A.look(0, 2); B.d.step(1.5); return { near: A.do('crowdNear', 25), drawn: A.state().crowds.drawn };`, 1500),
+  step('crowd-kings-circle-bazaar', `A.teleport(10, 12, -26, 90); A.look(90, 4); B.d.step(1.5); return { near: A.do('crowdNear', 20), drawn: A.state().crowds.drawn };`, 1500),
+  step('crowd-thins-upward-l3-gardens', `
+    const by = G.crowds._byLevel(); ok(by.G > by.L1 && by.L1 > by.L2 && by.G > 5 * by.L3, 'dense at G, thinning upward: ' + JSON.stringify(by));
+    A.teleport(75, 38, -90, 0); A.look(-90, 4); B.d.step(1.5); return { byLevel: by, drawn: A.state().crowds.drawn };`, 1500),
+  step('traffic-on-the-flyover', `A.teleport(40, 24, -57, 90); A.look(-90, 4); B.d.step(1.5); return { vehicles: A.state().crowds.drawn.vehicles };`, 1500),
+
+  // ------------------------------------------------------------------------------------------------ lifts: floors, charge, drained, palm, sunlight
+  step('lift-gauge-and-floor-panel', `
+    A.setTime(10); A.set('rays', 12); G.lifts.get('lift-canyon').charge = 80; G.lifts.get('lift-canyon').goTo('bottom'); B.d.step(1);
+    A.teleport(105, 0.05, -48, 0); A.look(0, 0); B.d.step(0.4);
+    const prompt = A.state().world.focus && A.state().world.focus.prompt;
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4);
+    const dlg = A.state().dialog; ok(dlg && dlg.choices.join() === 'L2,top,cancel', 'the three-floor lift offers L2 and the Upper Decks: ' + JSON.stringify(dlg));
+    return { prompt, dialog: dlg };`, 1500),
+  step('lift-ride-to-l2-then-l3-with-bio-scan', `
+    A.set('rays', 4); A.do('liftChoose', 'L2'); B.d.step(0.3);
+    ok(A.state().level === 'G' && !G.lifts.get('lift-canyon').moving, 'with 4 rays the bio-scan refuses the Flyovers floor (needs 5): ' + A.state().level);
+    A.set('rays', 12); { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(8);
+    const s1 = A.state(); ok(s1.level === 'L2' && s1.pos.y > 23.9, 'rode to L2 (24 m) in a 3-stop lift: ' + s1.level);
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'top'); B.d.step(5);
+    const s2 = A.state(); ok(s2.level === 'L3', 'and on to the Upper Decks (38 m): ' + s2.level);
+    const L = G.lifts.get('lift-canyon');
+    return { chargeAfter: L.chargePct, level: s2.level };`, 1200),
+  step('lift-drained-wait-it-out', `
+    const L = G.lifts.get('lift-canyon'); A.set('rays', 12); L.charge = 90;
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'bottom'); B.d.step(14); /* back down: pays 57%, leaving it low */
+    L.charge = 0;
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(0.4);
+    const d1 = A.state().dialog; ok(d1 && d1.choices.join() === 'palm,wait,leave', 'a drained cell offers: palm, wait, leave: ' + JSON.stringify(d1));
+    A.do('liftChoose', 'wait'); const c0 = L.charge; B.d.step(25); const c1 = L.charge;
+    ok(c1 - c0 > 12, 'by day the lit panel recharges while you wait: ' + c0.toFixed(1) + ' -> ' + c1.toFixed(1));
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(8);
+    ok(A.state().level === 'L2' || A.state().level === 'G', 'the lift runs again after waiting: ' + A.state().level);
+    return { chargeWhileWaiting: [R(c0), R(c1)], level: A.state().level, readyMsg: A.state().messages.last.filter((m) => /cell|lift/i.test(m)).slice(-2) };
+    function R(v) { return Math.round(v * 10) / 10; }`, 1200),
+  step('lift-drained-palm-one-ray', `
+    const L = G.lifts.get('lift-canyon'); L.goTo('bottom'); B.d.step(14); A.teleport(105, 0.05, -48, 0); B.d.step(0.4);
+    L.charge = 2; A.set('rays', 9); const r0 = A.state().rays;
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'top'); B.d.step(0.4);
+    ok(A.state().dialog && A.state().dialog.choices[0] === 'palm', 'drained: the palm option is offered');
+    A.do('liftChoose', 'palm'); B.d.step(12);
+    const s = A.state();
+    ok(s.rays === r0 - 1 && s.level === 'L3', 'one ray bought the ride: rays ' + r0 + ' -> ' + s.rays + ', level ' + s.level);
+    return { rays: [r0, s.rays], level: s.level, charge: L.chargePct };`, 1200),
+  step('recharge-sunlit-vs-shaded-vs-night', `
+    const out = {};
+    for (const h of [11, 23]) {
+      A.setTime(h); B.d.step(0.3);
+      for (const l of G.lifts.lifts) { l.goTo(l.stops[0].id); l.charge = 0; }
+      B.d.step(20);
+      out[h] = Object.fromEntries(G.lifts.lifts.map((l) => [l.id, +l.charge.toFixed(1)]));
+    }
+    const lit = out[11]['lift-canyon'], shaded = out[11]['lift-g1-skywalk'], night = out[23]['lift-canyon'];
+    ok(lit > 12 && shaded < lit / 2.5 && night < 1, 'fast by day when lit (' + lit + '), slow when shaded (' + shaded + '), hardly any at night (' + night + ')');
+    A.setTime(10);
+    return out;`, 600),
+  step('express-lift-g-to-l3', `
+    A.setTime(10); A.set('rays', 12); const L = G.lifts.get('lift-wadala-express-s'); L.goTo('bottom'); L.charge = 90; B.d.step(1);
+    A.teleport(97, 0.05, -22, 0); A.look(-90, 0); B.d.step(0.4); { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.3);
+    const rays0 = A.state().rays; const cost = 38 * 1.5;
+    B.d.step(11);
+    const s = A.state();
+    ok(s.level === 'L3' && s.pos.y > 37.9, 'the express lift goes straight from the street to the Upper Decks: ' + s.level);
+    ok(Math.abs(90 - cost - L.charge) < 25, 'a 38 m ride costs about 57% of the cell: ' + L.charge);
+    return { level: s.level, charge: L.chargePct };`, 1200),
+
+  // ------------------------------------------------------------------------------------------------ the draw-call budget
+  step('draw-calls-worst-case', `
+    A.set('view', 'third'); A.do('setuFind'); A.do('jeetuJoin'); A.set('hazards', true); A.do('hazardsClear'); A.set('invulnerable', true); A.setTime(10);
+    const rows = []; let max = 0;
+    const measure = async (label) => { B.d.step(1.2); G.render(); G.render(); const c = G.renderStats().calls; rows.push([label, c]); max = Math.max(max, c); };
+    /* a crowded station with a train standing and another arriving */
+    A.teleport(-45, 0.5, -67.6, 0); A.look(-90, -6); A.do('setuTeleportToPlayer', 3);
+    const w = A.do('transitWait', 'sion', 'east', 300); ok(w, 'a train at Sion');
+    await measure('Sion platform, train standing');
+    A.look(-110, -4); await measure('Sion platform, looking down the line');
+    A.teleport(-45, 0.5, -52.4, 0); A.look(-150, -6); A.do('setuTeleportToPlayer', 3); await measure('Sion south platform, an arriving train');
+    A.teleport(135, 0.5, -52.4, 0); A.look(-90, -6); A.do('setuTeleportToPlayer', 3); await measure('Sewri');
+    A.teleport(-45, 0, -30, 0); A.look(-90, 0); A.do('setuTeleportToPlayer', 3); await measure('the collapse crowd');
+    A.teleport(10, 12, -26, 0); A.look(90, 0); A.do('setuTeleportToPlayer', 3); await measure('the bazaar');
+    A.teleport(-105, 0, -80, 0); A.look(0, 0); A.do('setuTeleportToPlayer', 3); await measure('Dharavi');
+    A.teleport(-15, 0, -50, 0); A.look(0, 0); A.do('setuTeleportToPlayer', 3); await measure('Sion crossing, booms down maybe');
+    /* riding, in third person */
+    A.teleport(-45, 0.5, -67.6, 0); A.do('setuTeleportToPlayer', 3);
+    const w2 = A.do('transitWait', 'sion', 'east', 300); A.do('transitBoard', 'sion'); A.look(-90, -8); B.d.step(5); await measure('riding, third person');
+    A.set('view', 'first');
+    ok(max <= 150, 'the draw-call budget (about 150) holds at the worst case in third person: ' + max);
+    return { max, rows, drawn: A.state().crowds.drawn };`, 800),
+];
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  fs.writeFileSync(path.join(here, 'shots-phase8b.json'), JSON.stringify(tour, null, 1));
+  console.log('wrote shots-phase8b.json', tour.length, 'steps');
+}
+void R3;

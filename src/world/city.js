@@ -29,7 +29,9 @@ import { AdScreens, Rain, Searchlights, DiyaFlicker } from './fx.js';
 import { Labels } from './labels.js';
 import { GateSystem } from './gates.js';
 import { Sunlight } from './sunlight.js';
+import { Guidance } from './guidance.js';
 import { Sea } from './sea.js';
+import { buildRail, reserveRailCorridor } from './rail.js';
 
 const _col = new THREE.Color();
 
@@ -55,6 +57,7 @@ export class CitySystem {
     const ctx = new Ctx(game, b, map);
     this.ctx = ctx;
     defineKinds(b);
+    reserveRailCorridor(ctx);        // the Harbour Line corridor stays clear of markings, props and parked cars
 
     // ---- structures (order matters: later steps probe the colliders of earlier ones)
     buildGround(ctx);
@@ -87,6 +90,7 @@ export class CitySystem {
     dressBroken(ctx);
     buildLandmarks(ctx);
     buildStory(ctx);
+    world.rail = buildRail(ctx, labels);          // Phase 8B: the Harbour Line's tracks, platforms, fence and level crossings (src/world/rail.js)
     scatterStreets(ctx);
     scatterAreas(ctx);
     scatterDecks(ctx);
@@ -132,17 +136,23 @@ export class CitySystem {
     world.solarLamps = this.sun.lamps;
     world.isNearSolarLamp = (p) => !!this.sun.lampNear(p);
     this._buildSolarLamps(game, map);
+    // Phase 8A: sunlight guidance (beacons through the smog, painted arrows and signs on the ways up); needs the colliders, so it comes last
+    this.guidance = new Guidance(game, map, ctx); this.guidance.build();
+    world.guidance = this.guidance; world.upRoutes = this.guidance.routes;
     world.gates = this.gates.gates;
     world.gate = (id) => this.gates.get(id);
     world.lifts = game.lifts.lifts;
 
-    // ---- interactables: lifts and the Control Tower terminal
-    this._registerLiftInteractables(game, map);
+    // ---- interactables: the Control Tower terminal (the lifts' E panels are src/systems/lifts/panel.js)
     const ct = map.controlTowerTerminal;
     game.interactables.add({
       id: ct.id, pos: { x: ct.x, y: ct.y, z: ct.z }, radius: ct.radius, height: 2.5, prompt: 'Use the Control Tower terminal',
       onInteract: () => game.events.emit('terminal:interact', { id: ct.id }),
     });
+
+    const render0 = game.render.bind(game);
+    game.render = () => { this._cull(); render0(); };
+    game.events.on('vision:start', () => { if (this._chunks) for (const k of this._chunks) k.mesh.visible = true; });
 
     // ---- sky: start in the morning; Phase 3's clock calls game.sky.setTimeOfDay(hour)
     game.sky.setTimeOfDay(game.flags.debugHour ?? 7.5);
@@ -154,7 +164,7 @@ export class CitySystem {
       level: g.player.level, hour: +g.sky.hour.toFixed(2), phase: g.sky.phase,
       inSun: world.isInSunlight(g.player.pos), nearSolarLamp: world.isNearSolarLamp(g.player.pos), shaftIntensity: +world.sunShafts.intensity.toFixed(2),
       gates: this.gates.snapshot(), focus: g.interactables?.focus ? { id: g.interactables.focus.id, prompt: g.interactables.focus.promptText } : null,
-      inSea: world.inSea(g.player.pos), stats: world.stats,
+      inSea: world.inSea(g.player.pos), stats: world.stats, guidance: this.guidance.stats,
     }));
     world.validatePOIs = () => this.validatePOIs();
     game.debug?.addAction('validatePOIs', () => this.validatePOIs());
@@ -178,8 +188,9 @@ export class CitySystem {
     }
     for (const l of map.lifts) {
       const [cx, cz] = l.center, [w, d] = l.size;
-      for (const [stop, y] of [['bottom', l.yBottom], ['top', l.yTop]]) {
-        const [sx, sz] = V[l.exits[stop]];
+      const stops = l.stops ?? [{ y: l.yBottom, exit: l.exits.bottom }, { y: l.yTop, exit: l.exits.top }];
+      for (const { y, exit } of stops) {
+        const [sx, sz] = V[exit];
         if (sx) { const e = cx + sx * w / 2; ctx.keepClear(e, cz - d / 2 - 1.5, e + sx * 6, cz + d / 2 + 1.5, y); }
         else { const e = cz + sz * d / 2; ctx.keepClear(cx - w / 2 - 1.5, e, cx + w / 2 + 1.5, e + sz * 6, y); }
       }
@@ -344,58 +355,79 @@ export class CitySystem {
     this.solarPoolMat.opacity = 0.65 * night; this.solarPools.visible = night > 0.05;
   }
 
-  _registerLiftInteractables(game, map) {
-    const dirs = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
-    for (const l of map.lifts) {
-      const lift = game.lifts.get(l.id);
-      const [cx, cz] = l.center, [w, d] = l.size;
-      const inFootprint = (p) => Math.abs(p.x - cx) < w / 2 + 0.15 && Math.abs(p.z - cz) < d / 2 + 0.15;
-      const onCar = (p) => inFootprint(p) && Math.abs(p.y - lift.y) < 1.3;
-      for (const stop of ['bottom', 'top']) {
-        const side = dirs[l.exits[stop]];
-        const y = stop === 'bottom' ? lift.yBottom : l.yTop;
-        game.interactables.add({
-          // standing in the empty shaft you cannot call the car down onto yourself
-          enabled: (g) => lift.stop() === stop || lift.moving || !inFootprint(g.player.pos),
-          id: `${l.id}:${stop}`, pos: { x: cx + side[0] * (w / 2 + 1.4), y, z: cz + side[1] * (d / 2 + 1.4) }, radius: 4.2, height: 2.6,
-          prompt: (g) => {
-            if (lift.moving) return 'Lift is moving';
-            if (lift.stop() === stop) return onCar(g.player.pos) ? `Ride lift ${stop === 'bottom' ? 'up' : 'down'}` : 'Step onto the lift';
-            return 'Call lift';
-          },
-          onInteract: (g) => {
-            if (lift.moving) return;
-            if (lift.stop() === stop) { if (onCar(g.player.pos)) lift.goTo(stop === 'bottom' ? 'top' : 'bottom'); } else lift.goTo(stop);
-          },
-        });
-      }
+  /**
+   * Draw-call budget. Run just before each render (so it follows the final camera, cinematics included):
+   *  - deep underground (feet below -5, back on above -3) the tower window chunks (`city:building*`, `city:glass*`) are hidden (Phase 7b);
+   *  - Phase 8B: any static chunk whose bounding sphere lies beyond the fog (plus a margin; never under 66 m, so the sing wave still
+   *    lights what the fog swallowed) is not drawn. Hidden again for free as the camera comes near.
+   * A vision (second camera) draws everything.
+   */
+  _cull() {
+    const game = this.game, cam = game.camera.position;
+    if (!this._chunks) {
+      this._chunks = [];
+      this.group.traverse((o) => {
+        if (!o.isMesh || o.isInstancedMesh || !o.name.startsWith('city:')) return;
+        o.geometry.computeBoundingSphere();
+        this._chunks.push({ mesh: o, c: o.geometry.boundingSphere.center, r: o.geometry.boundingSphere.radius, tower: /^city:(building|glass)/.test(o.name) });
+      });
+      this._under = false;
     }
+    if (game.visionSystem?.active || game.params?.cull === 0) { for (const k of this._chunks) k.mesh.visible = true; this._culled = 0; return; }
+    const p = game.player;
+    const under = p.pos.y < (this._under ? -3.0 : -5.0);
+    this._under = under;
+    const D = Math.max(66, (game.scene.fog?.far ?? 60) + 8) + 4;
+    let culled = 0;
+    for (const k of this._chunks) {
+      const dx = k.c.x - cam.x, dz = k.c.z - cam.z, dy = k.c.y - cam.y;
+      const d = Math.sqrt(dx * dx + dz * dz + dy * dy * 0.25) - k.r;
+      const vis = !(under && k.tower) && d < D;
+      if (!vis) culled++;
+      k.mesh.visible = vis;
+    }
+    this._culled = culled;
+    this._cullSmall(cam, D + 8, under);
   }
 
   /**
-   * Phase 7b (draw-call budget): from the tunnels the towers cannot be seen, but their window-wall chunks still cost a call each.
-   * Deep underground (feet below -5, back on above -3) the tower chunks (`city:building*`, `city:glass*`) are hidden.
+   * The small loose meshes (lift cars, gate doors, Setu, trail props, cast...) are drawn one call each wherever they are in the frustum,
+   * so they are hidden beyond the fog too, and when they are on the other side of the ground slab (tunnels vs the street). The
+   * object's own code may set `visible` as it likes: this only turns off what is far, and turns back on what it turned off.
    */
-  _undergroundCull(game, p) {
-    if (!this._cullables) {
-      this._cullables = [];
-      game.scene.traverse((o) => { if (o.isMesh && /^city:(building|glass)/.test(o.name)) this._cullables.push(o); });
-      this._under = false;
+  _cullSmall(cam, D, under) {
+    const game = this.game;
+    if (!this._small || game.time - (this._smallAt ?? -9) > 2) {
+      this._smallAt = game.time; this._small = [];
+      const mine = new Set([game.camera]);
+      game.scene.traverse((o) => {
+        if (!o.isMesh || o.isInstancedMesh || o.name.startsWith('city:') || o.name.startsWith('train-')) return;
+        for (let p = o.parent; p; p = p.parent) if (mine.has(p)) return;
+        if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+        const bs = o.geometry.boundingSphere;
+        if (bs.radius > 14 || o.parent === game.camera) return;
+        this._small.push(o);
+      });
     }
-    const under = p.pos.y < (this._under ? -3.0 : -5.0);
-    if (under === this._under) return;
-    this._under = under;
-    for (const m of this._cullables) m.visible = !under;
+    const v = new THREE.Vector3(), py = game.player.pos.y;
+    for (const o of this._small) {
+      v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld);
+      const dx = v.x - cam.x, dz = v.z - cam.z, d = Math.hypot(dx, dz);
+      const far = d > D || (d > 22 && ((v.y < -3.5) !== (py < -3.2) && (py < -3.2 || v.y < -3.5)));
+      if (far) { if (o.visible) { o.visible = false; o.userData._cullHid = true; } }
+      else if (o.userData._cullHid) { o.visible = true; o.userData._cullHid = false; }
+    }
+    // the lifts' doors etc. are children of the lift groups: those are covered by the meshes themselves
   }
 
   update(dt, game) {
     this.gates.update(dt);
     this.sun.update(dt);
+    this.guidance.update(dt);
     this.sea.update(dt);
     const fx = this.fx;
     fx.ads.update(dt); fx.rain.update(dt); fx.searchlights.update(dt); fx.diyaFlicker.update(dt);
     const p = game.player;
-    if (p) this._undergroundCull(game, p);
     if (p) {
       this._seaCool -= dt;
       if (p.pos.y < this.map.seaLevel - 0.7 && this.sea.inSea(p.pos) && this._seaCool <= 0) {

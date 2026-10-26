@@ -82,6 +82,9 @@ export class Bot {
       await Promise.resolve();
       if (g.modal && !g.dialogue?.isOpen && !g.fragments?.current && !g.visionSystem?.active && !g.hazards?.detaining) { this.d.step(0.1); continue; }   // a scene or card holds her: let it run
       if (await this.react()) { last = Infinity; stall = 0; continue; }
+      if (g.transit?.holdPath?.(p.pos, dx / d, dz / d)) {                // a level crossing is ringing: wait behind the boom like anybody would
+        this.stats.crossingWaits = (this.stats.crossingWaits ?? 0) + 1; this.d.step(0.2); last = Infinity; stall = 0; continue;
+      }
       const yaw = Math.atan2(-dx, -dz) * 180 / Math.PI;
       if (stall > 5) {
         this.stats.stalls++;
@@ -239,6 +242,102 @@ export class Bot {
     await this.goTo(x, z, { tol: 0.8 });
     this.tap('KeyE'); await this.idle(0.5);
     await this.idle(seconds);
+  }
+
+  // ----------------------------------------------------------------------------------------------- the Harbour Line (Phase 8B)
+  /**
+   * Take the Harbour Line from one station to another with real inputs: walk to the platform, wait for the right train to stand
+   * with its doors open, walk in through a door, hold on while it runs (each leg costs a little game time), walk out at the stop.
+   * Returns {ok, waited, rideSeconds, clock}.
+   */
+  async rideTrain(from, to) {
+    const g = this.g, T = g.transit, p = this.p;
+    const A = T.stations.find((s) => s.id === from), B = T.stations.find((s) => s.id === to);
+    const east = B.x > A.x, side = east ? 'north' : 'south', P = A.platforms[side], zEdge = P.trackEdge, s = side === 'north' ? 1 : -1;     // s: from the platform toward the track
+    const t0 = g.time;
+    await this.goTo(A.x + (east ? -6 : 6), P.zMid, { tol: 0.8 });                      // up the platform, away from the columns
+    this.note(`waiting for the ${east ? 'eastbound' : 'westbound'} train at ${A.name}`);
+    let train = null, guard = 0;
+    while (guard++ < 4000) {
+      train = T.trains.find((t) => t.active && t.at === from && t.state === 'dwell' && t.dir === (east ? 1 : -1) && t.timer > 4);
+      if (train) break;
+      await this.idle(0.5);
+    }
+    if (!train) { this.note('NO TRAIN'); return { ok: false }; }
+    const waited = g.time - t0;
+    // the nearest door, then in and across the car
+    const doors = [-16.4, -11.8, -7, -2.4, 2.4, 7, 11.8, 16.4].map((d) => train.x + d);
+    const dx = doors.reduce((b, x) => (Math.abs(x - p.pos.x) < Math.abs(b - p.pos.x) ? x : b), doors[0]);
+    await this.goTo(dx, zEdge - s * 0.9, { tol: 0.22 });                               // the door is 1.5 m wide and Mithi 0.7: line up on its middle
+    this.d.look(s > 0 ? 180 : 0, 0);                                                    // face the train
+    this.d.run('KeyW', 0.9);
+    if (!T.ride) { this.d.run('KeyW', 0.5); }
+    this.note(`boarded ${train.id}: ${this.where()}`);
+    let n = 0;
+    while (n++ < 2400 && !(T.ride && T.ride.train.at === to && T.ride.train.state === 'dwell')) {
+      if (!T.ride) { this.note('left the train mid-way'); break; }
+      await this.idle(0.5);
+    }
+    const rideSeconds = g.time - t0 - waited;
+    // out of the doors: toward the platform, away from the track
+    const t = T.ride?.train ?? train;
+    if (t.at === to) {
+      const doors2 = [-16.4, -11.8, -7, -2.4, 2.4, 7, 11.8, 16.4].map((d) => t.x + d);
+      const ox = doors2.reduce((b, x) => (Math.abs(x - p.pos.x) < Math.abs(b - p.pos.x) ? x : b), doors2[0]);
+      await this.goTo(ox, t.z + (side === 'north' ? -0.7 : 0.7), { tol: 0.22 });
+      this.d.look(s > 0 ? 0 : 180, 0);
+      this.d.run('KeyW', 1.0);
+    }
+    return { ok: !T.ride && p.pos.y > 0.4, waited: Math.round(waited), rideSeconds: Math.round(rideSeconds), clock: g.clock.hhmm, at: this.where() };
+  }
+
+  // ----------------------------------------------------------------------------------------------- lifts with floors and charge (Phase 8B)
+  /**
+   * Ride a lift to the stop `stopId`: walk to its call panel, call the car, step on, press E; when a floor panel opens answer it with the
+   * floor's digit; when the cell is drained, wait for the sun (`onDrained: 'wait'`) or press a palm to the panel (`'palm'`, costs a ray).
+   */
+  async rideLift(liftId, stopId, { onDrained = 'wait', maxWait = 400 } = {}) {
+    const g = this.g, lift = g.lifts.get(liftId), p = this.p, [cx, cz] = lift.center;
+    const DIRS = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
+    const me = lift.stops.reduce((b, st) => (Math.abs(st.y - p.pos.y) < Math.abs(b.y - p.pos.y) ? st : b), lift.stops[0]);
+    const settle = async () => { let n = 0; while (lift.moving && n++ < 600) await this.idle(0.5); };
+    const handle = async () => { for (let i = 0; i < 6 && g.dialog.isOpen; i++) await this.answerLiftDialog(lift, stopId, onDrained, maxWait); };
+    this.stats.liftRides = (this.stats.liftRides ?? 0) + 1;
+    // 1. get the car to this floor (a call; a drained cell is waited out, or paid for with a palm)
+    if (lift.stop() !== me.id) {
+      await this.use(`${liftId}:${me.id}`); await handle(); await settle();
+      if (lift.stop() !== me.id && !lift.moving) { this.tap('KeyE'); await this.idle(0.3); await handle(); await settle(); }
+    }
+    // 2. onto the car
+    const side = DIRS[me.exit];
+    await this.goTo(cx + side[0] * 2.6, cz + side[1] * 2.6, { tol: 0.7 });
+    await this.goTo(cx, cz, { tol: 0.6 });
+    // 3. E: a plain lift just goes; a many-floored one asks which floor; a drained one asks what you will do about it
+    for (let tries = 0; tries < 5 && !lift.moving && lift.stop() !== stopId; tries++) {
+      if (!g.dialog.isOpen) { this.tap('KeyE'); await this.idle(0.3); }
+      await handle(); await this.idle(0.2);
+    }
+    await settle();
+    return { ok: lift.stop() === stopId, charge: lift.chargePct, rays: p.rays, at: this.where() };
+  }
+
+  /** Read whatever lift dialog is open (floor panel or drained) and answer it for the target stop. */
+  async answerLiftDialog(lift, stopId, onDrained, maxWait) {
+    const g = this.g, dlg = g.dialog;
+    const ids = dlg.current.choices.map((c) => c.id);
+    const press = async (id) => { const i = dlg.current.choices.findIndex((c) => c.id === id); const k = dlg.current.choices[i].keys[0]; key(k, 'keydown'); key(k, 'keyup'); await this.sleep(5); };
+    await this.sleep(20);
+    if (ids.includes('palm')) {
+      if (onDrained === 'palm') { this.note(`lift drained (${lift.chargePct}%): pressing a palm to the panel`); await press('palm'); }
+      else {
+        this.note(`lift drained (${lift.chargePct}%): waiting for the sun`); await press('wait');
+        const cost = lift.cost(stopId, {}); let t = 0;
+        while (t < maxWait && lift.charge + 1e-6 < Math.max(cost, lift.cost(lift.stop() === stopId ? 'bottom' : stopId, { call: true }))) { await this.idle(1); t += 1; }
+        this.stats.liftWaits = (this.stats.liftWaits ?? 0) + t;
+        this.tap('KeyE'); await Promise.resolve();
+      }
+    } else if (ids.includes(stopId)) await press(stopId);
+    else await press(ids[ids.length - 1]);
   }
 
   /** One compact object for the playthrough transcript. */

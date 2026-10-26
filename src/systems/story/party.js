@@ -134,7 +134,7 @@ export class PartySystem {
 
   switchTo(id) {
     const g = this.game;
-    if (!this.jeetu) { g.messages?.say('Jeetu is not with you yet.', { kind: 'hint', ttl: 3 }); return false; }
+    if (!this.jeetu) { g.messages?.say('Jeetu is not with you yet. Find him in the ward at Sion Hospital.', { kind: 'hint', ttl: 3 }); return false; }
     if (id === this.active || g.modal || g.mode !== 'playing') return false;
     const p = g.player, from = this.bodies[this.active], to = this.bodies[id];
     const prev = this.active;
@@ -156,7 +156,7 @@ export class PartySystem {
     }
     if (to.model) to.model.group.rotation.set(0, p.yaw, 0);
     this._hudText();
-    g.messages?.say(id === 'jeetu' ? 'You are Jeetu. You can see. You cannot sing.' : 'You are Mithi again. The world is sound.', { kind: 'system', ttl: 4 });
+    g.messages?.say(id === 'jeetu' ? 'You are Jeetu. You can see faces, signs, the colour of the dust. You cannot sing, and you are slower.' : 'You are Mithi again. The world is sound, and warm where it is kind.', { kind: 'system', ttl: 4 });
     g.events.emit('party:switched', { active: id, from: prev });
     return true;
   }
@@ -260,15 +260,16 @@ export class PartySystem {
     this._call.set(best.kind, now); this._callGlobal = 3;
     const dir = sayDirection(bearing(p.pos, p.yaw, best.pos));
     const J = this.bodies.jeetu;
+    const R = (a) => a[Math.floor(Math.random() * a.length)];
     const T = {
-      dog: bd < 9 ? `"Didi, dogs, ${dir}! Close!"` : `"Didi, dogs, ${dir}!"`,
-      deranged: `"Didi, someone's standing there, ${dir}. He's not right."`,
-      guard: `"Didi, a guard, ${dir}. Walk slowly."`,
-      drone: `"Drone, ${dir}, up high. Keep out of the light."`,
-      camera: `"Camera, ${dir}, Didi."`,
-      slab: '"Didi, the floor, it\'s cracking!"',
-      smog: `"Didi, bad air, ${dir}. Cover your mouth."`,
-      water: `"Water, ${dir}, Didi. Deep."`,
+      dog: bd < 9 ? R([`"Didi, dogs, ${dir}! Close! Do not run!"`, `"Didi, dogs, ${dir}! Sing! Sing!"`]) : R([`"Didi, dogs, ${dir}."`, `"Didi, dogs, ${dir}. Three of them, I think. Walk slow."`]),
+      deranged: R([`"Didi, ruk. Someone is standing there, ${dir}. He is not right. Do not talk to him."`, `"There is a man ${dir}, Didi. He is muttering. Do not sing, he will hear."`]),
+      guard: R([`"Didi, guard, ${dir}. Walk slowly. Do not run. Do not sing."`, `"Guard ${dir}, Didi. Do not look at his torch. Pretend you work here."`]),
+      drone: R([`"Drone, ${dir}, up high. Keep out of its light, Didi."`, `"Didi, a drone, ${dir}. They hate singing. Keep quiet."`]),
+      camera: R([`"Camera, ${dir}, Didi. Do not stop under it."`, `"There is a camera ${dir}, Didi. It is watching us."`]),
+      slab: R(['"Didi, the floor! It is cracking!"', '"RUN, Didi, the slab, it is going!"']),
+      smog: R([`"Didi, bad air, ${dir}. Cover your mouth with your dupatta."`, `"The air is brown, ${dir}. Breathe through the cloth, Didi, like this."`]),
+      water: R([`"Water, ${dir}, Didi. Deep. It is cold."`, `"Didi, the floor is wet, ${dir}. It is going up."`]),
     };
     this.calls++;
     this.lastCall = { kind: best.kind, dir, dist: Math.round(bd), text: T[best.kind] };

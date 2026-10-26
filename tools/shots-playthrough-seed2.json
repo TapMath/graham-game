@@ -7,12 +7,12 @@
  {
   "name": "bail-gautam-in-time",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-38,-26],[-38,-12],[-24,-8],[-10,5],[-10,-30],[-10,-58],[18,-62],[18,-74],[18,-79],[15,-79.4]]); await B.talk('gautam', ['in time'], { at: [15, -80.2] }); await B.watch(3); return { ...B.report(\"Gautam freed; two hours of forms\"), gautamFree: !!G.flags.gautamFree };})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-38,-26],[-38,-12],[-24,-8],[-10,5],[-10,-30],[-12,-46],[-12,-70],[10,-70],[18,-74],[18,-79],[15,-79.4]]);          /* north over the level crossing at Sion Junction to the police station */ await B.talk('gautam', ['in time'], { at: [15, -80.2] }); await B.watch(3); return { ...B.report(\"Gautam freed; two hours of forms\"), gautamFree: !!G.flags.gautamFree };})()"
  },
  {
   "name": "walk-to-hospital",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[15,-79.4],[18,-74],[18,-62],[-10,-58],[-10,-30],[-10,5],[-24,8],[-24,55],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]); return B.report(\"in ward A\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[15,-79.4],[18,-74],[10,-70],[-12,-70],[-12,-46],[-10,-30],[-10,5],[-24,8],[-24,55],[-45,66],[-45,71.5],[-45,76],[-55,76],[-55,84],[-57.5,86]]); return B.report(\"in ward A\");})()"
  },
  {
   "name": "hospital-jeetu",
@@ -77,12 +77,12 @@
  {
   "name": "to-the-pier-gate",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-10,-58],[40,-60],[105,-60],[140,-60],[155,-58],[156,-45],[156,-39]]); return B.report(\"at the pier gate\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[-44.5,90],[-45,76],[-45,71.5],[-45,66],[-24,55],[-24,5],[-10,5],[-10,-30],[-15,-46],[-15,-70]]);   /* over the level crossing of the Harbour Line at Sion */ const leg = await B.rideTrain('sion', 'wadala-road');                                                         /* and the 4 stops east by train: real inputs, doors and all */ await B.go([[100,-66.4],[105,-67],[105,-53.5],[150,-53.5],[156,-52],[156,-45],[156,-39]]);                     /* back over the crossing at Wadala (x 105) and along the south pavement to the pier */ return { ...B.report(\"at the pier gate\"), train: leg, crossingWaits: B.stats.crossingWaits ?? 0 };})()"
  },
  {
   "name": "bridge-lift",
   "wait": 300,
-  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[161,-39],[168,-39],[172,-39]]); B.tap('KeyE'); await B.idle(11); return B.report(\"lift to the bridge deck\");})()"
+  "eval": "(async()=>{const A=__grahan,B=A.bot,G=A.game;await B.go([[161,-39],[166,-39]]); const lift = await B.rideLift('lift-bridge', 'top'); return { ...B.report(\"lift to the bridge deck\"), lift };})()"
  },
  {
   "name": "bridge-walk",
