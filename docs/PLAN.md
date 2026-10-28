@@ -970,3 +970,133 @@ The game moved to `TapMath/graham-game`. The player's request: *"way more flyove
 - Draw calls are at most 150 in the worst case (currently about 136 at a busy station in third person). The network must be merged per material, and pillars, railings and barriers instanced. Distance-cull far decks. Triangles stay within about 400k.
 - **The scripted playthroughs must still reach ending 1** (`tools/shots-playthrough.json` with `--wait 500 --query "seed=1&intro=1"`, and `tools/shots-playthrough-seed2.json` with `--query seed=2`). Also keep `tools/shots-phase7b.json`, `tools/shots-phase8a.json`, `tools/shots-phase8b.json` and `tools/shots-phase8d.json` passing.
 - Each agent writes its own `tools/shots-phase9a.json` / `tools/shots-phase9b.json` and reads its screenshots. The money shot is looking up from a G street at layers of flyovers and walkways, and looking out across New Wadala's patchy green roofs from L3.
+
+## 14. Phase 10: Mithi's bag, the noisy street, vermin, voices, graffiti and side quests
+
+The player's feedback after Phase 9: the flyovers are great. Their requests, condensed (Mithi = "Mitty" in their notes):
+
+1. **Visible traffic** on the flyovers: cars and buses moving on every road deck, readable from below.
+2. **The street is noisier.** Constant honking, worst around Mithi, because a blind woman is always in the way of traffic. She **can be hit**.
+3. **Under-area people are weaker**, and many ride **super-fast two-wheeler e-scooters**.
+4. **Dirty, gritty, grimy streets** with garbage everywhere. **Beaten, dirty electric taxis and buses.**
+5. **Real-looking wild dogs and rats**, and **exterminators in suits** killing rats and cockroaches everywhere.
+6. **Mithi's backpack.** She rummages it to check what she has:
+   - **Earbuds**, which start by themselves when put in (body heat): noise-cancelling; nature sounds (running water, waves, rain on leaves, crackling fire, wind and water, wind and fire); frequency healing. She used to run a company selling them, with her parents. The story's version (PLAN §1b) is that she worked at Gautam's meditative-music company. Reconcile as: the earbuds were the family business her parents began and she kept running, and Gautam's company made the soundscapes for them.
+   - **Backup D-shots** from the start.
+   - **A mic.** She sings through it, and **asks people questions directly** through it. She can't see, so she speaks more.
+7. **Neon graffiti.** Spray canisters and neon tags, useful to whoever is with her: Setu finds a canister; Jeetu can read and spray.
+8. **The stakes shown on top from the start**: the personal ticking clock and what's at stake. A clear initial direction, and **plenty of side quests**.
+9. **Capsule lifts need a pass.** The pass tier depends on having enough health. Health comes from **D-shots**, bought with **money**. She earns money by **busking**: she sets up a **digital busking screen**, sings, and passers-by pay if it's good. The screen **takes the player's song and converts it into Mithi's voice**.
+10. **More real voices.**
+
+### 14.1 Rules decided here (binding)
+
+- **Money.**
+  - `game.wallet` holds rupees (₹), starting at about ₹60.
+  - Earned by busking and side quests.
+  - Spent on D-shots (vendors now price in ₹, still with unpredictable vendor variance and risk), lift passes, and some story costs (bail, the torch) where ₹ is natural. Some of those can still be paid in rays or time as an alternative.
+  - Health stays a currency in the deck's sense: rays are what passes and gates test, and D-shots turn money into rays.
+- **Passes.**
+  - Capsule lifts and gates check a **pass**: `walk` (L1, free), `flyover` (L2), `sky` (L3).
+  - A pass is bought at **pass kiosks** (by lift lobbies, at stations) for ₹, and the kiosk's bio-scan only issues it if rays meet the tier: flyover ≥ 5, sky ≥ 8, as before.
+  - A pass is a timed day-pass: it lasts until the next 06:00.
+  - The Tara permit stays a separate route to the bridge.
+- **Busking.**
+  - Mithi unfolds the screen at any spot with foot traffic (not on roads or track).
+  - The player provides a song in one of three ways, in this priority order:
+    - (a) **sing or hum into the device microphone** (`getUserMedia`, with the permission explained first): the pitch is tracked and resynthesised in Mithi's voice;
+    - (b) **play a melody on keys or taps**: a simple 8-note raga keyboard (Bhairav and a filmi scale), echoed in her voice;
+    - (c) **pick a song she knows** and play a timing and pitch-matching mini-game.
+  - Quality (in tune, in time, varied phrasing) times the crowd density times the time of day gives the earnings. Coins clink onto the screen's UPI QR, and the crowd gathers.
+  - Busking also helps the senses: singing calms dogs, as before. Police drones fine unregistered buskers (a risk). Better spots pay more.
+- **Earbuds.** Each pair goes in with E from the bag and auto-starts. Exactly one pair at a time.
+  - **Noise-cancelling**: the din and honks are ducked hard. Calmer, so stress drain is lower, but Mithi also hears far less: ripples shrink, Setu's mouth organ range halves, and she gets hit by traffic more. A real trade-off.
+  - **Nature soundscapes** (6 kinds): mask the din partly and slowly restore calm. Calm is a soft stat: noise and fear raise stress, and stress makes the darkness drain faster.
+  - **Frequency healing** (for example 432 Hz or solfeggio tones): a slow trickle of healing, or slower decay. Give a pair to **Setu** and his breath decays more slowly.
+  - They have battery-free charge from body heat, so no management, but there are limited pairs: some are lost when you give them away. Earbuds also make good **gifts** in side quests.
+- **The mic.**
+  - **Sing through the mic**: a bigger echolocation wave and calm radius, but police hear it from twice as far.
+  - **Ask through the mic**: choose a question ("Has anyone seen a boy, eight, with a mouth organ?", "Where's the nearest light?", "Where can I buy a pass?", "Which way to Sion Hospital?").
+    - Nearby people (crowd and cast) answer with spoken lines.
+    - Answers are useful, often partial, sometimes wrong, flavoured by who's around.
+    - It's the main way a blind protagonist navigates socially.
+- **Traffic danger.** Road lanes at G and on the flyover footpath edges are dangerous.
+  - Vehicles honk when Mithi is in or near their lane (directional honks you can hear coming).
+  - Scooters weave and are fast.
+  - A hit costs 1 ray (2 for a bus), with knockback, a fall and a curse from the driver. A near miss is a sharp honk and a shove.
+  - Followers can be hit too.
+  - Lane crossings are fair: honks warn about 1.5 s ahead, and zebra crossings with signals exist.
+- **Budget.** Raised for this phase:
+  - *High* quality (default on desktop): at most **175 draw calls** and about **450k triangles** in the worst case.
+  - *Low* quality (default on phones, in Settings): at most **130 calls** and about **300k triangles**, by thinning crowd, traffic, garbage and greenery density and LOD distances.
+  
+  Every workstream must respect both.
+
+### 14.2 Workstreams (four in parallel; file ownership)
+
+- **10A, the street** (main checkout). Owns:
+  - `src/systems/crowds/**` (people, vehicles, routing);
+  - `src/systems/transit/**` vehicles' look;
+  - a new `src/world/grime.js` (garbage and grime dressing, one registration line in `city.js`);
+  - a new `src/systems/audio/street.js` (street sound recipes);
+  - adding a small `game.audio.registerRecipe(kind, fn)` hook in `src/systems/audio/engine.js` (others call it defensively).
+  
+  Deliverables:
+  - dense visible moving traffic on every road flyover deck (headlights, tail-lights, buses), readable from below;
+  - beaten, dirty EV taxis, buses and autos (dents, grime, mismatched panels, roof racks, cracked glass);
+  - fast e-scooters at G and U ridden by thin, masked under-city people (the weaker people below: thinner builds, masks, coughs, slower gait);
+  - honking everywhere at G, more around Mithi, with directional warning honks;
+  - **vehicle hits and near misses** per 14.1, with zebra crossings and signals;
+  - garbage piles, bags, litter, overflowing bins, oily puddles, stains, peeling posters, puddle trash at G and U (instanced);
+  - the quality-setting thinning.
+- **10D, the vermin** (worktree). Owns `src/systems/hazards/**` and its own audio recipe file `src/systems/hazards/sounds.js` (registered via `game.audio?.registerRecipe?.`, with a fallback).
+  - **Realistic dogs**: real canine anatomy (a deep chest, tucked waist, a proper leg articulation with hocks, ears and tail that move), coat colours of Indian pariah dogs, mange patches, and a believable gait cycle (walk, trot, gallop), sniffing, scratching, lying.
+  - **Rats**: swarms in U and G garbage, scurrying along walls, fleeing light, sound and people, squeaking. A rat bite is minor damage; mostly they frighten (stress).
+  - **Cockroaches**: tiny instanced swarms on walls and garbage, scattering.
+  - **Exterminators** in hazmat suits (respirators, backpack tanks, spray lances) roam G and U: spraying fog that kills rats and roaches, carrying bags of dead rats, and logging on tablets. Their fog is a mild smog-like hazard (coughing, worse for Setu's breath). They're also people to *ask* via the mic.
+  - Keep the hazard calm and alert rules (singing calms dogs).
+- **10B, Mithi's bag and the economy** (worktree). Owns:
+  - a new `src/systems/kit/**` (wallet, earbuds, mic, busking, passes, D-shot use);
+  - a new `src/ui/backpack.js` and the busking UI;
+  - `src/ui/hud.js` (the stakes bar);
+  - `src/systems/lifts/panel.js` (the pass check);
+  - `src/systems/vendors.js` (₹ prices);
+  - `src/systems/story/items.js` (extend `DEFS` with the kit; keep the API).
+  
+  Deliverables:
+  - **Backpack UI**: B or a touch button. Rummaging is tactile: items are described by touch and sound as Mithi feels them. Jeetu, if present and active, reads labels.
+  - The starting kit: 2 backup D-shots, Setu's pills and inhaler, the mic, the folded busking screen, 7–8 earbud pairs of different kinds, ₹60.
+  - Earbuds with audio effects via the audio buses (a small hook in `engine.js` if needed), plus the stress stat.
+  - The mic: sing and ask, with `game.mic.addResponder(fn)` so 10C's story can answer.
+  - Busking with song input converted to Mithi's voice: a formant vocal synth, pitch-tracked from the microphone or played on keys.
+  - Wallet, passes and kiosks.
+  - **The stakes bar on top from the start**: "Setu: next pill due in 3h 40m", his breath, the flood countdown once known, and the primary objective with a direction cue. The first minutes must make the direction clear.
+  - APIs: `game.wallet {balance, add(n, why), spend(n, why)}` (events `wallet:changed`), `game.passes {has(tier), grant(tier, untilHour)}`, `game.kit`, `game.mic {ask(q), sing(), addResponder(fn)}`, `game.busking`.
+- **10C, voices, graffiti and side quests** (worktree). Owns `src/systems/story/**` except `items.js`, plus `src/systems/audio/pa.js`.
+  - **More real voices.** Pick the best available voice per character (prefer names with Enhanced, Premium, Neural, Natural, Google or Siri, and en-IN/hi-IN). Use natural prosody: sentence chunking, comma pauses, slight rate and pitch variation per line, breaths between lines, emotion presets (scared, warm, angry, tired), and Hinglish words pronounced sensibly (respell for TTS where needed).
+  - **Mithi speaks more**: voiced asides, her questions through the mic, her answers in conversations, and comments on sounds around her.
+  - **Neon graffiti**:
+    - spray-canister items (`game.items.DEFS.spray`, added defensively);
+    - graffiti-crew NPCs in U and G who teach the code;
+    - Setu finds a canister and leaves neon tags on his timeline route (the trail becomes visible neon for Jeetu and on the map);
+    - Jeetu, or Setu when following, can spray waypoint tags that glow and show on the minimap;
+    - crew tags hint at routes, passes and light.
+  - **Side quests aplenty** (10–14), with rewards in ₹, D-shots, passes, earbuds, info or shortcuts, using 10B's APIs defensively. Examples:
+    - find a lost child at the triage tents;
+    - fetch medicine for an old woman in Dharavi;
+    - play a wedding band gig;
+    - help the exterminators;
+    - return a stolen phone;
+    - deliver tiffins on the local train;
+    - repair a busker's speaker;
+    - trade earbuds for a pass;
+    - the graffiti crew's tag run;
+    - free caged dogs;
+    - a chai-stall owner's lost cat;
+    - Gautam's request.
+    
+    A quest log sits in the backpack.
+  - **Mic answers**: register responders via `game.mic?.addResponder?.(fn)`, so cast and crowd answer questions according to Setu's timeline and nearby places.
+  - **A clear initial direction** in the opening minutes (rescuers point, and Mithi says where she's going).
+
+**Shared files:** each workstream adds only its own registration lines to `src/main.js`, its own debug entries, its own §10 entry, and its own `tools/shots-phase10X.json`. The coordinator merges. **Playthroughs must still reach ending 1.** The bot may need updates for passes (buy a pass at a kiosk with ₹ it earns by busking via keys) and for traffic: 10B owns the bot updates for passes and busking, and 10A for traffic.
