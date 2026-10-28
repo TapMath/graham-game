@@ -11,7 +11,7 @@ import { Y } from './map.js';
 export const TONE = {
   free: 0x59d6a2, gate5: 0xffb347, gate8: 0xff6a4a, metro: 0x4fe0ff, work: 0xffa030, sun: 0xffd45a, surya: 0xffcf6a, danger: 0xff5a4a,
 };
-export const DECK_COLOR = { walkway: 0x7b7463, road: 0x474d50, bridge: 0x80786a, pier: 0x6b6a62, terrace: 0x7b7668 };
+export const DECK_COLOR = { walkway: 0x7b7463, road: 0x474d50, bridge: 0x80786a, pier: 0x6b6a62, terrace: 0x7b7668, catwalk: 0x4e585a };
 const RAIL_H = 1.3;
 
 export function subtractRects(r, cuts) {
@@ -121,7 +121,7 @@ function segBox(s, th, y0, y1) {
 }
 
 /** One rail segment: a solid collider plus thin visual bars; posts are queued for instancing. */
-export function addRail(ctx, s, y, { h = RAIL_H, style = 'rail', tone = 0xffb347, postEvery = 3 } = {}) {
+export function addRail(ctx, s, y, { h = RAIL_H, style = 'rail', tone = 0xffb347, postEvery = 3, lampEvery = 2 } = {}) {
   const b = ctx.b, th = 0.18;
   const col = segBox(s, th, y, y + h);
   b.world.addBox(col.min, col.max, { solid: true, walkable: false, tag: 'rail', userData: { rail: true } });
@@ -144,7 +144,7 @@ export function addRail(ctx, s, y, { h = RAIL_H, style = 'rail', tone = 0xffb347
     const t = s.a + (len * i) / n;
     const px = s.axis === 'x' ? t : (s.n[0] < 0 ? s.fixed + th / 2 : s.fixed - th / 2);
     const pz = s.axis === 'x' ? (s.n[1] < 0 ? s.fixed + th / 2 : s.fixed - th / 2) : t;
-    ctx.railPosts.push([px, y, pz, tone, i % 2 === 0]);
+    ctx.railPosts.push([px, y, pz, tone, i % lampEvery === 0]);
   }
 }
 
@@ -365,7 +365,7 @@ export function paintRoads(ctx) {
   }
 }
 
-/** Jagged ends and hanging rebar for the broken skywalk stubs (visual only). */
+/** Jagged ends and hanging rebar for the broken skywalk stubs and the sheared end of the Sion Junction stack (visual only). `broken`: '+x' | '-x' | '+z' | '-z' = the end that is broken. */
 export function dressBroken(ctx) {
   const { b, map } = ctx;
   const rnd = (() => { let s = 99; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); })();
@@ -373,23 +373,24 @@ export function dressBroken(ctx) {
   const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
   for (const d of map.decks) {
     if (!d.broken) continue;
-    const dir = d.broken === '+x' ? 1 : -1;
-    const ex = dir > 0 ? d.x1 : d.x0, zc = (d.z0 + d.z1) / 2;
+    const dir = d.broken[0] === '+' ? 1 : -1, alongZ = d.broken[1] === 'z';
+    const edge = alongZ ? (dir > 0 ? d.z1 : d.z0) : (dir > 0 ? d.x1 : d.x0), mid = alongZ ? (d.x0 + d.x1) / 2 : (d.z0 + d.z1) / 2, wid = alongZ ? d.x1 - d.x0 : d.z1 - d.z0;
     // sheared-off concrete lips hanging at angles
     for (let i = 0; i < 4; i++) {
-      const w = 1 + rnd() * 1.6, len = 1.5 + rnd() * 2.2;
-      p.set(ex + dir * (len / 2 - 0.2) , d.y - 0.5 - rnd() * 1.3, zc + (i - 1.5) * 1.4 + (rnd() - 0.5) * 0.5);
-      e.set((rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.4, dir * (0.2 + rnd() * 0.9));
+      const w = 1 + rnd() * 1.6, len = 1.5 + rnd() * 2.2, off = (i - 1.5) * (wid / 4.4) + (rnd() - 0.5) * 0.5;
+      const a = edge + dir * (len / 2 - 0.2), yy = d.y - 0.5 - rnd() * 1.3;
+      p.set(alongZ ? mid + off : a, yy, alongZ ? a : mid + off);
+      e.set(alongZ ? -dir * (0.2 + rnd() * 0.9) : (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.4, alongZ ? (rnd() - 0.5) * 0.5 : dir * (0.2 + rnd() * 0.9));
       q.setFromEuler(e); m.compose(p, q, sc);
-      b.geometry(box(len, 0.45, w), { color: 0x7b7463, matrix: m.clone() });
+      b.geometry(alongZ ? box(w, 0.45, len) : box(len, 0.45, w), { color: 0x7b7463, matrix: m.clone() });
     }
     // rebar sticking out and hanging down
     for (let i = 0; i < 9; i++) {
-      const len = 1.5 + rnd() * 3;
-      p.set(ex + dir * (rnd() * 1.6), d.y - 0.4 - rnd() * 0.8, d.z0 + 0.6 + rnd() * (d.z1 - d.z0 - 1.2));
-      e.set(0, (rnd() - 0.5) * 0.4, dir * (rnd() * 1.4 - 0.6));
+      const len = 1.5 + rnd() * 3, a = edge + dir * (rnd() * 1.6), lat = (alongZ ? d.x0 : d.z0) + 0.6 + rnd() * (wid - 1.2);
+      p.set(alongZ ? lat : a, d.y - 0.4 - rnd() * 0.8, alongZ ? a : lat);
+      e.set(alongZ ? -dir * (rnd() * 1.4 - 0.6) : 0, (rnd() - 0.5) * 0.4, alongZ ? 0 : dir * (rnd() * 1.4 - 0.6));
       q.setFromEuler(e); m.compose(p, q, sc);
-      b.geometry(box(len, 0.06, 0.06), { color: 0x5a3a28, matrix: m.clone() });
+      b.geometry(alongZ ? box(0.06, 0.06, len) : box(len, 0.06, 0.06), { color: 0x5a3a28, matrix: m.clone() });
     }
   }
 }
@@ -527,23 +528,26 @@ export function buildLift(ctx, l) {
   // stops: explicit (multi-stop lifts) or the classic bottom/top pair; the lowest car position sits 0.04 m above its floor (no z-fighting)
   const stops = (l.stops ?? [{ id: 'bottom', y: l.yBottom, exit: l.exits.bottom, ...(l.stopMeta?.bottom ?? {}) }, { id: 'top', y: l.yTop, exit: l.exits.top, ...(l.stopMeta?.top ?? {}) }])
     .map((s, i) => ({ ...s, y: i === 0 ? s.y + 0.04 : s.y }));
-  const lift = game.lifts.add({ id: l.id, center: l.center, size: l.size, stops, speed: 4, dwell: 3, auto: false, label: l.label, panel: l.panel, start: l.start });
+  const lift = game.lifts.add({ id: l.id, center: l.center, size: l.size, stops, speed: 4, dwell: 3, auto: false, label: l.label, panel: l.panel, start: l.start, cls: l.class, capsule: !!l.capsule });
   lift.def = l;
   ctx.lifts.push(lift);
   const exitSides = new Set(stops.map((s) => s.exit));
   const th = 0.3, top = l.yTop + 3.6, bot = l.yBottom - 0.2;
-  const walls = { '-x': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx - w / 2, top, cz + d / 2 + th]], '+x': [[cx + w / 2, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz + d / 2 + th]],
-    '-z': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz - d / 2]], '+z': [[cx - w / 2 - th, bot, cz + d / 2], [cx + w / 2 + th, top, cz + d / 2 + th]] };
-  for (const side of Object.keys(walls)) {
-    if (exitSides.has(side)) continue;
-    b.box(walls[side][0], walls[side][1], { color: 0x4a5557, tag: 'lift-shaft', walkable: false, userData: { rail: true } });
-  }
-  // roof cap
-  b.box([cx - w / 2 - th, top, cz - d / 2 - th], [cx + w / 2 + th, top + 0.4, cz + d / 2 + th], { color: 0x3c4648, tag: 'lift-cap', walkable: false });
-  // glowing corner strips along the full height: the lift is visible from far away
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const x = cx + sx * (w / 2 + th + 0.04), z = cz + sz * (d / 2 + th + 0.04);
-    b.box([x - 0.08, l.yBottom, z - 0.08], [x + 0.08, top + 0.4, z + 0.08], { mat: 'emissive', color: tone, solid: false, walkable: false, noTint: true });
+  if (l.capsule) buildCapsuleFrame(ctx, l, stops, tone, exitSides);
+  else {
+    const walls = { '-x': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx - w / 2, top, cz + d / 2 + th]], '+x': [[cx + w / 2, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz + d / 2 + th]],
+      '-z': [[cx - w / 2 - th, bot, cz - d / 2 - th], [cx + w / 2 + th, top, cz - d / 2]], '+z': [[cx - w / 2 - th, bot, cz + d / 2], [cx + w / 2 + th, top, cz + d / 2 + th]] };
+    for (const side of Object.keys(walls)) {
+      if (exitSides.has(side)) continue;
+      b.box(walls[side][0], walls[side][1], { color: 0x4a5557, tag: 'lift-shaft', walkable: false, userData: { rail: true } });
+    }
+    // roof cap
+    b.box([cx - w / 2 - th, top, cz - d / 2 - th], [cx + w / 2 + th, top + 0.4, cz + d / 2 + th], { color: 0x3c4648, tag: 'lift-cap', walkable: false });
+    // glowing corner strips along the full height: the lift is visible from far away
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const x = cx + sx * (w / 2 + th + 0.04), z = cz + sz * (d / 2 + th + 0.04);
+      b.box([x - 0.08, l.yBottom, z - 0.08], [x + 0.08, top + 0.4, z + 0.08], { mat: 'emissive', color: tone, solid: false, walkable: false, noTint: true });
+    }
   }
   // lobby side walls (and the call panel)
   if (l.lobby) {
@@ -564,13 +568,47 @@ export function buildLift(ctx, l) {
     }
     void gate;
   }
-  // the solar cell on the cap: tilted toward the east, a dark blue panel with a bright frame (lit lifts recharge fast by day)
-  const cell = (l.panel ?? 'sun') === 'sun';
-  b.box([cx - w / 2 - 0.5, top + 0.4, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.52, cz + d / 2 + 0.5], { color: cell ? 0x1b3556 : 0x2c3030, tag: 'lift-solar', walkable: false, solid: false, noTint: true });
-  b.box([cx - w / 2 - 0.5, top + 0.52, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.545, cz - d / 2 - 0.42], { mat: 'emissive', color: cell ? 0x6fb4ff : 0x4a4a42, solid: false, walkable: false, noTint: true });
+  if (!l.capsule) {
+    // the solar cell on the cap: tilted toward the east, a dark blue panel with a bright frame (lit lifts recharge fast by day)
+    const cell = (l.panel ?? 'sun') === 'sun';
+    b.box([cx - w / 2 - 0.5, top + 0.4, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.52, cz + d / 2 + 0.5], { color: cell ? 0x1b3556 : 0x2c3030, tag: 'lift-solar', walkable: false, solid: false, noTint: true });
+    b.box([cx - w / 2 - 0.5, top + 0.52, cz - d / 2 - 0.5], [cx + w / 2 + 0.5, top + 0.545, cz - d / 2 - 0.42], { mat: 'emissive', color: cell ? 0x6fb4ff : 0x4a4a42, solid: false, walkable: false, noTint: true });
+  }
   // openings so rails are not generated across the doorways
   for (const y of stops.map((st) => st.y)) ctx.openings.push({ x0: cx - w / 2 - 0.3, z0: cz - d / 2 - 0.3, x1: cx + w / 2 + 0.3, z1: cz + d / 2 + 0.3, y });
   return lift;
+}
+
+/**
+ * The static frame of a capsule lift (Phase 9A): two exposed rails up the back of the shaft, a cross beam and the solar cell on top, and
+ * lit strips down the rails. The glass car itself is drawn by the fleet (src/systems/lifts/fleet.js); the car's side walls and the landing
+ * doors are colliders owned by the Lift. Visual only: the rails stand 0.1 m outside the car's footprint.
+ */
+function buildCapsuleFrame(ctx, l, stops, tone, exitSides) {
+  const { b } = ctx;
+  const [cx, cz] = l.center, [w, d] = l.size, ys = stops.map((s) => s.y), y0 = Math.min(...ys) - 0.1, y1 = Math.max(...ys);
+  const free = ['-x', '+x', '-z', '+z'].filter((sd) => !exitSides.has(sd));
+  const back = l.back && free.includes(l.back) ? l.back : free[0];
+  const rail = 0.2, top = y1 + 3.35, cell = (l.panel ?? 'sun') === 'sun';
+  if (back) {
+    const ax = back[1], sg = back[0] === '-' ? -1 : 1, out = 0.1;
+    for (const k of [-1, 1]) {
+      const px = ax === 'x' ? cx + sg * (w / 2 + out + rail / 2) : cx + k * (w / 2 - rail / 2), pz = ax === 'x' ? cz + k * (d / 2 - rail / 2) : cz + sg * (d / 2 + out + rail / 2);
+      b.box([px - rail / 2, y0, pz - rail / 2], [px + rail / 2, top + 0.3, pz + rail / 2], { color: 0x4a5557, tag: 'lift-rail', solid: false, walkable: false });
+      const fx = ax === 'x' ? px - sg * (rail / 2 + 0.02) : px, fz = ax === 'x' ? pz : pz - sg * (rail / 2 + 0.02);
+      b.box([fx - (ax === 'x' ? 0.015 : 0.06), y0, fz - (ax === 'x' ? 0.06 : 0.015)], [fx + (ax === 'x' ? 0.015 : 0.06), top + 0.3, fz + (ax === 'x' ? 0.06 : 0.015)], { mat: 'emissive', color: tone, solid: false, walkable: false, noTint: true });
+    }
+    // the cross beam and the cell on top
+    const bx0 = ax === 'x' ? cx + sg * (w / 2 + out) - (sg < 0 ? rail : 0) : cx - w / 2, bz0 = ax === 'x' ? cz - d / 2 : cz + sg * (d / 2 + out) - (sg < 0 ? rail : 0);
+    b.box([bx0, top, bz0], [bx0 + (ax === 'x' ? rail : w), top + 0.3, bz0 + (ax === 'x' ? d : rail)], { color: 0x3c4648, tag: 'lift-beam', solid: false, walkable: false });
+    const cw = Math.max(1.2, Math.min(w, d) * 0.9);
+    const px = ax === 'x' ? cx + sg * (w / 2 + out + rail / 2) : cx, pz = ax === 'x' ? cz : cz + sg * (d / 2 + out + rail / 2);
+    const sx = ax === 'x' ? 0.9 : Math.max(cw, w * 0.9) / 2, sz = ax === 'x' ? Math.max(cw, d * 0.9) / 2 : 0.9;
+    b.box([px - sx, top + 0.3, pz - sz], [px + sx, top + 0.38, pz + sz], { color: cell ? 0x1b3556 : 0x2c3030, tag: 'lift-solar', solid: false, walkable: false, noTint: true });
+    b.box([px - sx, top + 0.38, pz - sz], [px + sx, top + 0.405, pz - sz + 0.08], { mat: 'emissive', color: cell ? 0x6fb4ff : 0x4a4a42, solid: false, walkable: false, noTint: true });
+  } else {
+    b.box([cx - w / 2, top, cz - d / 2], [cx + w / 2, top + 0.3, cz + d / 2], { color: 0x3c4648, tag: 'lift-beam', solid: false, walkable: false });
+  }
 }
 
 

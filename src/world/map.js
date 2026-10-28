@@ -19,6 +19,8 @@
 //   L2: flyover H along z=-60 (x -135..157), flyover V along x=-15 (z -166..42), cloverleaf at (-15,-60)
 //   U : metro station under x 27..63 (z -46..80), service tunnels, breach chamber far west (-138..-98)
 
+import { buildNetwork } from './network.js';
+
 export const Y = Object.freeze({ U: -8, G: 0, L1: 12, L2: 24, L3: 38 });
 
 function lcg(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
@@ -209,18 +211,18 @@ const lifts = [
   // `stops` (lowest first): id, level, y (walking surface), exit = the side of the car you walk on/off at that stop. Two-stop lifts
   // keep the ids 'bottom' and 'top'. `panel`: 'sun' (the solar cell on the shaft cap is above the haze) or 'shade'. `min`: bio-scan
   // threshold (rays) to RIDE to that stop; the older gated lifts keep their physical gates instead.
-  { id: 'lift-g1-skywalk', center: [20, 0], size: [4, 4], yBottom: 0, yTop: 12, exits: { bottom: '-x', top: '-x' }, tone: 'free', label: 'WALKWAYS', panel: 'shade', start: 0.9 },
-  { id: 'lift-12-bazaar', center: [2, -48], size: [4, 4], yBottom: 12, yTop: 24, exits: { bottom: '+z', top: '-z' }, tone: 'gate5', label: 'FLYOVERS', gate: 'gate-l2-lift-bazaar', lobby: { side: '+z', len: 8 }, panel: 'sun', start: 0.8 },
-  { id: 'lift-23-west', center: [80, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-w', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.85 },
-  { id: 'lift-bridge', center: [172, -39], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '-x', top: '+z' }, tone: 'sun', label: 'ATAL SETU', gate: 'gate-bridge', lobby: { side: '-x', len: 8 }, panel: 'sun', start: 1 },
-  { id: 'lift-23-east', center: [140, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-e', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.75 },
+  { id: 'lift-g1-skywalk', class: 'public', capsule: true, center: [20.5, 0], size: [5, 5], yBottom: 0, yTop: 12, exits: { bottom: '-x', top: '-x' }, tone: 'free', label: 'WALKWAYS', panel: 'shade', start: 0.9 },
+  { id: 'lift-12-bazaar', class: 'family', capsule: true, center: [2, -48], size: [4, 4], yBottom: 12, yTop: 24, exits: { bottom: '+z', top: '-z' }, tone: 'gate5', label: 'FLYOVERS', gate: 'gate-l2-lift-bazaar', lobby: { side: '+z', len: 8 }, panel: 'sun', start: 0.8 },
+  { id: 'lift-23-west', class: 'family', capsule: true, center: [80, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-w', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.85 },
+  { id: 'lift-bridge', class: 'family', capsule: true, center: [172, -39], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '-x', top: '+z' }, tone: 'sun', label: 'ATAL SETU', gate: 'gate-bridge', lobby: { side: '-x', len: 8 }, panel: 'sun', start: 1 },
+  { id: 'lift-23-east', class: 'family', capsule: true, center: [140, -60], size: [4, 4], yBottom: 24, yTop: 38, exits: { bottom: '-x', top: '-x' }, tone: 'gate8', label: 'UPPER DECKS', gate: 'gate-l3-lift-e', lobby: { side: '-x', len: 6 }, panel: 'sun', start: 0.75 },
   // Phase 8B: express lifts from the street straight up to the New Wadala podiums (38 m: the longest, dearest ride), and a three-stop
   // lift in the canyon between the podiums (ground, the EEH flyover, the Upper Decks).
-  { id: 'lift-wadala-express-s', center: [97, -22], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.7,
+  { id: 'lift-wadala-express-s', class: 'family', capsule: true, center: [97, -22], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.7,
     stopMeta: { bottom: { name: 'Wadala street', level: 'G' }, top: { name: 'New Wadala Skyline Terrace', level: 'L3', min: 8 } } },
-  { id: 'lift-wadala-express-n', center: [97, -80], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.9,
+  { id: 'lift-wadala-express-n', class: 'family', capsule: true, center: [97, -80], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+x', top: '-x' }, tone: 'gate8', label: 'NEW WADALA EXPRESS', panel: 'sun', start: 0.9,
     stopMeta: { bottom: { name: 'Wadala street', level: 'G' }, top: { name: 'New Wadala Garden Terrace', level: 'L3', min: 8 } } },
-  { id: 'lift-canyon', center: [105, -48], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+z', top: '+z' }, tone: 'gate5', label: 'WADALA CANYON', panel: 'sun', start: 0.8,
+  { id: 'lift-canyon', class: 'public', capsule: true, center: [105, -48], size: [4, 4], yBottom: 0, yTop: 38, exits: { bottom: '+z', top: '+z' }, tone: 'gate5', label: 'WADALA CANYON', panel: 'sun', start: 0.8,
     stops: [
       { id: 'bottom', y: 0, exit: '+z', name: 'Wadala street', level: 'G' },
       { id: 'L2', y: 24, exit: '-z', name: 'EEH flyover', level: 'L2', min: 5 },
@@ -239,6 +241,9 @@ const gates = [
   { id: 'gate-bridge', min: 0, permit: 'bridgePermit', x: 162.15, y: 0, z: -39, axis: 'z', width: 4, inside: '+x', route: 'lift-bridge', level: 'L3' },
   { id: 'gate-l3-lift-e', min: 8, x: 132.15, y: 24, z: -60, axis: 'z', width: 4, inside: '+x', route: 'lift-23-east', level: 'L3' },
 ];
+
+// ------------------------------------------------------------------------------------ the flyover network (Phase 9A)
+// Built from the base city above (towers, buildings and the Harbour Line are defined below, so the call is made at the end of the file).
 
 // ------------------------------------------------------------------------------------ underground
 // U floors are at -8; the ground slab (y -2..0) is their ceiling. Tracks lie 0.5 m lower.
@@ -335,13 +340,16 @@ const signs = [
 // the east (the sun), see SHAFT_LEAN. None underground; few and thin on G, wider on higher levels.
 export const SHAFT_LEAN = { x: 0.16, z: -0.05 };
 const sh = (id, level, x, z, r, height = null) => ({ id, level, x, z, y0: Y[level], r, height: height ?? { G: 64, L1: 56, L2: 60, L3: 70 }[level] });
+// Phase 9A: the web of flyovers closes most of the sky over the streets, so the ground-level shafts stand in real gaps: the open yards
+// (slum, courtyard, clover yard, the hospital's back lane, the site, the promenade steps) and two slots down the canyon of the street
+// x = 105. `node tools/check-network.mjs` proves that no deck or pier crosses any shaft's slanted column.
 const sunShafts = [
-  sh('sh-g-rubble', 'G', -47, -26, 2.2), sh('sh-g-tree', 'G', -52, 40, 1.4), sh('sh-g-slum-w', 'G', -105, -85, 1.5),
-  sh('sh-g-depot', 'G', -45, 95, 1.6), sh('sh-g-site', 'G', 66, 91, 1.5), sh('sh-g-promenade', 'G', 20, 128, 1.6),
-  sh('sh-g-clover', 'G', 25, -100, 1.8),
+  sh('sh-g-rubble', 'G', -58, -21, 2.2), sh('sh-g-tree', 'G', -52, 40, 1.4), sh('sh-g-slum-w', 'G', -105, -85, 1.5),
+  sh('sh-g-depot', 'G', -45, 95, 1.6), sh('sh-g-site', 'G', 66, 91, 1.5), sh('sh-g-promenade', 'G', 60, 115, 1.6),
+  sh('sh-g-clover', 'G', -55, -75, 1.8), sh('sh-g-slum-s', 'G', -100, 88, 1.5), sh('sh-g-canyon-n', 'G', 103, -150, 1.8), sh('sh-g-canyon-s', 'G', 103, 30, 1.8),
   sh('sh-l1-bazaar-a', 'L1', 24, -22, 3.0), sh('sh-l1-bazaar-b', 'L1', 6, -20, 2.6), sh('sh-l1-b', 'L1', 10, 38, 2.8),
   sh('sh-l1-c', 'L1', 70, 30, 3.2), sh('sh-l1-w', 'L1', -95, -30, 3.0), sh('sh-l1-w2', 'L1', -95, 30, 2.6), sh('sh-l1-tree', 'L1', -35, 20, 2.2),
-  sh('sh-l2-h1', 'L2', -110, -60, 4.0), sh('sh-l2-h2', 'L2', -82, -60, 3.5), sh('sh-l2-clover-n', 'L2', -15, -112, 4.0),
+  sh('sh-l2-h1', 'L2', -110, -60, 4.0), sh('sh-l2-h2', 'L2', -96, -60, 3.5), sh('sh-l2-clover-n', 'L2', 15, -75, 4.0),
   sh('sh-l2-clover-e', 'L2', 32, -60, 4.0), sh('sh-l2-v-south', 'L2', -15, 10, 3.5), sh('sh-l2-canyon', 'L2', 63, -60, 3.0),
   sh('sh-l2-overlook', 'L2', 148, -60, 4.5),
   sh('sh-l3-garden-w', 'L3', 75, -90, 6), sh('sh-l3-garden-w2', 'L3', 75, -30, 6), sh('sh-l3-heights', 'L3', 125, -85, 6),
@@ -578,6 +586,12 @@ const landmarks = [
   { id: 'sea-south', name: 'Mithi River estuary', level: 'G', x: 0, y: 0, z: 142 },
 ];
 
+// ------------------------------------------------------------------------------------ Phase 9A: roads, stacks, skywalks, capsule lifts
+const NET = buildNetwork({
+  Y, towers, decks, stairs, ramps, lifts, gates, buildings, rail, land, spawn,
+  pois: [...fragmentSpots, ...setuSpots, ...vendorSpots, ...checkpoints, ...shrineSpots, ...metroGuardPosts, ...ventSpots.map((v) => v.g), ...landmarks.filter((l) => l.level === 'G'), controlTowerTerminal],
+});
+
 export const MAP = {
   name: 'Mumbai 2049',
   levels: Y, bounds, land, seaLevel: -2.4, spawn,
@@ -585,6 +599,7 @@ export const MAP = {
   rail, deadTree, rubble, slumShacks, signs, buildings, uPartitions, ventSpots, doorDefs, metroGuardPosts, story, setuTimeline, adScreens, shrineSpots, searchlights, statues,
   sunShafts, solarLamps,
   breachChamber, controlTowerTerminal, sunriseBridgeEnd,
+  piers: NET.piers, trafficLanes: NET.trafficLanes, walkLanes: NET.walkLanes,
   setuSpots, vendorSpots, fragmentSpots, hazardZones, checkpoints, landmarks: [...landmarks, ...landmarksExtra],
   // market stalls and other dressing zones used by the prop generator in city.js
   markets: [{ id: 'bazaar', ...rect(1, -48, 34, -12), y: 12 }, { id: 'terrace-c', ...rect(58, 14, 92, 48), y: 12 }],

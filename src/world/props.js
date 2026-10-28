@@ -21,7 +21,7 @@ export function defineKinds(b) {
   const cyl = new THREE.CylinderGeometry(0.5, 0.5, 1, 8, 1, false); cyl.translate(0, 0.5, 0);
   b.kind('pillar', part(cyl, 0xffffff), 'lit');
   const cube = box(1, 1, 1, 0, 0.5, 0);
-  b.kind('cube', part(cube, 0xffffff), 'lit');
+  b.kind('cube', part(cube, 0xffffff), 'lit', { chunked: true });
   b.kind('glow', part(cube.clone(), 0xffffff, 'emissive'), 'emissive');
   b.kind('car', mergeGeometries([
     part(box(1.9, 0.28, 4.3, 0, 0.26, 0), 0x2e3434),
@@ -56,7 +56,7 @@ export function defineKinds(b) {
     part(new THREE.ConeGeometry(0.42, 0.5, 8).translate(0, 2.65, 0), 0xffffff, 'lit'),
   ], false), 'lit');
   // pointed (ogive) rib arch in the XY plane, span 1 wide, 0.866 tall at unit scale, extruded 1 along z: hung under decks
-  const og = (r) => { const out = []; const N = 8; for (let i = 0; i <= N; i++) { const th = Math.PI - (Math.PI / 3) * (i / N); out.push([0.5 + Math.cos(th), Math.sin(th)]); } for (let i = N - 1; i >= 0; i--) out.push([-out[i][0], out[i][1]]); return out.map(([x, y]) => [x * r, y * r]); };
+  const og = (r) => { const out = []; const N = 4; for (let i = 0; i <= N; i++) { const th = Math.PI - (Math.PI / 3) * (i / N); out.push([0.5 + Math.cos(th), Math.sin(th)]); } for (let i = N - 1; i >= 0; i--) out.push([-out[i][0], out[i][1]]); return out.map(([x, y]) => [x * r, y * r]); };
   const rs = new THREE.Shape(); const outer = og(1), inner = og(0.84).reverse();
   rs.moveTo(...outer[0]); for (const p of outer) rs.lineTo(...p); for (const p of inner) rs.lineTo(...p); rs.closePath();
   const rib = new THREE.ExtrudeGeometry(rs, { depth: 1, bevelEnabled: false }); rib.translate(0, 0, -0.5);
@@ -532,7 +532,7 @@ export function scatterGothic(ctx) {
   const { b, map } = ctx, rnd = fixedRng(2049);
   // ---- pointed-arch ribs hanging under road, walkway and bridge decks (apex flush with the underside)
   for (const d of map.decks) {
-    if (!['road', 'walkway', 'bridge'].includes(d.kind)) continue;
+    if (!['road', 'walkway', 'bridge'].includes(d.kind) || d.net) continue;       // the Phase 9A decks carry their own merged vault ribs (network-build.js)
     const alongX = d.lane ? d.lane === 'x' : d.x1 - d.x0 >= d.z1 - d.z0;
     const len = alongX ? d.x1 - d.x0 : d.z1 - d.z0, wid = alongX ? d.z1 - d.z0 : d.x1 - d.x0;
     const rise = Math.min(3.0, 0.45 * wid + 0.6), step = d.kind === 'road' ? 6 : 5;
@@ -566,7 +566,7 @@ export function scatterGothic(ctx) {
   // ---- crows on rails (a seeded sample of the rail posts) and lamp heads
   let crows = 0;
   for (const [x, y, z] of ctx.railPostsAll) {
-    if (rnd() > 0.045 || y < 6) continue;
+    if (rnd() > 0.045 || y < 6 || crows >= 70) continue;      // (Phase 9A: the web has many more rail posts, but the crows stay a few)
     b.instance('crow', { x, y: y + 1.34, z, yaw: rnd() * 6.28, sx: 1.4, sy: 1.4, sz: 1.4, color: 0xffffff }); crows++;
   }
   ctx.crows = crows;

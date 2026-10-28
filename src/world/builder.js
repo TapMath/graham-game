@@ -240,10 +240,10 @@ export class Builder {
   // ------------------------------------------------------------------ instancing
 
   /** Register a repeated prop: one InstancedMesh (one draw call). `geometry` should be ~unit sized. */
-  kind(name, geometry, mat = 'lit') {
+  kind(name, geometry, mat = 'lit', opts = {}) {
     const g = geometry.index ? geometry.toNonIndexed() : geometry;
     if (!g.attributes.uv || !g.attributes.color) finishGeometry(g, 0xffffff, mat, {});
-    this.kinds.set(name, { geometry: g, mat, items: [] });
+    this.kinds.set(name, { geometry: g, mat, items: [], whole: !opts.chunked });   // Phase 9A: with a chunked Builder an instance kind is one mesh per chunk (so the fog cull and the frustum cull work on it), only for the busiest kinds (opts.chunked), per chunk
   }
 
   /** Queue an instance. Colour is multiplied with the geometry's colour (shaded by height if enabled). */
@@ -252,7 +252,7 @@ export class Builder {
     if (!k) throw new Error('unknown instance kind ' + name);
     _c.set(color);
     if ((shade ?? this.shade) && k.mat !== 'emissive' && k.mat !== 'pool') { shadeAt(y + sy * 0.5, _p2); _c.multiply(_p2); }
-    k.items.push([x, y, z, yaw, sx, sy, sz, _c.r, _c.g, _c.b]);
+    k.items.push([x, y, z, yaw, sx, sy, sz, _c.r, _c.g, _c.b, this.chunk === Infinity || k.whole ? '0' : `${Math.floor(x / this.chunk)},${Math.floor(z / this.chunk)}`]);
     this.stats.instances++;
   }
 
@@ -271,21 +271,25 @@ export class Builder {
     this.parts.clear();
     for (const [kname, k] of this.kinds) {
       if (!k.items.length) continue;
-      const mesh = new THREE.InstancedMesh(k.geometry, this.game.materials[k.mat], k.items.length);
-      mesh.name = `${name}:inst:${kname}`;
-      const col = new THREE.Color();
-      k.items.forEach((it, i) => {
-        _e.set(0, it[3], 0);
-        _q.setFromEuler(_e);
-        _p.set(it[0], it[1], it[2]); _s.set(it[4], it[5], it[6]);
-        _m.compose(_p, _q, _s);
-        mesh.setMatrixAt(i, _m);
-        mesh.setColorAt(i, col.setRGB(it[7], it[8], it[9]));
-      });
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      mesh.computeBoundingSphere();
-      group.add(mesh);
+      const byChunk = new Map();
+      for (const it of k.items) { let l = byChunk.get(it[10]); if (!l) byChunk.set(it[10], l = []); l.push(it); }
+      for (const items of byChunk.values()) {
+        const mesh = new THREE.InstancedMesh(k.geometry, this.game.materials[k.mat], items.length);
+        mesh.name = `${name}:inst:${kname}`;
+        const col = new THREE.Color();
+        items.forEach((it, i) => {
+          _e.set(0, it[3], 0);
+          _q.setFromEuler(_e);
+          _p.set(it[0], it[1], it[2]); _s.set(it[4], it[5], it[6]);
+          _m.compose(_p, _q, _s);
+          mesh.setMatrixAt(i, _m);
+          mesh.setColorAt(i, col.setRGB(it[7], it[8], it[9]));
+        });
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        mesh.computeBoundingSphere();
+        group.add(mesh);
+      }
       k.items.length = 0;
     }
     this.game.scene.add(group);

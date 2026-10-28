@@ -32,6 +32,8 @@ import { Sunlight } from './sunlight.js';
 import { Guidance } from './guidance.js';
 import { Sea } from './sea.js';
 import { buildRail, reserveRailCorridor } from './rail.js';
+import { buildPiers, dressNetwork } from './network-build.js';
+import { validateNetwork, deckArea } from './netcheck.js';
 
 const _col = new THREE.Color();
 
@@ -86,8 +88,10 @@ export class CitySystem {
 
     // ---- dressing
     buildPillars(ctx);
+    buildPiers(ctx);                     // Phase 9A: the tall piers of the road stacks (data: map.piers)
     paintRoads(ctx);
     dressBroken(ctx);
+    dressNetwork(ctx);                   // Phase 9A: footpaths, vault ribs, the light under the vault, the lit tower doors
     buildLandmarks(ctx);
     buildStory(ctx);
     world.rail = buildRail(ctx, labels);          // Phase 8B: the Harbour Line's tracks, platforms, fence and level crossings (src/world/rail.js)
@@ -99,7 +103,7 @@ export class CitySystem {
     // ---- railings on every walkable edge with a drop beside it
     for (const d of map.decks) {
       if (d.rails === false) continue;
-      for (const s of edgeSegments(ctx, d, d.y)) addRail(ctx, s, d.y);
+      for (const s of edgeSegments(ctx, d, d.y)) addRail(ctx, s, d.y, d.net ? { postEvery: 10, lampEvery: 2 } : {});
     }
     for (const t of ctx.towerRects) {
       for (const s of edgeSegments(ctx, t, t.y)) addRail(ctx, s, t.y);
@@ -167,6 +171,37 @@ export class CitySystem {
       inSea: world.inSea(g.player.pos), stats: world.stats, guidance: this.guidance.stats,
     }));
     world.validatePOIs = () => this.validatePOIs();
+    // Phase 9A: where the triangles of the last frame went (the biggest meshes first), and the flyover network's own self-check
+    game.debug?.addAction('triBreakdown', (g, top = 24) => {
+      const rows = []; let total = 0, calls = 0;
+      const fr = new THREE.Frustum(), pm = new THREE.Matrix4().multiplyMatrices(g.camera.projectionMatrix, g.camera.matrixWorldInverse); fr.setFromProjectionMatrix(pm);
+      const sph = new THREE.Sphere();
+      g.scene.traverse((o) => {
+        if (!(o.isMesh || o.isLine || o.isPoints) || !o.visible) return;
+        for (let p = o.parent; p; p = p.parent) if (p.visible === false) return;
+        if (o.frustumCulled !== false && o.geometry) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); sph.copy(o.geometry.boundingSphere).applyMatrix4(o.matrixWorld); if (!fr.intersectsSphere(sph)) return; }
+        const geo = o.geometry, idx = geo.index ? geo.index.count : geo.attributes.position.count, n = Math.floor(idx / 3) * (o.isInstancedMesh ? o.count : 1);
+        if (o.isInstancedMesh && o.count === 0) return;
+        rows.push([o.name || o.type, n, o.isInstancedMesh ? o.count : 1]); total += n; calls++;
+      });
+      rows.sort((a, b) => b[1] - a[1]);
+      return { total, calls, top: rows.slice(0, top).map(([name, n, c]) => `${name}: ${n}${c > 1 ? ' (x' + c + ')' : ''}`) };
+    });
+    // the exact version: hooks every object's onBeforeRender, so the triangles the renderer counted between two objects belong to the first
+    game.debug?.addAction('triReal', (g, top = 24) => {
+      const seq = [], r = g.renderer, objs = [];
+      g.scene.traverse((o) => { if (o.isMesh || o.isLine || o.isPoints) objs.push(o); });
+      const saved = objs.map((o) => o.onBeforeRender);
+      objs.forEach((o, i) => { o.onBeforeRender = function (...a) { seq.push([o.name || o.type, r.info.render.triangles, o.isInstancedMesh ? o.count : 1]); saved[i]?.apply(this, a); }; });
+      g.render();
+      objs.forEach((o, i) => { o.onBeforeRender = saved[i]; });
+      const total = r.info.render.triangles, rows = [];
+      for (let i = 0; i < seq.length; i++) { const next = i + 1 < seq.length ? seq[i + 1][1] : total; rows.push([seq[i][0], next - seq[i][1], seq[i][2]]); }
+      const by = new Map(); for (const [n, t, c] of rows) { const k = n.replace(/:-?\d+,-?\d+$/, ':*').replace(/^crowd-(near|mid)-.*/, 'crowd-$1'); const e = by.get(k) ?? [0, 0]; e[0] += t; e[1] += c; by.set(k, e); }
+      return { total, calls: seq.length, groups: [...by.entries()].sort((a, b) => b[1][0] - a[1][0]).slice(0, top).map(([k, v]) => `${k}: ${v[0]} (${v[1]} objs/inst)`) };
+    });
+    game.debug?.addAction('validateNetwork', () => validateNetwork(map));
+    game.debug?.addAction('deckArea', () => ({ before: Math.round(deckArea({ ...map, decks: map.decks.filter((d) => !d.net) })), after: Math.round(deckArea(map)) }));
     game.debug?.addAction('validatePOIs', () => this.validatePOIs());
     game.debug?.addAction('lift', (g, id, where) => { g.lifts.get(id).goTo(where); return g.lifts.get(id).snapshot(); });
     game.debug?.addAction('tp', (g, name) => {
@@ -196,7 +231,7 @@ export class CitySystem {
       }
     }
     for (const s of map.stairs) {
-      if (s.from === s.to) continue;
+      if (s.from === 'U' && s.to === 'U') continue;
       const run = s.run ?? 0.5, len = s.steps * run, ax = s.dir[1], sg = s.dir[0] === '-' ? -1 : 1, hw = s.width / 2 + 1.5;
       const a = ax === 'z' ? s.z : s.x;
       const lo = a - sg * 6, hiEnd = a + sg * (len + 6);
@@ -367,7 +402,13 @@ export class CitySystem {
     if (!this._chunks) {
       this._chunks = [];
       this.group.traverse((o) => {
-        if (!o.isMesh || o.isInstancedMesh || !o.name.startsWith('city:')) return;
+        if (!o.isMesh || !o.name.startsWith('city:')) return;
+        if (o.isInstancedMesh) {          // Phase 9A: the merged instance chunks (railings, pillars, ribs, lamps...) go out with the fog too; moving ones (crows) stay
+          if (o.frustumCulled === false || /^city:inst:crow/.test(o.name) || !o.count) return;
+          o.computeBoundingSphere();
+          if (o.boundingSphere) this._chunks.push({ mesh: o, c: o.boundingSphere.center, r: o.boundingSphere.radius, tower: false });
+          return;
+        }
         o.geometry.computeBoundingSphere();
         this._chunks.push({ mesh: o, c: o.geometry.boundingSphere.center, r: o.geometry.boundingSphere.radius, tower: /^city:(building|glass)/.test(o.name) });
       });
