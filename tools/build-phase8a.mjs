@@ -128,9 +128,10 @@ export const desktop = [
     return { target: nearestShaft(), checks: out };`, 1100),
   step('warmth-grows-as-you-near', `
     A.set('rays', 6);
-    const at = (z) => { A.teleport(25, 0, z, 0); A.look(0, 0); A.step(0.4); return M().warmth; };
-    at(-90);                                  /* the cue sticks to its last target unless another is clearly nearer: start beside the clover shaft */
-    const far = at(-35), mid = at(-80), near = at(-95);
+    const sh = G.world.sunShafts.find((s) => s.id === 'sh-g-clover');         /* (Phase 9A moved the clover shaft into a real gap of the flyover web: (-55, -75)) */
+    const at = (dx) => { A.teleport(sh.x + dx, 0, sh.z, 0); A.look(90, 0); A.step(0.4); return M().warmth; };
+    at(8);                                    /* the cue sticks to its last target unless another is clearly nearer: start beside the clover shaft */
+    const far = at(60), mid = at(32), near = at(6);
     ok(far.id === 'sh-g-clover' && mid.id === 'sh-g-clover' && near.id === 'sh-g-clover', 'the same shaft all the way: ' + [far.id, mid.id, near.id]);
     ok(far.strength < mid.strength && mid.strength < near.strength, 'stronger as you get closer: ' + [far.strength, mid.strength, near.strength]);
     ok(near.alpha > far.alpha, 'and brighter on screen: ' + [far.alpha, near.alpha]);

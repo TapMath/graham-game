@@ -159,30 +159,30 @@ export const tour = [
   step('lift-ride-to-l2-then-l3-with-bio-scan', `
     A.set('rays', 4); A.do('liftChoose', 'L2'); B.d.step(0.3);
     ok(A.state().level === 'G' && !G.lifts.get('lift-canyon').moving, 'with 4 rays the bio-scan refuses the Flyovers floor (needs 5): ' + A.state().level);
-    A.set('rays', 12); { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(8);
+    A.set('rays', 12); { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(12);
     const s1 = A.state(); ok(s1.level === 'L2' && s1.pos.y > 23.9, 'rode to L2 (24 m) in a 3-stop lift: ' + s1.level);
-    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'top'); B.d.step(5);
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'top'); B.d.step(8);
     const s2 = A.state(); ok(s2.level === 'L3', 'and on to the Upper Decks (38 m): ' + s2.level);
     const L = G.lifts.get('lift-canyon');
     return { chargeAfter: L.chargePct, level: s2.level };`, 1200),
   step('lift-drained-wait-it-out', `
     const L = G.lifts.get('lift-canyon'); A.set('rays', 12); L.charge = 90;
-    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'bottom'); B.d.step(14); /* back down: pays 57%, leaving it low */
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'bottom'); B.d.step(20); /* back down: pays 57%, leaving it low (the canyon lift is a public capsule now: 2.8 m/s) */
     L.charge = 0;
     { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(0.4);
     const d1 = A.state().dialog; ok(d1 && d1.choices.join() === 'palm,wait,leave', 'a drained cell offers: palm, wait, leave: ' + JSON.stringify(d1));
     A.do('liftChoose', 'wait'); const c0 = L.charge; B.d.step(25); const c1 = L.charge;
     ok(c1 - c0 > 12, 'by day the lit panel recharges while you wait: ' + c0.toFixed(1) + ' -> ' + c1.toFixed(1));
-    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(8);
+    { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'L2'); B.d.step(12);
     ok(A.state().level === 'L2' || A.state().level === 'G', 'the lift runs again after waiting: ' + A.state().level);
     return { chargeWhileWaiting: [R(c0), R(c1)], level: A.state().level, readyMsg: A.state().messages.last.filter((m) => /cell|lift/i.test(m)).slice(-2) };
     function R(v) { return Math.round(v * 10) / 10; }`, 1200),
   step('lift-drained-palm-one-ray', `
-    const L = G.lifts.get('lift-canyon'); L.goTo('bottom'); B.d.step(14); A.teleport(105, 0.05, -48, 0); B.d.step(0.4);
+    const L = G.lifts.get('lift-canyon'); L.goTo('bottom'); B.d.step(20); A.teleport(105, 0.05, -48, 0); B.d.step(0.4);
     L.charge = 2; A.set('rays', 9); const r0 = A.state().rays;
     { let k = 0; while (G.modal && k++ < 300) B.d.step(0.1); } B.d.run('KeyE', 0.1); B.d.step(0.4); A.do('liftChoose', 'top'); B.d.step(0.4);
     ok(A.state().dialog && A.state().dialog.choices[0] === 'palm', 'drained: the palm option is offered');
-    A.do('liftChoose', 'palm'); B.d.step(12);
+    A.do('liftChoose', 'palm'); B.d.step(17);
     const s = A.state();
     ok(s.rays === r0 - 1 && s.level === 'L3', 'one ray bought the ride: rays ' + r0 + ' -> ' + s.rays + ', level ' + s.level);
     return { rays: [r0, s.rays], level: s.level, charge: L.chargePct };`, 1200),
@@ -190,7 +190,9 @@ export const tour = [
     const out = {};
     for (const h of [11, 23]) {
       A.setTime(h); B.d.step(0.3);
-      for (const l of G.lifts.lifts) { l.goTo(l.stops[0].id); l.charge = 0; }
+      for (const l of G.lifts.lifts) l.goTo(l.stops[0].id);
+      B.d.step(20);                                              /* (park every car first: the slowest, a freight capsule, takes 20 s over 38 m) */
+      for (const l of G.lifts.lifts) l.charge = 0;
       B.d.step(20);
       out[h] = Object.fromEntries(G.lifts.lifts.map((l) => [l.id, +l.charge.toFixed(1)]));
     }
