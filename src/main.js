@@ -23,6 +23,7 @@ import { ObjectiveSystem } from './systems/objective.js';
 import { ViewSystem } from './systems/view.js';
 import { HazardSystem } from './systems/hazards/index.js';
 import { AudioSystem } from './systems/audio/engine.js';
+import { AudioKeeper } from './systems/audio/keeper.js';
 import { PASystem } from './systems/audio/pa.js';
 import { RippleSystem } from './systems/senses/ripples.js';
 import { SensesSystem } from './systems/senses/senses.js';
@@ -106,6 +107,7 @@ function boot() {
   // `senses` grades the atmosphere the sky just set, so it must come after the sky; `ripples` hides Phase 3's Setu glow
   // after `setu` updated.
   game.addSystem('audio', guarded(new AudioSystem(), 'audio'));
+  game.addSystem('audioKeeper', guarded(new AudioKeeper(), 'audioKeeper'));   // keeps Web Audio alive on iOS (silent switch, interruptions)
   game.addSystem('ripples', guarded(new RippleSystem(), 'ripples'));
   game.addSystem('senses', guarded(new SensesSystem(), 'senses'));
   game.addSystem('sing', guarded(new Sing(), 'sing'));
