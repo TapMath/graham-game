@@ -26,8 +26,8 @@ import { Glows } from '../hazards/render.js';
 import { populate, buildVehicleLanes } from './populate.js';
 import { LAYOUT } from '../transit/train-model.js';
 
-const CAP_V = { taxi: 48, auto: 48, bus: 16 };
-const CAPS = { near: 24, mid: 70, far: 260, umbrella: 130 };      // per body (near), per group (mid), far in all, umbrellas in all
+const CAP_V = { taxi: 26, auto: 26, bus: 9 };          // per type, the nearest ones (Phase 9A: with the flyover web there are cars on every level, so the triangle budget needs a cap)
+const CAPS = { near: 24, mid: 70, far: 190, umbrella: 130 };      // per body (near), per group (mid), far in all, umbrellas in all
 const NEAR_R = 12, NEAR_MAX = 22, MID_R = 28, MID_MAX = 70, SEL_MAX = 400;   // people closer than NEAR_R (at most NEAR_MAX) get the detailed bodies, then the mid ones to MID_R, then the tiny ones
 const KEEP = 0.98, KEEP_SEAT = 0.55, KEEP_CAM = 0.92, KEEP_EYE_SEATED = 0.82;     // nobody is drawn closer than this to the player's body, a seat (body), the camera, the eye of someone seated near
 const LUNGIS = [0x3a6a8a, 0x2a5a3a, 0x7a3a2a, 0x5a5a8a, 0x8a8070, 0x6a2a3a, 0x3a4a6a];
@@ -329,7 +329,7 @@ export class CrowdSystem {
   _rerollVehicle(v, L) {
     const r = this.rng.next();
     v.type = L.buses && r < 0.14 ? 'bus' : r < 0.5 ? 'taxi' : 'auto';
-    v.len = VEHICLES[v.type].len; v.width = VEHICLES[v.type].width; v.vmax = (L.level === 'L2' ? 9 : 5.5) * (0.75 + this.rng.next() * 0.4);
+    v.len = VEHICLES[v.type].len; v.width = VEHICLES[v.type].width; v.vmax = (L.level === 'L2' || L.fast ? 9 : 5.5) * (0.75 + this.rng.next() * 0.4);
     v.tint = this.rng.pick(VEHICLES[v.type].tints);
   }
 
@@ -381,6 +381,12 @@ export class CrowdSystem {
       }
     }
     for (const r of riders) sel.push(r);
+    // the strangers in the public capsules (Phase 9A)
+    if (game.capsules && !under) for (const a of game.capsules.riders(cp, (maxD + 8) * (maxD + 8))) {
+      const ddx = a.x - cp.x, ddz = a.z - cp.z, ddy = a.y - cp.y, d2 = ddx * ddx + ddz * ddz + ddy * ddy * 0.4;
+      if (d2 > maxD2 || (d2 > 90 && (ddx * fx + ddz * fz) < -0.12 * Math.sqrt(d2) * fl)) continue;
+      a._d = d2; sel.push(a);
+    }
     sel.sort((a, b) => a._d - b._d);
     if (sel.length > SEL_MAX) sel.length = SEL_MAX;
     // fill the meshes
@@ -501,10 +507,17 @@ export class CrowdSystem {
     const game = this.game;
     for (const v of Object.values(this.vm)) v.n = 0;
     this.lamps.begin();
+    const cand = this._cand ?? (this._cand = []); cand.length = 0;
     if (!under) for (const L of this.vlanes) for (const v of L.vehicles) {
       const dx = v.x - cp.x, dz = v.z - cp.z, d2 = dx * dx + dz * dz + (v.y - cp.y) * (v.y - cp.y) * 0.4;
       if (d2 > maxD2) continue;
       if (d2 > 140 && (dx * fx + dz * fz) < -0.12 * Math.sqrt(d2) * fl) continue;
+      v._d = d2; v._L = L; cand.push(v);
+    }
+    if (game.capsules && !under) for (const v of game.capsules.cargo(cp, maxD2)) { const dx = v.x - cp.x, dz = v.z - cp.z; v._d = dx * dx + dz * dz + (v.y - cp.y) * (v.y - cp.y) * 0.4; if (v._d <= maxD2) cand.push(v); }
+    cand.sort((a, b) => a._d - b._d);
+    for (const v of cand) {
+      const L = v._L, d2 = v._d;
       const vm = this.vm[v.type];
       if (vm.n >= vm.cap) continue;
       const i = vm.n++, o = i * 16, e = vm.mesh.instanceMatrix.array;

@@ -15,10 +15,15 @@
 // when it is shaded, hardly at all at night. `lift.ride(stopId, {call})` is the charged move (the E-panel uses it); `goTo` stays free.
 //   game.lifts.lifts[i].charge / .chargePct / .rechargeRate() / .cost(toY) / .snapshot()     game.lifts.state()
 // Events: lift:ride {id, from, to, cost, charge}, lift:drained {id}, lift:topup {id, charge}.
+// Phase 9A: a lift is a capsule of a class (`cls`: solo 1 / family 4 / public 12 / freight 24 riders, see lift-classes.js). The class sets the
+// seats (`seats`), the speed, the price of a ride (units = metres x costPerM x class cost) and the solar cell's size. A `capsule` lift has no
+// meshes of its own (src/systems/lifts/fleet.js draws every car in three instanced meshes), dynamic side walls on every side that is never a
+// door, and a landing door at each stop that shuts while the car is elsewhere. `lift.crowd` is the number of seats the public is using.
 // game.lifts is the LiftSystem; register it BEFORE the player so platforms move first.
 import * as THREE from '../../vendor/three.module.js';
 import { makeBoxGeometry } from './builder.js';
 import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.js';
+import { liftClass } from './lift-classes.js';
 
 const LEVEL_NAMES = { U: 'Underground', G: 'Ground', L1: 'Walkways', L2: 'Flyovers', L3: 'Upper Decks' };
 const levelOf = (y) => (y < -4 ? 'U' : y < 6 ? 'G' : y < 18 ? 'L1' : y < 31 ? 'L2' : 'L3');
@@ -40,8 +45,12 @@ export class Lift {
     ]).map((s) => ({ ...s })).sort((a, b) => a.y - b.y);
     for (const s of this.stops) { s.level = s.level ?? levelOf(s.y); s.name = s.name ?? LEVEL_NAMES[s.level]; }
     this.yBottom = this.stops[0].y; this.yTop = this.stops[this.stops.length - 1].y;
+    this.cls = liftClass(o.cls ?? 'family');
+    this.capsule = !!o.capsule;
+    this.seats = this.cls.cap; this.crowd = 0;
     this.speed = o.speed ?? 2.5;
     this.dwell = o.dwell ?? 3;
+    if (this.capsule) { this.speed = this.cls.speed; this.dwell = this.cls.dwell; }
     this.auto = o.auto ?? false;
     this.thickness = o.thickness ?? 0.4;
     this.y = o.startAt === 'top' ? this.yTop : this.yBottom;
@@ -53,7 +62,7 @@ export class Lift {
     this.label = o.label ?? '';
     // the solar battery
     this.capacity = o.capacity ?? LIFT_TUNING.capacity;
-    this.costPerM = o.costPerM ?? LIFT_TUNING.costPerM;
+    this.costPerM = o.costPerM ?? LIFT_TUNING.costPerM * (this.capsule ? this.cls.cost : 1);
     this.panel = o.panel ?? 'sun';                          // 'sun': the cell on the shaft cap is above the haze; 'shade': it is not
     this.charge = this.capacity * (o.start ?? 1);
     this.rides = 0; this.palmed = 0;
@@ -63,18 +72,22 @@ export class Lift {
     this.collider = game.physics.addBox([cx - w / 2, -t, cz - d / 2], [cx + w / 2, 0, cz + d / 2], { dynamic: true, tag: 'lift', userData: this });
     game.physics.setOffset(this.collider, 0, this.y, 0);
 
-    // visual: slab + glowing amber edge strips (origin at the surface centre so mesh.y = surface y)
-    const slab = makeBoxGeometry([-w / 2, -t, -d / 2], [w / 2, 0, d / 2], 0x58606a);
-    const strip = (a, b) => makeBoxGeometry(a, b, 0xffb347, 'emissive');
-    const e = 0.12;
+    // visual: slab + glowing amber edge strips (origin at the surface centre so mesh.y = surface y). A capsule has none: the fleet draws it.
     this.mesh = new THREE.Group();
-    this.mesh.add(new THREE.Mesh(slab, game.materials.lit));
-    const strips = mergeGeometries([
-      strip([-w / 2, 0.005, -d / 2], [w / 2, 0.03, -d / 2 + e]), strip([-w / 2, 0.005, d / 2 - e], [w / 2, 0.03, d / 2]),
-      strip([-w / 2, 0.005, -d / 2 + e], [-w / 2 + e, 0.03, d / 2 - e]), strip([w / 2 - e, 0.005, -d / 2 + e], [w / 2, 0.03, d / 2 - e]),
-    ], false);
-    this.mesh.add(new THREE.Mesh(strips, game.materials.emissive));
+    if (!this.capsule) {
+      const slab = makeBoxGeometry([-w / 2, -t, -d / 2], [w / 2, 0, d / 2], 0x58606a);
+      const strip = (a, b) => makeBoxGeometry(a, b, 0xffb347, 'emissive');
+      const e = 0.12;
+      this.mesh.add(new THREE.Mesh(slab, game.materials.lit));
+      const strips = mergeGeometries([
+        strip([-w / 2, 0.005, -d / 2], [w / 2, 0.03, -d / 2 + e]), strip([-w / 2, 0.005, d / 2 - e], [w / 2, 0.03, d / 2]),
+        strip([-w / 2, 0.005, -d / 2 + e], [-w / 2 + e, 0.03, d / 2 - e]), strip([w / 2 - e, 0.005, -d / 2 + e], [w / 2, 0.03, d / 2 - e]),
+      ], false);
+      this.mesh.add(new THREE.Mesh(strips, game.materials.emissive));
+    }
+    this.walls = []; this.landing = [];
     if (this.exits) this._makeDoors();
+    if (this.capsule) { this._makeWalls(); this._makeLanding(); }
     this.mesh.position.set(cx, this.y, cz);
     game.scene.add(this.mesh);
   }
@@ -96,11 +109,14 @@ export class Lift {
       const mx = ax === 'x' ? [mn[0] + t, h, span / 2] : [span / 2, h, mn[2] + t];
       const door = this.game.physics.addBox([this.center[0] + mn[0], mn[1], this.center[1] + mn[2]],
         [this.center[0] + mx[0], mx[1], this.center[1] + mx[2]], { dynamic: true, walkable: false, tag: 'lift-door' });
-      const bar = makeBoxGeometry(mn.map((v, i) => (i === 1 ? 1.1 : v)), mx.map((v, i) => (i === 1 ? 1.2 : v)), 0xffb347, 'emissive');
-      const rail = makeBoxGeometry(mn.map((v, i) => (i === 1 ? 0.2 : v)), mx.map((v, i) => (i === 1 ? 0.3 : v)), 0xffb347, 'emissive');
-      const m = new THREE.Mesh(mergeGeometries([bar, rail], false), this.game.materials.emissive);
-      m.visible = false;
-      this.mesh.add(m);
+      let m = null;
+      if (!this.capsule) {
+        const bar = makeBoxGeometry(mn.map((v, i) => (i === 1 ? 1.1 : v)), mx.map((v, i) => (i === 1 ? 1.2 : v)), 0xffb347, 'emissive');
+        const rail = makeBoxGeometry(mn.map((v, i) => (i === 1 ? 0.2 : v)), mx.map((v, i) => (i === 1 ? 0.3 : v)), 0xffb347, 'emissive');
+        m = new THREE.Mesh(mergeGeometries([bar, rail], false), this.game.materials.emissive);
+        m.visible = false;
+        this.mesh.add(m);
+      }
       this.doors.push({ side, collider: door, mesh: m });
     }
     this._syncDoors();
@@ -117,9 +133,42 @@ export class Lift {
     for (const d of this.doors) {
       const closed = d.side !== open;
       d.collider.enabled = closed;
-      d.mesh.visible = closed;
+      d.closed = closed;
+      if (d.mesh) d.mesh.visible = closed;
       this.game.physics.setOffset(d.collider, 0, this.y, 0);
     }
+    if (this.capsule) { this._syncWalls(); this._syncLanding(); }
+  }
+
+  /** A capsule's fixed side walls (every side that is never a door): dynamic colliders that ride with the car. */
+  _makeWalls() {
+    const [cx, cz] = this.center, [w, d] = this.size, h = 2.7, t = 0.2, used = new Set(this.stops.map((s) => s.exit).filter(Boolean));
+    for (const side of ['-x', '+x', '-z', '+z']) {
+      if (used.has(side)) continue;
+      const ax = side[1], sg = side[0] === '-' ? -1 : 1;
+      const mn = ax === 'x' ? [cx + (sg > 0 ? w / 2 - t : -w / 2), 0, cz - d / 2] : [cx - w / 2, 0, cz + (sg > 0 ? d / 2 - t : -d / 2)];
+      const mx = ax === 'x' ? [mn[0] + t, h, cz + d / 2] : [cx + w / 2, h, mn[2] + t];
+      this.walls.push({ side, collider: this.game.physics.addBox(mn, mx, { dynamic: true, walkable: false, tag: 'lift-wall' }) });
+    }
+    this._syncWalls();
+  }
+  _syncWalls() { for (const wl of this.walls) this.game.physics.setOffset(wl.collider, 0, this.y, 0); }
+
+  /** The landing door of each stop: a static barrier across the exit that is shut whenever the car is not at that stop (nobody steps into an empty shaft). */
+  _makeLanding() {
+    const [cx, cz] = this.center, [w, d] = this.size, t = 0.14;
+    for (const st of this.stops) {
+      if (!st.exit) continue;
+      const ax = st.exit[1], sg = st.exit[0] === '-' ? -1 : 1;
+      const e = ax === 'x' ? cx + sg * w / 2 : cz + sg * d / 2, lo = Math.min(e, e + sg * t), hi = Math.max(e, e + sg * t);
+      const mn = ax === 'x' ? [lo, st.y, cz - d / 2] : [cx - w / 2, st.y, lo], mx = ax === 'x' ? [hi, st.y + 1.5, cz + d / 2] : [cx + w / 2, st.y + 1.5, hi];
+      this.landing.push({ stop: st.id, y: st.y, side: st.exit, collider: this.game.physics.addBox(mn, mx, { solid: true, walkable: false, tag: 'lift-landing' }), closed: true });
+    }
+    this._syncLanding();
+  }
+  _syncLanding() {
+    const here = this.moving ? null : this.stopAtY(this.y)?.id;
+    for (const l of this.landing) { l.closed = l.stop !== here; l.collider.enabled = l.closed; }
   }
 
   /** The surface height for 'top' | 'bottom' | a stop id | a number. */
@@ -149,7 +198,7 @@ export class Lift {
   /** Units per second right now (sun 0..1 is the daylight on the shafts). */
   rechargeRate(sun = this.game.world?.sunShafts?.intensity ?? 0) {
     const T = LIFT_TUNING;
-    return (this.panel === 'sun' ? T.rateLit : T.rateShade) * sun + T.rateNight;
+    return ((this.panel === 'sun' ? T.rateLit : T.rateShade) * sun + T.rateNight) * (this.capsule ? this.cls.rate : 1);
   }
   /** Seconds until the battery holds `need` units at the present rate (Infinity if it never will). */
   secondsToCharge(need) {
@@ -207,7 +256,7 @@ export class Lift {
     return {
       id: this.id, y: +this.y.toFixed(3), target: +this.target.toFixed(3), moving: this.moving, stop: this.stop(),
       charge: +this.charge.toFixed(1), chargePct: this.chargePct, rate: +this.rechargeRate().toFixed(3), panel: this.panel,
-      stops: this.stops.map((s) => s.id), rides: this.rides,
+      stops: this.stops.map((s) => s.id), rides: this.rides, cls: this.cls.id, seats: this.seats, crowd: this.crowd,
     };
   }
 }
@@ -221,7 +270,7 @@ export class LiftSystem {
   state() {
     return this.lifts.map((l) => ({
       id: l.id, label: l.label, center: l.center.slice(), y: +l.y.toFixed(2), moving: l.moving, stop: l.stop(), panel: l.panel,
-      charge: +l.charge.toFixed(1), chargePct: l.chargePct, capacity: l.capacity, rate: +l.rechargeRate().toFixed(3),
+      charge: +l.charge.toFixed(1), chargePct: l.chargePct, capacity: l.capacity, rate: +l.rechargeRate().toFixed(3), cls: l.cls.id, seats: l.seats, crowd: l.crowd, cost1m: +(l.costPerM).toFixed(2),
       stops: l.stops.map((s) => ({ id: s.id, level: s.level, y: s.y, name: s.name, min: s.min ?? 0 })),
     }));
   }

@@ -8,6 +8,8 @@ import { SkySystem } from './world/sky.js';
 import { arenaSystem } from './world/arena.js';
 import { CitySystem } from './world/city.js';
 import { LiftPanelSystem } from './systems/lifts/panel.js';
+import { CapsuleFleet } from './systems/lifts/fleet.js';
+import { CapsuleSystem } from './systems/lifts/capacity.js';
 import { TransitSystem } from './systems/transit/index.js';
 import { CrowdSystem } from './systems/crowds/index.js';
 import { InteractableSystem } from './systems/interactables.js';
@@ -73,6 +75,8 @@ function boot() {
   game.addSystem('screenfx', new ScreenFxSystem());
   game.addSystem('world', params.arena ? arenaSystem : new CitySystem());   // the city; the Phase 1 test arena stays behind ?arena=1
   if (!params.arena) game.addSystem('liftpanel', new LiftPanelSystem());   // Phase 8B: E panels, floor choice, solar charge (after the world, before the player)
+  if (!params.arena) game.addSystem('capsules', new CapsuleSystem());     // Phase 9A: who fits in the car (solo / family / public / freight), the crowd riders, the party waiting for the next one
+  if (!params.arena) game.addSystem('fleet', new CapsuleFleet());          // Phase 9A: the capsule lifts' glass cars (3 instanced meshes)
   if (!params.arena) game.addSystem('transit', new TransitSystem());       // Phase 8B: the Harbour Line trains (they must move before the player is carried)
   game.addSystem('player', new Player());
   // Phase 3 core loop. Order is update order: the clock first, then health, Setu, vendors, endings, the view

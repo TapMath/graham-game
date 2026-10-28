@@ -8,6 +8,8 @@ import { DARK, paintLevel } from './maprender.js';
 import { BOUNDS, LEVEL_INFO, gatesAt, linksAt, levelIndex, RAIL } from './mapdata.js';
 
 const RADIUS_M = 60;                                   // metres from the player to the rim: 120 m across
+/** Ring radius (m) of a capsule lift on the maps, by class: the bigger the car, the bigger the ring. */
+const CAR_R = { solo: 2.4, family: 3.4, public: 4.6, freight: 5.8 };
 const TAU = Math.PI * 2;
 
 export class Minimap {
@@ -124,7 +126,7 @@ export class Minimap {
 
   _lifts(g, f, px) {
     for (const l of f.lifts) {
-      const cx = l.center[0], cz = l.center[1], r = 3.6;
+      const cx = l.center[0], cz = l.center[1], r = CAR_R[l.cls] ?? 3.6;       // the ring grows with the car: solo, family, public, freight
       const pct = l.charge / l.capacity, col = pct > 0.5 ? '#9fe8c0' : pct > 0.2 ? '#ffd27a' : '#ff8068';
       g.lineWidth = 2.2 * px; g.strokeStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(cx, cz, r, 0, TAU); g.stroke();
       g.strokeStyle = col; g.beginPath(); g.arc(cx, cz, r, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0.02, pct)); g.stroke();
@@ -162,8 +164,9 @@ export class Minimap {
     for (const l of f.lifts) {
       const [x, y] = P(l.center[0], l.center[1]);
       if (Math.hypot(x - this.canvas.width / 2, y - this.canvas.width / 2) > this.canvas.width / 2 - 24 * dpr) continue;
-      const lv = l.stops.map((s) => s.level).filter((v) => v !== f.level);
-      const txt = `${l.chargePct}% ${lv.length ? (lv.length > 1 ? '↕' : levelIndex(lv[0]) > levelIndex(f.level) ? '↑' : '↓') + lv.join('·') : ''}`;
+      const lv = l.stops.map((s) => s.level).filter((v, i, a) => v !== f.level && a.indexOf(v) === i);
+      const full = l.seats >= 12 && l.crowd >= l.seats;
+      const txt = `${l.chargePct}% ${lv.length ? (lv.length > 1 ? '↕' : levelIndex(lv[0]) > levelIndex(f.level) ? '↑' : '↓') + lv.join('·') : ''} ·${l.seats}p${full ? ' FULL' : ''}`;
       const w = g.measureText(txt).width + 7 * dpr;
       g.fillStyle = 'rgba(8,14,19,.8)'; this._pill(g, x - w / 2, y + 6 * dpr, w, 10 * dpr, 3 * dpr);
       g.fillStyle = '#c9ece6'; g.fillText(txt, x, y + 11 * dpr);

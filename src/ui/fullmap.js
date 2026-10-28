@@ -13,6 +13,8 @@ import {
 import { MAP } from '../world/map.js';
 
 const TAU = Math.PI * 2;
+/** Ring radius (m) of a capsule lift by class: the bigger the car, the bigger the ring. */
+const CAR_R = { solo: 2.4, family: 3.4, public: 4.6, freight: 5.8 };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const SANS = "Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif";
@@ -25,7 +27,7 @@ const LIFT_NAMES = {
   'lift-bridge': 'Atal Setu lift', 'lift-wadala-express-s': 'New Wadala Express (south)', 'lift-wadala-express-n': 'New Wadala Express (north)', 'lift-canyon': 'Wadala Canyon lift',
 };
 const GATE_NAMES = {
-  'gate-l2-stairs-b': 'EEH flyover stairs, Matunga', 'gate-l2-lift-bazaar': 'EEH flyover lift, King’s Circle', 'gate-l3-stairs-sx3': 'Upper Decks stairs, Wadala',
+  'gate-l2-stairs-b': 'EEH flyover stairs, Matunga', 'gate-l2-stairs-ew': 'Sion cross road stairs, King’s Circle', 'gate-l2-lift-bazaar': 'EEH flyover lift, King’s Circle', 'gate-l3-stairs-sx3': 'Upper Decks stairs, Wadala',
   'gate-l3-lift-w': 'Upper Decks lift, west', 'gate-l3-lift-e': 'Upper Decks lift, east', 'gate-bridge': 'Atal Setu permit gate',
 };
 const STAIR_NAMES = {
@@ -455,11 +457,14 @@ export class FullMap {
       const x = X(l.center[0]), y = Y(l.center[1]);
       if (x < -40 || y < -20 || x > this.W + 40 || y > this.H + 20) continue;
       const pct = l.charge / l.capacity, col = pct > 0.5 ? '#12906a' : pct > 0.2 ? '#d38b00' : '#d1362b';
-      const r = Math.max(7, 4 * z) * 1.0;
+      const r = Math.max(7, (CAR_R[l.cls] ?? 3.4) * 1.15 * z);      // the ring grows with the car: solo, family, public, freight
       g.lineWidth = 3.2; g.strokeStyle = 'rgba(0,0,0,.15)'; g.beginPath(); g.arc(x, y, r + 3, 0, TAU); g.stroke();
       g.strokeStyle = col; g.beginPath(); g.arc(x, y, r + 3, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0.03, pct)); g.stroke();
+      if (z > 0.8) {                                                // the seats, inside the ring
+        g.font = `700 ${(l.seats > 9 ? 8 : 9.5) * S}px ${SANS}`; g.fillStyle = l.seats >= 12 && l.crowd >= l.seats ? '#d1362b' : '#00605c'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(l.seats), x, y + 0.5);
+      }
       if (z > 1.9) {
-        const lvs = l.stops.map((s) => s.level), txt = `${lvs.join('⇄')}  ${l.chargePct}%`;
+        const lvs = l.stops.map((s) => s.level).filter((v, i, a) => a.indexOf(v) === i), txt = `${lvs.join('⇄')}  ${l.chargePct}%  ·${l.seats}p${l.seats >= 12 && l.crowd >= l.seats ? ' FULL' : ''}`;
         g.font = `600 ${9.5 * S}px ${SANS}`; const w = g.measureText(txt).width + 12, h = 15 * S;
         const [cx, cy] = this._spot(x, y - r - 14 * S, w, h);
         g.fillStyle = 'rgba(0,92,88,.95)'; this._pill(g, cx - w / 2, cy - h / 2, w, h, 7);
@@ -600,7 +605,7 @@ export class FullMap {
     const disc = this.sys.discovered;
     const places = PLACES.filter((q) => q.level === lv && q.kind === 'story' && disc.has(q.id));
     const hidden = PLACES.filter((q) => q.level === lv && q.kind === 'story' && !disc.has(q.id)).length;
-    const key = JSON.stringify([lv, Math.round(I * 20), Math.floor(hour * 6), rays, lifts.map((l) => [l.id, Math.round(l.charge / 2)]), T?.stations?.map((s) => [Math.round((s.next?.east?.eta ?? 999) / 3), Math.round((s.next?.west?.eta ?? 999) / 3)]), places.length, hidden, p.level, data.sun.length, game.flags.bridgePermit]);
+    const key = JSON.stringify([lv, Math.round(I * 20), Math.floor(hour * 6), rays, lifts.map((l) => [l.id, Math.round(l.charge / 2), l.crowd]), T?.stations?.map((s) => [Math.round((s.next?.east?.eta ?? 999) / 3), Math.round((s.next?.west?.eta ?? 999) / 3)]), places.length, hidden, p.level, data.sun.length, game.flags.bridgePermit]);
     if (!force && key === this.sideKey) return;
     this.sideKey = key;
 
@@ -632,8 +637,9 @@ export class FullMap {
     if (lifts.length) {
       html += `<section class="fm-sec"><h3>Lifts <span class="dev">लिफ्ट</span></h3><ul class="fm-list fm-lifts">${lifts.map((l) => {
         const col = l.chargePct > 50 ? 'ok' : l.chargePct > 20 ? 'mid' : 'low';
-        const floors = l.stops.map((s) => `${s.level}${s.min && s.level !== lv ? `<sup>${s.min}</sup>` : ''}`).join(' ⇄ ');
-        return `<li><span class="nm">${esc(LIFT_NAMES[l.id] ?? l.label ?? l.id)}</span><span class="fl">${floors}</span><span class="bar ${col}" title="solar battery"><i style="width:${l.chargePct}%"></i></span><span class="pc">${l.chargePct}%${l.panel === 'shade' ? ' <em>shaded</em>' : ''}</span></li>`;
+        const floors = l.stops.map((s) => `${s.level}${s.min && s.level !== lv ? `<sup>${s.min}</sup>` : ''}`).filter((v, i, a) => a.indexOf(v) === i).join(' ⇄ ');
+        const full = l.seats >= 12 && l.crowd >= l.seats;
+        return `<li><span class="nm">${esc(LIFT_NAMES[l.id] ?? l.label ?? l.id)}</span><span class="fl">${floors}</span><span class="cp${full ? ' full' : ''}" title="capsule class and seats">${l.cls} ${l.seats > 1 ? l.seats + ' seats' : '1 seat'}${l.seats >= 12 ? ` · ${l.crowd} in${full ? ', FULL' : ''}` : ''}</span><span class="bar ${col}" title="solar battery"><i style="width:${l.chargePct}%"></i></span><span class="pc">${l.chargePct}%${l.panel === 'shade' ? ' <em>shaded</em>' : ''}</span></li>`;
       }).join('')}</ul><p class="fm-line dim">Batteries charge in sunlight. Small numbers are rays the floor asks for.</p></section>`;
     }
     const gates = gatesAt(lv);

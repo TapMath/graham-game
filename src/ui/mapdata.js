@@ -70,7 +70,7 @@ export const LINKS = (() => {
   const out = [];
   for (const s of MAP.stairs) {
     const a = levelAt(s.y0), b = levelAt(s.y1);
-    if (a === b) continue;
+    if (a === b && !s.net) continue;                  // (the Phase 9A flights between 12 and 18 stay on one level but are still stairs)
     const r = stairRect(s);
     out.push({ id: s.id, kind: 'stairs', lo: a, hi: b, ...r, w: s.width, gate: s.gate ?? null, maintenance: !!s.maintenance, footX: s.x, footZ: s.z, y0: s.y0, y1: s.y1 });
   }
@@ -81,7 +81,7 @@ export const LINKS = (() => {
   for (const l of MAP.lifts) {
     const stops = (l.stops ?? [{ id: 'bottom', y: l.yBottom, exit: l.exits.bottom }, { id: 'top', y: l.yTop, exit: l.exits.top }]).map((s) => ({ ...s, level: s.level ?? levelAt(s.y) })).sort((p, q) => p.y - q.y);
     const [cx, cz] = l.center, [w, d] = l.size;
-    out.push({ id: l.id, kind: 'lift', label: l.label, x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, cx, cz, stops, lo: stops[0].level, hi: stops[stops.length - 1].level, gate: l.gate ?? null, panel: l.panel });
+    out.push({ id: l.id, kind: 'lift', cls: l.class ?? 'family', label: l.label, x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, cx, cz, stops, lo: stops[0].level, hi: stops[stops.length - 1].level, gate: l.gate ?? null, panel: l.panel });
   }
   return out;
 })();

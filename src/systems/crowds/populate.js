@@ -160,6 +160,14 @@ export function populate(sys) {
   }
   // 5 rickshaw drivers dozing in their autos at the Metro forecourt are in the traffic lanes below
   void VEHICLES;
+
+  // -------------------------------------------------------------------------------- Phase 9A: the footpaths of the new flyovers and the skywalks
+  // (last, so the people placed above keep the random stream they always had)
+  for (const W of map.walkLanes ?? []) {
+    const L = addLane(W.ax, W.az, W.bx, W.bz, W.y, W.level);
+    const n = Math.max(1, Math.round(W.n * Math.min(1, L.len / 50 + 0.4)));
+    for (let i = 0; i < n; i++) walker(L, rng.next() * L.len, rng.next() < 0.5 ? 1 : -1, { speedMul: W.speedMul ?? 1, spread: W.spread ?? 0.5, rich: !!W.rich, umbrella: W.level === 'L3' || W.y >= 20 ? 0 : 0.15, woman: W.rich ? rng.next() < 0.5 : undefined });
+  }
 }
 
 // ------------------------------------------------------------------------------------------------- traffic
@@ -202,4 +210,6 @@ export function buildVehicleLanes(sys) {
   // the promenade
   addLane(-135, 129.5, 150, 129.5, 0, 'G', { spacing: 26, jam: 0.2 });
   addLane(150, 126.5, -135, 126.5, 0, 'G', { spacing: 26, jam: 0.2 });
+  // Phase 9A: the new road flyovers (single, double and triple stacks), one lane each way on every deck
+  for (const T of map.trafficLanes ?? []) addLane(T.ax, T.az, T.bx, T.bz, T.y, T.level, { spacing: T.spacing, jam: T.jam, buses: T.buses, fast: T.y >= 10 });
 }
