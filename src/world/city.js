@@ -454,6 +454,9 @@ export class CitySystem {
     }
     const v = new THREE.Vector3(), py = game.player.pos.y;
     for (const o of this._small) {
+      // the list is refreshed every 2 s: in between, a mesh can be removed or have its geometry swapped (the cast does both)
+      if (!o.parent || !o.geometry) continue;
+      if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
       v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld);
       const dx = v.x - cam.x, dz = v.z - cam.z, d = Math.hypot(dx, dz);
       const far = d > D || (d > 22 && ((v.y < -3.5) !== (py < -3.2) && (py < -3.2 || v.y < -3.5)));
