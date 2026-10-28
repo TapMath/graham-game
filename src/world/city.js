@@ -34,6 +34,7 @@ import { Sea } from './sea.js';
 import { buildRail, reserveRailCorridor } from './rail.js';
 import { buildPiers, dressNetwork } from './network-build.js';
 import { validateNetwork, deckArea } from './netcheck.js';
+import { buildGreenery } from './greenery.js';
 
 const _col = new THREE.Color();
 
@@ -146,6 +147,7 @@ export class CitySystem {
     world.gates = this.gates.gates;
     world.gate = (id) => this.gates.get(id);
     world.lifts = game.lifts.lifts;
+    buildGreenery(game, world, ctx);      // Phase 9B: roof gardens, creepers, green walls (src/world/greenery.js); reads the finished world
 
     // ---- interactables: the Control Tower terminal (the lifts' E panels are src/systems/lifts/panel.js)
     const ct = map.controlTowerTerminal;
