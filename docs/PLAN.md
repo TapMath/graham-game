@@ -863,3 +863,48 @@ The map is a compressed, stylised slice of central Mumbai around Dharavi, Sion, 
     - NPC hints.
 
 All Phase 8 agents append to §10 when done, and their final reports list what they couldn't do.
+
+## 13. Phase 9: a denser vertical city (flyovers, walkways, capsule lifts, greenery)
+
+The game moved to `TapMath/graham-game`. The player's request: *"way more flyovers and walkways: a dense network of single, double and triple flyovers, and capsule lifts of varying capacity; make the upper levels greener with plants on buildings, but not everywhere."*
+
+### 13.1 Design
+
+- **The flyover network.** Today the city has a handful of decks per level. Phase 9 makes the sky over the streets a *web*, the defining image of the deck: "Hundreds of tall buildings. Thousands of flyovers and walkways. Blocking the sun for millions."
+  - **Road flyovers** are wide, carry traffic (8B's vehicles) and have barriers. Pedestrians can walk their footpaths. There are three kinds:
+    - **single**: one deck on pillars;
+    - **double**: two stacked decks on shared tall pillars, at L1+L2 or L2+L3 heights;
+    - **triple**: three stacked decks sharing a pier (the Sion Junction look).
+  - **Walkways (skywalks)** are narrow pedestrian bridges between towers, between flyovers, and from flyovers to towers, at many heights. Not only at the five level heights: intermediate heights such as 6, 18 and 30 m, linked to the level system with ramps and stairs. Some are covered with railings and lights, some are cheap steel catwalks.
+  - **Density:** the network roughly triples the walkable deck area above G. Crossings stack visibly overhead, so from the street you look up at layers of undersides (ribbed vaults per §3b) with slivers of sky. Light at G gets even rarer, so place G sun shafts deliberately where gaps in the web exist (and the map shows them).
+  - **Navigation:** more routes up, more loops, more choice, and none of it a maze that traps. Every new deck connects to the network at both ends, or ends at a lift or stair. The health-gate rule still holds for entering L2 and L3 territory; add gates where new routes enter gated levels.
+- **Capsule lifts of varying capacity.** Rounded glass capsules on exposed rails up tower faces and flyover piers, with lit edges. Capacity classes:
+  - **solo** (1 person: Mithi alone, followers must wait or take the next ride; cheap charge, fast);
+  - **family** (4: the party fits);
+  - **public** (12: shared with crowd riders who board and leave; slower, stops at more floors);
+  - **freight** (large, slow, rare; carries vehicles and crowds).
+  
+  Capacity is a real rule: with followers, a solo capsule makes Jeetu and Setu take the next cycle (they wait at the lobby and arrive after). Public capsules show crowd riders and may be full at rush hour (wait for the next). All capsules use 8B's solar charge, with cost scaled by capacity × height, and 8B's floor panel. Many more lifts: aim for about 2–3× the current count, spread across the city at varied heights (short hops of 6–12 m as well as tall runs). The map (8A) draws them with their capacity.
+- **Greener upper levels, not everywhere.** Green is a privilege of height and wealth (§3b cyberpunk: SURYA sells sunlight; New Wadala is the elite).
+  - **L3 and the tops of some towers:** roof gardens, trees on terraces, planters along the decks, hedges, lawns, and vertical-garden façades (green walls) on *some* elite towers.
+  - **L2:** occasional balcony plants and creepers on a few walkways, plus small rooftop kitchen gardens on some mid-rise roofs (a sign of people making do).
+  - **L1/G:** almost none: a few tulsi pots at shrines and potted plants on Dharavi window ledges. The dead tree stays dead.
+  - Distribute by a seeded density field so it's clustered and patchy: some towers lush, most bare. More green where sunlight shafts are.
+  - Plants sway gently in the wind (vertex shader).
+
+### 13.2 Workstreams (built in parallel)
+
+- **9A, the network and capsule lifts** (main checkout). Owns:
+  - `src/world/map.js` and the deck, ramp, stairs and pillar code in `src/world/**` (`city.js`, `builder.js`, `lift.js`, `gates.js`, `rail.js` where routes cross);
+  - `src/systems/lifts/**`;
+  - the crowd and vehicle routing data (`src/systems/crowds/**` paths, so vehicles drive the new road flyovers and pedestrians walk the skywalks);
+  - the debug bot and playthrough scripts.
+  
+  The map (`src/ui/map*.js`) is drawn from world data: verify it renders the new network and lift capacities, and adjust map drawing code if needed.
+- **9B, the greenery** (separate worktree). Owns a new `src/world/greenery.js` (plus any `src/world/plants/*.js`) and adds exactly one registration call in `src/world/city.js` after the city is built (`buildGreenery(game, world)`). It reads final building, tower, deck and lift footprints from world data at runtime, so it adapts to 9A's new network without editing 9A's files. It must not place plants on walk paths, stairs, lift lobbies, gates or track. Instanced and merged: plants add at most about 6 draw calls.
+
+### 13.3 Budgets and tests (both)
+
+- Draw calls are at most 150 in the worst case (currently about 136 at a busy station in third person). The network must be merged per material, and pillars, railings and barriers instanced. Distance-cull far decks. Triangles stay within about 400k.
+- **The scripted playthroughs must still reach ending 1** (`tools/shots-playthrough.json` with `--wait 500 --query "seed=1&intro=1"`, and `tools/shots-playthrough-seed2.json` with `--query seed=2`). Also keep `tools/shots-phase7b.json`, `tools/shots-phase8a.json`, `tools/shots-phase8b.json` and `tools/shots-phase8d.json` passing.
+- Each agent writes its own `tools/shots-phase9a.json` / `tools/shots-phase9b.json` and reads its screenshots. The money shot is looking up from a G street at layers of flyovers and walkways, and looking out across New Wadala's patchy green roofs from L3.
