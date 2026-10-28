@@ -28,7 +28,7 @@ import { LAYOUT } from '../transit/train-model.js';
 
 const CAP_V = { taxi: 26, auto: 26, bus: 9 };          // per type, the nearest ones (Phase 9A: with the flyover web there are cars on every level, so the triangle budget needs a cap)
 const CAPS = { near: 24, mid: 70, far: 190, umbrella: 130 };      // per body (near), per group (mid), far in all, umbrellas in all
-const NEAR_R = 12, NEAR_MAX = 22, MID_R = 28, MID_MAX = 70, SEL_MAX = 400;   // people closer than NEAR_R (at most NEAR_MAX) get the detailed bodies, then the mid ones to MID_R, then the tiny ones
+const NEAR_R = 12, NEAR_MAX = 18, MID_R = 28, MID_MAX = 56, SEL_MAX = 400;   // people closer than NEAR_R (at most NEAR_MAX) get the detailed bodies, then the mid ones to MID_R, then the tiny ones
 const KEEP = 0.98, KEEP_SEAT = 0.55, KEEP_CAM = 0.92, KEEP_EYE_SEATED = 0.82;     // nobody is drawn closer than this to the player's body, a seat (body), the camera, the eye of someone seated near
 const LUNGIS = [0x3a6a8a, 0x2a5a3a, 0x7a3a2a, 0x5a5a8a, 0x8a8070, 0x6a2a3a, 0x3a4a6a];
 const HIVIS = [0xe8801c, 0xe8801c, 0xe8801c, 0xd8b81c];

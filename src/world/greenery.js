@@ -617,7 +617,7 @@ class Greenery {
     }
     for (const sh of this.shafts) {
       if (sh.level !== 'G' || (map.deadTree && Math.hypot(sh.x - map.deadTree.x, sh.z - map.deadTree.z) < 18)) continue;      // the dead tree stays dead
-      for (let k = 0; k < 4; k++) {
+      for (let k = 0; k < 2; k++) {        // a tuft or two: the street stays nearly bare even with Phase 9A's extra gaps of light
         const a = R() * 6.28, d = R() * sh.r * 0.7, x = sh.x + Math.cos(a) * d, z = sh.z + Math.sin(a) * d;
         const g = this.phys.groundHeightAt(x, z, 0.3, 0.3, 0.1);
         if (Math.abs(g) > 0.05 || this.avoided(x, z, 0.4, 0)) continue;
@@ -709,7 +709,7 @@ class Greenery {
     this._pv.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse.copy(cam.matrixWorld).invert());
     this._frustum.setFromProjectionMatrix(this._pv);
     const D = Math.max(66, (game.scene.fog?.far ?? 60) + 8) + 4, NEAR = Math.min(64, D * 0.42);
-    const cp = cam.position, budget = 48000;
+    const cp = cam.position, budget = cp.y < 20 ? 8000 : 22000;   // near-detail triangles per frame (past it, cells drop to the far LOD); below the flyovers the gardens are far overhead, so spend little
     let tris = 0, n0 = 0, cells = 0;
     const chosen = [];
     for (let li = 0; li < this.layers.length; li++) {

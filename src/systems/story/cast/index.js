@@ -19,6 +19,7 @@ import { faceMaterial } from '../../../characters/face.js';
 import { buildRoster } from './roster.js';
 
 const SHOW_DIST = 72;
+const GROUP_SHOW_DIST = 45;   // baked groups are many detailed people at once; farther off, the instanced crowd stands in for them
 
 /** Bake one person (body + face patch) in the pose given: lying, arms, a mood. */
 function bake(game, spec, { x = 0, y = 0, z = 0, yaw = 0, lying = false, arms = {}, mood } = {}) {
@@ -240,7 +241,7 @@ export class CastSystem {
       const p = a.kind === 'group' ? a.def.centre : a.pos;
       const d = Math.hypot(p.x - cam.x, p.z - cam.z);
       const sameLevel = (a.level === 'U') === inU;
-      const show = !a.hiddenFlag && d < SHOW_DIST && sameLevel && Math.abs((a.pos.y ?? 0) - pl.pos.y) < 14;
+      const show = !a.hiddenFlag && d < (a.kind === 'group' ? GROUP_SHOW_DIST : SHOW_DIST) && sameLevel && Math.abs((a.pos.y ?? 0) - pl.pos.y) < 14;
       if (a.group.visible !== show) a.group.visible = show;
       if (a.double) a.double.model.update(dt, 0, { onGround: true });
       if (a.model && a.restYaw !== undefined && !a.talking && !a.hiddenModel && a.def.lying !== true && a.owner !== 'party' && !a.moving) {     // back to where they were standing
