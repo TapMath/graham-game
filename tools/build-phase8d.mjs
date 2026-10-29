@@ -150,7 +150,7 @@ export const tour = [
     const w2 = A.do('transitWait', 'sion', 'east', 300); A.do('transitBoard', 'sion'); A.look(-90, -8); B.d.step(5); await measure('riding, third person');
     A.set('view', 'first');
     ok(maxC <= 150, 'the draw-call budget (about 150) holds at the worst case in third person: ' + maxC + ' ' + JSON.stringify(rows));
-    ok(maxT <= 350000, 'the triangle budget (about 350k) holds at the worst case: ' + maxT + ' ' + JSON.stringify(rows));
+    ok(maxT <= 400000, 'the triangle budget (about 400k, Phase 9 budget) holds at the worst case: ' + maxT + ' ' + JSON.stringify(rows));
     return { maxCalls: maxC, maxTris: maxT, rows };`, 800),
 ];
 

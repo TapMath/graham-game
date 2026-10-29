@@ -135,9 +135,10 @@ export class Follower {
     }
 
     const dx = tp.x - a.x, dz = tp.z - a.z, dist = Math.hypot(dx, dz), dy = tp.y - a.y;
+    const held = !!this.hold;     // Phase 9A: waiting for the next capsule (src/systems/lifts/capacity.js): stands still, falls and is carried like anybody, never teleports
 
     // ---- teleport rules
-    const can = !o.canTeleport || o.canTeleport(this);
+    const can = !held && (!o.canTeleport || o.canTeleport(this));
     if (can) {
       if (dist > o.teleportDist) return this.teleportBehind('far');
       if (a.y < w.killY + 5) return this.teleportBehind('fell');
@@ -167,7 +168,7 @@ export class Follower {
 
     // ---- steer
     const hx = gx - a.x, hz = gz - a.z, hd = Math.hypot(hx, hz);
-    const stopped = !chasing && dist <= o.followDist;
+    const stopped = held || (!chasing && dist <= o.followDist);
     let sp = 0;
     if (!stopped && hd > 0.05) {
       sp = Math.min(o.maxSpeed, o.speed + Math.max(0, dist - 6) * 0.5);
@@ -176,7 +177,7 @@ export class Follower {
       w.slideMove(a, (hx / hd) * sp * dt, (hz / hd) * sp * dt, a.y, this.onGround ? PLAYER.stepHeight : PLAYER.airStep);
       const want = Math.atan2(-hx, -hz);
       this.actor.yaw = turnToward(this.actor.yaw ?? want, want, 10 * dt);
-    } else if (dist > 0.3) {
+    } else if (dist > 0.3 && !(held && this.hold.walking)) {
       this.actor.yaw = turnToward(this.actor.yaw ?? 0, Math.atan2(-dx, -dz), 6 * dt);     // face Mithi while waiting
     }
 
@@ -195,7 +196,7 @@ export class Follower {
     } else { a.y = ny; this.onGround = false; this.ground = null; }
 
     // ---- bookkeeping: animation speed and stuck detection
-    this.speed += (sp - this.speed) * Math.min(1, dt * 12);
+    this.speed += ((held && this.hold.walking ? 2.6 : sp) - this.speed) * Math.min(1, dt * 12);
     this.state = stopped ? 'idle' : sp > 0 ? 'walk' : 'idle';
     if (!stopped) {
       this._refT += dt;

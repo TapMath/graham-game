@@ -11,6 +11,8 @@ import * as THREE from '../../../vendor/three.module.js';
 
 const DIRS = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
 const pct = (lift, units) => Math.round(100 * units / lift.capacity);
+/** The capsule's class and how full it is, for prompts: "solo", "family", "public 7/12", "freight 3/24". */
+const tag = (lift) => (lift.capsule ? ` · ${lift.cls.id}${lift.seats >= 12 ? ` ${lift.crowd}/${lift.seats}` : ''}` : '');
 const mmss = (s) => (!isFinite(s) ? 'never, at this light' : s < 90 ? `${Math.ceil(s)} s` : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, '0')} s`);
 const STYLE = `
 .lp-gauge{height:11px;border:1px solid rgba(221,233,244,.55);margin:2px 0 10px;position:relative;background:rgba(0,0,0,.4)}
@@ -55,14 +57,14 @@ export class LiftPanelSystem {
           enabled: (g) => lift.stop() === sid || lift.moving || !inFootprint(g.player.pos),
           id: `${lift.id}:${sid}`, pos: { x: cx + side[0] * (w / 2 + 1.4), y: stop.y, z: cz + side[1] * (d / 2 + 1.4) }, radius: 4.2, height: 2.6,
           prompt: (g) => {
-            const c = `${lift.chargePct}%`;
-            if (lift.moving) return `Lift is moving · ${c}`;
+            const c = `${lift.chargePct}%`, tg = tag(lift), full = lift.seats - lift.crowd < 1 ? ' · FULL' : '';
+            if (lift.moving) return `Lift is moving · ${c}${tg}`;
             if (lift.stop() === sid) {
-              if (!onCar(g.player.pos)) return 'Step onto the lift';
-              return lift.multi ? `Choose a floor · charge ${c}` : `Ride lift ${sid === 'bottom' ? 'up' : 'down'} · ${pct(lift, lift.cost(sid === 'bottom' ? 'top' : 'bottom'))}% of ${c}`;
+              if (!onCar(g.player.pos)) return `Step onto the lift${tg}${full}`;
+              return lift.multi ? `Choose a floor · charge ${c}${tg}${full}` : `Ride lift ${sid === 'bottom' ? 'up' : 'down'} · ${pct(lift, lift.cost(sid === 'bottom' ? 'top' : 'bottom'))}% of ${c}${tg}${full}`;
             }
             const need = lift.cost(sid, { call: true });
-            return lift.charge + 1e-6 < need ? `Call lift · drained (${c})` : `Call lift · charge ${c}`;
+            return lift.charge + 1e-6 < need ? `Call lift · drained (${c})${tg}` : `Call lift · charge ${c}${tg}`;
           },
           onInteract: (g) => {
             if (lift.moving) return;
@@ -84,10 +86,27 @@ export class LiftPanelSystem {
       game.events.emit('gate:denied', { id: lift.id, min: stop.min, rays: p.rays });
       return { ok: false, reason: 'scan' };
     }
+    // Phase 9A: the capsule's seats. A full car cannot be boarded; a small one takes Mithi first and the others wait for the next cycle.
+    let plan = null;
+    if (!call && lift.capsule && game.capsules) {
+      plan = game.capsules.plan(lift);
+      if (!plan.ok) {
+        const s = game.capsules.status(lift);
+        game.messages?.say(`${lift.label || 'The lift'}: the ${lift.cls.name.toLowerCase()} is full, ${s.crowd} of ${s.seats} seats${s.rush ? ' (rush hour)' : ''}. The next one is ${Math.max(1, Math.ceil(s.nextIn))} s away.`, { kind: 'system', ttl: 4.5 });
+        game.events.emit('capsule:refused', { id: lift.id, crowd: s.crowd, seats: s.seats });
+        return { ok: false, reason: 'full' };
+      }
+    }
+    const fromId = lift.stop();
     const r = lift.ride(stopId, { call });
     if (r.ok) {
       this.waiting = null;
-      if (!call) game.messages?.say(`${lift.label || 'Lift'}: ${stop.level} ${stop.name}. The cell reads ${lift.chargePct}%.`, { kind: 'system', ttl: 3.2 });
+      if (plan) game.capsules.depart(lift, plan, fromId, stopId);
+      if (!call) {
+        const left = plan?.left ?? [], names = left.map((m) => m.name);
+        game.messages?.say(`${lift.label || 'Lift'}: ${stop.level} ${stop.name}. The cell reads ${lift.chargePct}%.`, { kind: 'system', ttl: 3.2 });
+        if (names.length) game.messages?.say(lift.seats === 1 ? `A solo capsule: ${names.join(' and ')} will come on the next cycle.` : `Only room for ${plan.board.length + 1}: ${names.join(' and ')} will take the next one.`, { kind: 'story', ttl: 4.5 });
+      }
       return r;
     }
     if (r.reason === 'drained') { this.drained(lift, stopId, { call }); return null; }
@@ -101,6 +120,10 @@ export class LiftPanelSystem {
   _decorate(lift, costUnits) {
     const rows = this.game.dialog?.el?.querySelector('.dl-rows');
     if (rows) rows.insertAdjacentHTML('afterbegin', this._gaugeHtml(lift, costUnits));
+  }
+  _capRow(lift) {
+    const c = lift.cls, st = this.game.capsules?.status(lift);
+    return `${c.name} · ${c.cap === 1 ? '1 seat' : c.cap + ' seats'}${st && lift.seats >= 12 ? ` · ${st.crowd} taken${st.full ? ', FULL' : ''}` : ''}`;
   }
   _sunRow(lift) {
     const sun = this.game.world?.sunShafts?.intensity ?? 0;
@@ -123,7 +146,7 @@ export class LiftPanelSystem {
     dlg.open({
       title: lift.label || 'Lift', tag: `LIFT · FLOOR ${lift.stops.indexOf(here) + 1}`,
       quote: `The panel is warm. The cell glows ${lift.chargePct > 50 ? 'green' : lift.chargePct > 20 ? 'amber' : 'red'}.`,
-      rows: [['Charge', `${lift.chargePct}%`], this._sunRow(lift)],
+      rows: [['Capsule', this._capRow(lift)], ['Charge', `${lift.chargePct}%`], this._sunRow(lift)],
       choices,
       onChoose: (id) => { if (id !== 'cancel') this.attempt(lift, id); },
     });
@@ -140,7 +163,7 @@ export class LiftPanelSystem {
       quote: lift.panel === 'sun' || (game.world?.sunShafts?.intensity ?? 0) > 0.05
         ? 'The lift stutters and sighs. Nothing left in the cell. Somewhere above the haze the sun is feeding it, slowly.'
         : 'The lift is dead. The cell has had no sun for hours.',
-      rows: [['Charge', `${lift.chargePct}%`], ['This ride needs', `${pct(lift, cost)}% (${stop.level} ${stop.name})`], ['Waiting', mmss(eta)], this._sunRow(lift)],
+      rows: [['Capsule', this._capRow(lift)], ['Charge', `${lift.chargePct}%`], ['This ride needs', `${pct(lift, cost)}% (${stop.level} ${stop.name})`], ['Waiting', mmss(eta)], this._sunRow(lift)],
       choices: [
         { id: 'palm', hint: '1', keys: ['Digit1', 'Numpad1'], label: canPalm ? `Press your palm to the panel · costs ${1} ray` : 'Press your palm to the panel (you have too little light left)' },
         { id: 'wait', hint: '2', keys: ['Digit2', 'Numpad2'], label: `Wait for the sun (${mmss(eta)})` },

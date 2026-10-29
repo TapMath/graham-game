@@ -75,6 +75,16 @@ export function paintLevel(ctx, level, st, view, px) {
       if (w.broken) { ctx.fillStyle = 'rgba(255,128,104,.55)'; const bx = w.broken === '+x' ? w.x1 - 1.4 : w.x0; ctx.fillRect(bx, w.z0, 1.4, w.z1 - w.z0); }
     }
   }
+  // ---- the decks that are not at their level's own height (the Phase 9A skywalks and flyovers at 6, 18 and 30 m, or one level up from a terrace): a small height tag
+  if (px < 0.6) {
+    ctx.font = `700 ${8.5 * px}px Inter, Helvetica, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const w of D.walk) {
+      if (w.y === undefined || w.kind === 'land' || Math.abs(w.y - D.y) < 2 || !overlaps(w, v)) continue;
+      if (Math.min(w.x1 - w.x0, w.z1 - w.z0) < 2.6 || Math.max(w.x1 - w.x0, w.z1 - w.z0) < 14 * px * 4) continue;
+      ctx.fillStyle = st.name === 'paper' ? 'rgba(27,42,54,.72)' : 'rgba(221,233,244,.62)';
+      ctx.fillText(`${w.y} m`, (w.x0 + w.x1) / 2, (w.z0 + w.z1) / 2);
+    }
+  }
   // ---- solids: towers and podium blocks
   for (const s of D.solids) {
     if (!overlaps(s, v)) continue;

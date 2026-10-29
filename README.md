@@ -19,6 +19,7 @@ It is based on *Grahan (Children of the Sun)*, a story by Sarat T. Rao, and a co
 - **Tab** swaps between Mithi and Jeetu once he joins you. Jeetu can read signs and documents, climb, and carry a torch. He cannot sing.
 - **V** switches between first and third person.
 - **The map.** A round minimap in the corner turns with your view and shows the level you are on: streets, decks, stairs, ramps and lifts (with their battery), gates and their ray thresholds, the Harbour Line with the next train, and the **sunlight patches active right now**. **M** opens the full city map: a transit sheet of the slice of Mumbai (Dharavi, Sion Junction, King's Circle, New Wadala, Sewri, Atal Setu, Mahim Bay, the Mithi River), one tab per level, with the lifts, gates, trains, sunlight (and when it returns), places you have found and a "you are here".
+- **The web.** Single, double and triple road flyovers on shared piers (the triple stack stands at Sion Junction, beside the collapsed spans), bridges between the tower faces and skywalks at 6, 12, 18, 24, 30 and 38 m, ribbed like cathedral vaults underneath, with traffic on the roads and people on the footpaths. The routes up are stairs, ramps and **capsule lifts**: rounded glass cars on exposed rails in four classes (solo 1, family 4, public 12, freight 24). Capacity is a rule, not a label: Jeetu and Setu wait for the next cycle in a solo capsule, and a public one is full at rush hour. A ride costs solar charge by capacity and height, and the maps show every lift's class and seats.
 - **Finding the light.** Mithi feels the sun on her skin: a soft glow on the edge of the screen points the way to the nearest sunlight you can reach (the same level, or the nearest stairs or lift up), and grows as you near it. Pale columns of light stand out of the smog from afar, and painted arrows and **धूप ↑ SUN ↑** signs mark the ways up.
 - **The clock and the flood.** Time runs from before dawn to dawn the next day, in real time (about 30 minutes by default). Something is wrong with the water below. Once you know, a flood timer appears.
 - **D-shots** are illegal health jabs from black-market sellers. Each one has a different price in time and a different risk.
@@ -82,16 +83,18 @@ src/game.js           the shared Game object (scene, camera, events, rng, system
 src/debug.js          the debug / test API (window.__grahan with ?debug=1)
 src/core/             events, rng, params, input (keyboard, mouse, pointer lock, touch), physics, player
 src/world/            the city as data (map.js) and everything that builds it: structures, props, rail (the Harbour Line's tracks, platforms, fence), sky, sea,
-                      lifts (multi-stop, solar battery), gates, sunlight, fx
+                      lifts (capsules: solo, family, public and freight classes, solar battery), the flyover network (network.js is the data, netcheck.js its
+                      self-check, network-build.js its piers, footpaths and vaulted undersides), gates, sunlight, fx
 src/characters/       procedural low-poly people
 src/systems/          clock, health, Setu, vendors, hazards/, audio/ (a procedural Web Audio engine), senses/ (sing, ripples,
                       visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings,
-                      transit/ (the Harbour Line trains), crowds/ (instanced pedestrians and traffic), lifts/ (floor panels and charge)
+                      transit/ (the Harbour Line trains), crowds/ (instanced pedestrians and traffic), lifts/ (floor panels and charge, the capsule fleet,
+                      capacity: who fits in the car and who waits for the next one)
 src/ui/               HUD, messages, dialogs, screen effects, title screen, pause menu, settings, how to play, touch controls, the minimap, the full map and the warmth cue
                       (map.js, minimap.js, fullmap.js, maprender.js, mapdata.js, warmth.js)
 src/styles.css        the whole stylesheet (OK Computer language: pale blue-white thin type, safety-card pictograms, scrawls)
 tools/smoke.mjs       headless test runner (Playwright)  tools/shots*.json  screenshot tours with assertions
-tools/audio-check.mjs offline render of every synthesised sound
+tools/audio-check.mjs offline render of every synthesised sound  tools/check-network.mjs  self-check of the flyover network (no browser)
 docs/PLAN.md          the design spec and the per-phase progress log
 docs/*.pdf            the story and the pitch deck
 vendor/               three.js r160 (MIT)
@@ -117,7 +120,7 @@ Playwright is found through `NODE_PATH` or the global npm root.
 | `--no-autostart` | open without `autostart=1`, so the title screen shows |
 | `--mobile` | phone emulation (touch, 844x390; `--orientation portrait` for 390x844, or `--viewport WxH`) |
 
-The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase8b.json` (Mumbai signage, the Harbour Line, crowds, lifts and the draw-call worst case; built by `tools/build-phase8b.mjs`), `shots-phase8a.json` (the minimap and the full map on every level and on phone-sized screens, the warmth cue and its bearing, sun beacons, painted arrows and signs, the minimap setting; built by `tools/build-phase8a.mjs`) and `shots-phase8a-mobile.json` (real touch: tapping the minimap, the tabs, zoom and pan; run with `--mobile --query "seed=1&touch=1"`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
+The tours: `tools/shots.json` (the whole city, level by level), `shots-arena.json` (the Phase 1 arena, `--query "seed=1&arena=1"`), `shots-phase3.json` (core loop), `shots-phase4.json` (hazards), `shots-phase5.json` (senses and sound), `shots-phase6a.json` and `shots-phase6b.json` (cast, objectives, fragments, cinematics; `shots-phase6b-intro.json` with `--query "seed=1&intro=1"`), `shots-phase9a.json` (the flyover web and the capsule lifts: money shots from the streets, the triple stack, traffic on the flyovers, a long walk over the skywalks, each capsule class, the seat rule, the maps and the draw-call and triangle worst cases; built by `tools/build-phase9a.mjs`), `shots-phase8b.json` (Mumbai signage, the Harbour Line, crowds, lifts and the draw-call worst case; built by `tools/build-phase8b.mjs`), `shots-phase8a.json` (the minimap and the full map on every level and on phone-sized screens, the warmth cue and its bearing, sun beacons, painted arrows and signs, the minimap setting; built by `tools/build-phase8a.mjs`) and `shots-phase8a-mobile.json` (real touch: tapping the minimap, the tabs, zoom and pan; run with `--mobile --query "seed=1&touch=1"`), `shots-phase7a.json` (title, how to play, settings, pause, HUD, dialogs and endings on desktop; run with `--no-autostart`) and `shots-phase7a-mobile.json` (touch controls and the phone layouts in both orientations; run with `--mobile --query "seed=1&touch=1"`). Most steps assert with `ok(condition, message)`, so a broken behaviour fails the run, not just the picture.
 
 `node tools/audio-check.mjs` renders every synthesised sound offline and flags silence, NaN and clipping (`--wav dir` writes WAV files to listen to).
 

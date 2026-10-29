@@ -756,6 +756,68 @@ The playthrough numbers behind this: both seeds lose 1 ray per 40 s on G and per
 - Per-level geometry on the map comes from `MAP` (decks, pods, towers, floors), not from the colliders, so props and dressing never appear.
 
 
+### Phase 9A: the web of flyovers, walkways and capsule lifts (done)
+
+**What exists.** A dense, layered network above the streets: 11 road flyovers (single, double and triple stacks on shared piers, with traffic lanes and footpaths), many narrow skywalks, tower-face bridges, catwalks and terraces at 6, 12, 18, 24, 30 and 38 m, linked by 18 stairs, 4 ramps and 23 capsule lifts; ribbed gothic vaults under every new deck; G sun shafts re-placed at real gaps. Deck area above G: **22,094 m2 before, 63,152 m2 after (2.86x)**. 95 decks (new ones carry `net: true`), about 160 piers. The data is `src/world/network.js` (`buildNetwork(W)`, called once in `map.js`, which adds `piers`, `trafficLanes` and `walkLanes` to `MAP`); the build is `network-build.js`; `netcheck.js` is the pure-data validator.
+
+**Layout (roads: z or x, width, levels).**
+- Sion Junction stack (the triple): x -75, 14 m wide, z -104..36, at 12, 24 and 38 m; the north end is a broken stub (the collapse stays collapsed, `dressBroken` now handles all four directions) and the stack stops short of the opening cinematic's interchange (x -75, z -108..-172).
+- EEH road z -120 (12, 24); Quay road x -131 (12, 24); Matunga road z 60 (18, 30); East-west road z 0 (24, gated stair at x 30); Wadala road x 45 (30); Dharavi spur x -75 z 44..104 (18); Veer Savarkar x -15 z 42..104 (24); Promenade z 128 (6, 18, ramps at both ends); SkyGrid roads x -15 and z -90 at 38 (L3).
+- Tower-face bridges across the EEH canyon at 12 and 24, across the Matunga road at 18 and 30 (same-height junctions, auto-split decks), three double-decker catwalks at 18 over the Wadala and Dharavi streets with 12-to-18 stairs, and Matunga stairs 12 to 18.
+- Piers: lateral offset w/2 + 1.4, 18 m apart, octagonal open shafts with a plinth and a bracket under each deck; they skip POIs, the spawn, triage tents, the plaza, the metro canopies, the Harbour Line corridor (z about -60) and the stations.
+
+**Capsule lifts (`lift-classes.js`, `lifts/fleet.js`, `lifts/capacity.js`).** 23 lifts (from 8): **solo 3, family 11, public 7, freight 2**, at varied heights (G to 6, 12, 18, 24, 30, 38). Rounded-square glass capsules on exposed rails, drawn by three instanced meshes for all cars (frame, tinted glass, glow bars). Classes: solo 1 seat (2.4 m, cost x0.6, 5.5 m/s), family 4 (4 m, x1.0), public 12 (6x4 m, x1.5, rush-hour crowd), freight 24 (10x4 m, x2.2, carries a vehicle and crowd at the car ends). Charge cost = metres x 8B's rate x class cost; the cell recharges at the class rate (a bigger car has a bigger panel). Rules: Mithi's followers (Setu, Jeetu) ride only if seats are free; in a solo capsule they wait at the lobby and the car comes back for them on the next cycle (grouped jobs, never called while she stands on the car); a public capsule carries a crowd (rush hours 6.4-9.6 and 17-20.6: a full car 58 % of the time) and refuses with a message when full; `game.capsules.plan/status/depart`. The floor panel (8B) shows `public 7/12`, `FULL`, and the follower's fate. Minimap: ring radius by class and `Np` / FULL chips; full map: seat number inside the ring and a class chip in the side list; small height tags on decks at their own heights.
+
+**Gates.** The new routes into L2 and L3 are the lifts (stop `min` 5 and 8), plus one stair gate (`gate-l2-stairs-ew`, min 5). Checked by `netcheck`: every new deck reachable at 12 rays, nothing above 20 m reachable at 4 rays, nothing above 34 m at 7 (the permit gate counts as unpassable), no orphan lift stop or stair.
+
+**Budgets.** Merging per material and chunk, plus: instanced `cube` kinds are now one mesh per 100 m chunk (`Builder.kind(..., { chunked: true })`) and every `city:*` instance chunk joins the fog cull (`city.js` `_cull`); net rails use fewer posts and lamps (`postEvery 10`, `lampEvery 2`); ribs every 8 m (6.5 on skywalks); capsule geometry 20 segments. Worst cases in third person with Jeetu and Setu following (`G.renderStats()` after `G.render()`): looking up at the web from G 127 calls / 326k triangles; a busy station 118 / 341k; Sion Junction 125 / 347k; L2 traffic 141 / 282k; the others (bazaar L1, the Skyline Terrace corners looking east-north-east, L3 gardens) at most 138 / 370k; 8D's own worst-case list peaks at about 400k (its limit was raised from 350k to 400k, the Phase 9 budget). Greenery (9B) adds 1-2 calls and at most 60k triangles in view on L3, where the web is lighter.
+
+**Tours.** `tools/shots-phase9a.json` (written by `tools/build-phase9a.mjs`, 37 steps) passes with 0 console errors: network soundness and deck area; money shots from G streets (the nave of the triple stack, cross-street layers, the EEH canyon, Wadala road, Matunga bridges); the stack from the plaza and on each of its three decks; traffic and footpath pedestrians at every height; a four-part bot walk over the skywalks (Dharavi terrace, Matunga road, down to the Wadala terrace, over the street on a double-decker catwalk, to the bazaar); each capsule class; the solo capsule leaving the followers and their coming up on the next cycle; the family capsule taking the party; a full public capsule at rush hour and the one-seat plan; cost per metre ordering; the minimap and full map (L1, L2, G zoom) with capacity; the five budget steps. Also passing: `shots-phase7b.json`, `shots-phase8a.json`, `shots-phase8b.json`, `shots-phase8d.json`, `shots.json`, and both playthroughs reach ending 1 (seed 1 with intro; seed 2).
+
+**Changes to older tours (intended layout changes).** 8A: the warmth test used the old clover shaft position, now `sh-g-clover` is found from the world data at (-55, -75). 8B: the lift timing steps are longer (public and freight cars are slower) and the recharge test parks the cars before zeroing the cell. 8D: the triangle limit is 400k. The G-level `lift-g1-skywalk` is now a public capsule at (20.5, 0), 5 m square.
+
+**Deviations and notes.**
+- Canyon and road bridges are at the roads' own heights (12/24 and 18/30), not at 18 m, because a stair to an 18 m bridge would pierce the upper road; the roads are joined by same-height junctions with no stairs.
+- Only one new stair gate; the lifts are the gated routes.
+- The Sion stack ends at z -104 (a broken stub) to keep the opening interchange intact.
+- Pedestrians use `walkLanes` (42), vehicles `trafficLanes` (34), appended to the existing lane builders.
+- Debug: actions `deckArea`, `validateNetwork`, `triBreakdown`, `triReal`, `capsules`, `capsuleCrowd(id, n)`, `capsulePlan(id)`; `node tools/check-network.mjs` prints errors, warnings and stats.
+- The rail collider tag `rail` and the `SHAFT_LEAN` export are unchanged for the greenery (9B); new lifts are ordinary `MAP.lifts` records (centre, size, exits, stops).
+- Unfinished: the area is 2.86x (target "roughly 3x").
+
+### Phase 9B: the greenery (done)
+
+**What exists.** The player's words, "make the upper levels greener with plants on buildings but not everywhere", as a seeded, patchy canopy over the Upper Decks and the tops of some elite towers, a thinner making-do green on L2, and almost nothing below. It is one new module plus a two-line registration in `src/world/city.js` (`import { buildGreenery }` and `buildGreenery(game, world, ctx)` after `world.lifts = ...`); `world.greenery = { stats, plants[], verify(), setEnabled(bool), snapshot(), debug }`. `?greenery=0` leaves it out (for A/B draw-call checks). Tour: `node tools/smoke.mjs --shots tools/shots-phase9b.json --wait 4000` (28 steps).
+
+**Files.** New: `src/world/greenery.js` (data gathering, the density field's use, placement, assembly, per-frame cull, `verify()`), `src/world/plants/batch.js` (`PlantBatch`: world-space triangle accumulator, per 64 m cell and LOD), `plants/species.js` (rain tree, gulmohar, peepal, palm, shrub, hedge, flowerbed, lawn and grass tufts, bougainvillea creeper and drape, pots, paint-bucket money plants, planter box, garden light, green wall, balcony kitchen garden, roof kitchen garden), `plants/field.js` (hash noise, `DensityField`, mulberry), `plants/material.js` (the Lambert material and its shader hooks, the procedural leaf texture). Nothing else was edited.
+
+**The density field (`plants/field.js`).** `lushness(x, z, y)` = height (smoothstep of y from 26 to 40: L3 and tower tops 1, L2 a little) x wealth (distance from New Wadala at (105, -62): 1 within 60 m, 0.3 beyond 150 m) x a clustered patch (3-octave value noise, smoothstep 0.34..0.66, fixed seed 9031, NOT game.seed: the city is the same every run) x (0.8 + 0.4 x nearness to a sunlight shaft), plus a bonus inside a shaft. Everything is scaled by it: tree and shrub counts per roof, lawn coverage, whether a hedge or creeper run is kept, whether a tower top is planted at all (most are bare: 5 of 12 eligible towers), where the lights are.
+
+**What goes where.**
+- **L3 plazas** (any deck or roof at y >= 31, at least 18 m each way, not a road: today the four New Wadala podiums; 9A's new ones are picked up automatically): per-roof `lush` 0.4 to 0.85 (Garden Terrace lush, Dawn Terrace sparse). Rain trees, gulmohar (a few in red-orange bloom), palms, shrubs and flowering shrubs, flowerbeds with kerbs, lawn (1.6 m cells, only on free flat floor), clipped hedges inside the rails, bougainvillea on the rails and draped down the outer face of the roof edge (so the L2 and street levels see a green fringe), and the existing generic planters filled with shrubs. The old generic trees of `props.js` are hidden (instances scaled to zero, their colliders removed) and replaced. One **peepal** on a raised stone platform with a diya, near a sunlight shaft, on the second-lushest roof.
+- **L3 bridges** (not roads): bougainvillea on the rails, drapes, clipped planters along the edges.
+- **Tower tops** (towers over 40 m and at least 14 m across, not the Control Tower): palms, rain trees, gulmohar, shrubs and a lawn on the ring round the spire block (computed from the same 0.62 factor as `structures.js`, and clear of the corner pinnacles); visual only.
+- **Green walls** on the glass (elite) towers and the tall towers near New Wadala: leaf-textured panels 0.4 m off the facade between the buttress fins (same fin spacing formula as `structures.js`), above the stained-glass band, with a steel frame, concrete troughs every 7 m that spill foliage, and **lit irrigation lines** (cyan, emissive: visible by day, blazing at night). A bay is dropped if a solid collider is in front of it (walkways, lift rails) and raised above any walkable surface that meets the face. 14 bays now.
+- **L2** (making do): bougainvillea on the flyover and walkway rails with short drapes, rusty paint buckets of money plant tied to road barriers, cantilevered **balcony kitchen gardens** on tower faces beside the L2 decks (12 now: slab, rail, crate beds with vegetables and chillies, bamboo canes, a bucket, a water drum, a string of bulbs), and a generic small roof kitchen garden for any non-road deck at L2 (there is no mid-rise roof at L2 in today's map, so none exists yet; 9A's network may add some).
+- **L1 and G**: tulsi pots by the shrines (16, including the two on L1), 7 pots on Dharavi shack ledges, a few weeds in the G sun shafts (not near the dead tree: the dead tree stays dead). 37 plants on G, 2 on L1, against about 270 on L3.
+
+**Rendering.** Everything is baked into **one static geometry** (about 73k triangles at LOD 0 plus 8.6k at LOD 1 in total, ~600k bytes of attributes) sorted by 64 m cell and LOD, drawn as **one draw call**: each frame `cull()` (a wrapper on `game.render`, chained after the city's) picks the cells in the frustum and within the city's fog distance, near ones (about 64 m) at LOD 0, the rest at LOD 1 (a cap of 48k triangles per frame pushes the rest to LOD 1), and recomposes the dynamic index buffer only when that set changes (only the used part is uploaded). Plus **one additive call at night** for the garden-light pools. Worst measured: greenery 1 call by day, 2 at night, 45k visible triangles; the whole scene 121 calls at the busiest green view (the scene is 148 there without greenery at one crowded viewpoint: greenery adds 1-2). Vertex shader: wind sway in world space (gust plus flutter, weighted per vertex 0 on trunks to 1 on leaf tips, `uTime` from `game.time`). Fragment hooks: leaves inside a **sunlight shaft** (the L2 and L3 shafts, with their lean) glow warm and bright; vertices tagged emissive (irrigation lines, lamps) show a little by day and blaze at night; foliage tagged uplit (about 40 % of the trees on lush roofs, the ones with a garden light spike) takes a warm underglow at night; the panel texture is applied only on panel vertices (`aMisc.z` = 3), so one material serves all. By day the colours sit in the city's height tint; at dusk the crowns are dark silhouettes against the orange sky, and at night only the lit trees, the lamps and the irrigation lines show. The material is Lambert, so fog and the Sing patch apply; the senses patch chains onto it (the tour asserts `sensePatched`), so the echolocation wave and grid light the plants (the `sing-roof-*` shots).
+
+**Never on a path.** `gather()` collects every reserved approach from the data at runtime: `ctx.clear` (the city's own keep-clear zones, passed in), gates (9 m out, 4 m in), every lift stop (the car circle plus the exit side lobby and its `lobby.len`), stairs and ramps (both ends, 7 m), the spawn, terminal, bridge end, fragment, Setu, vendor and checkpoint spots, solar lamps, and every interactable present. On each plaza, **portals** are found by scanning the perimeter (where there is no rail and walkable floor of the same height lies outside), plus every reserved zone inside, and a 4.4 m wide path is kept from each to the hub, so the roof stays connected whatever 9A adds. Each solid plant also checks live colliders (no solids, floor flat, not within 1 m of a slab cut). `world.greenery.verify()` (debug action `greeneryVerify`) re-collects the approaches from the finished world, checks every solid plant against them and against the interactables, and flood-fills each plaza from its portals at 0.6 m with the plants' colliders on and off: nothing is lost (`lost: 0` on all four podiums; plants cover 390-520 of about 4,000 reachable cells each).
+
+**Tests (`tools/shots-phase9b.json`).** Asserts: the module ran; every plant kind exists; G has under 45 plants and L1 under 7; L3 has more than twice L2's; most towers are bare; `verify()` finds no overlap and no blocked route; no plant within 1.2 m of an interactable or 5 m of a gate; the bot walks pod 3-1 (bridge, hub, lift lobby, east bridge) and pod 3-2; the greenery material is senses-patched; greenery is at most 2 calls (3 at night), at most 60k triangles in view, the whole scene at most 150. Shots: the L3 view across New Wadala's roofs by day, at dusk and at night (two vantage points), a lush podium, the peepal, a lit garden at night, a green wall from the deck, at night and close, the drapes seen from the flyover, balcony gardens and creepers on L2, G with almost nothing, a tulsi pot at a shrine, a Dharavi ledge pot, the dead tree still dead, the Sing wave on the plants by day and night.
+
+**Results.** `tools/shots-phase9b.json` (28 steps) passes with 0 console errors. Build 0.46 s; 359 plant records (L3 268, L2 52, G 37, L1 2), about 80k triangles at LOD 0 and 8.6k at LOD 1 in the whole city, 206 solid plant colliders. At the busiest green view (the Skyline Terrace corner, 12 cells, 6 at LOD 0): greenery 1 draw call by day and 2 at night, 49k triangles; the whole scene 120 calls (118 at night) and 263k triangles. `shots-phase7b.json` and `shots-phase8a.json` pass; the seed-1 playthrough (`--wait 500 --query "seed=1&intro=1"`) still reaches ending 1 (min rays 3, 0 detentions). The tours were run on a machine shared with 9A, so the first screenshot sometimes timed out: re-run.
+
+**Deviations and notes.**
+- "Rooftop kitchen gardens on mid-rise roofs" at L2 are balcony gardens on tower faces (the map has no L2 roof); the roof version is implemented for any L2 non-road deck.
+- The flyovers' pedestrian footpaths get creepers and buckets only on the rail side; no planter takes walkway width on L2.
+- Rooftop greenery is the same fixed set every run (not seeded by `?seed`).
+- G and L1 plants sit in the gloom and read dark; that is the point.
+- Not done: gargoyle planters, vertical gardens on tower faces below 40 m, rain on the leaves, a leaf-fall effect.
+- Edits that may conflict with 9A: only the two lines in `city.js`. Anything 9A changes in `map.towers`, `map.decks`, `map.gates`, `map.lifts`, `map.stairs`, `map.ramps`, `world.sunShafts` or the `tower`/`rail`/`planter` colliders is read at runtime. If 9A renames the `'rail'` collider tag or removes `SHAFT_LEAN` from `map.js`, `railAt()` and the shaft lean need a one-line follow-up.
+
+
 ## 12. Phase 8: feedback round (realism, Mumbai, transit, crowds, lifts, map, sunlight)
 
 The game shipped and was played on desktop and iPad. The player's feedback, in their words: the vibe, feeling and sound design are great. The requested changes:
@@ -863,3 +925,178 @@ The map is a compressed, stylised slice of central Mumbai around Dharavi, Sion, 
     - NPC hints.
 
 All Phase 8 agents append to §10 when done, and their final reports list what they couldn't do.
+
+## 13. Phase 9: a denser vertical city (flyovers, walkways, capsule lifts, greenery)
+
+The game moved to `TapMath/graham-game`. The player's request: *"way more flyovers and walkways: a dense network of single, double and triple flyovers, and capsule lifts of varying capacity; make the upper levels greener with plants on buildings, but not everywhere."*
+
+### 13.1 Design
+
+- **The flyover network.** Today the city has a handful of decks per level. Phase 9 makes the sky over the streets a *web*, the defining image of the deck: "Hundreds of tall buildings. Thousands of flyovers and walkways. Blocking the sun for millions."
+  - **Road flyovers** are wide, carry traffic (8B's vehicles) and have barriers. Pedestrians can walk their footpaths. There are three kinds:
+    - **single**: one deck on pillars;
+    - **double**: two stacked decks on shared tall pillars, at L1+L2 or L2+L3 heights;
+    - **triple**: three stacked decks sharing a pier (the Sion Junction look).
+  - **Walkways (skywalks)** are narrow pedestrian bridges between towers, between flyovers, and from flyovers to towers, at many heights. Not only at the five level heights: intermediate heights such as 6, 18 and 30 m, linked to the level system with ramps and stairs. Some are covered with railings and lights, some are cheap steel catwalks.
+  - **Density:** the network roughly triples the walkable deck area above G. Crossings stack visibly overhead, so from the street you look up at layers of undersides (ribbed vaults per §3b) with slivers of sky. Light at G gets even rarer, so place G sun shafts deliberately where gaps in the web exist (and the map shows them).
+  - **Navigation:** more routes up, more loops, more choice, and none of it a maze that traps. Every new deck connects to the network at both ends, or ends at a lift or stair. The health-gate rule still holds for entering L2 and L3 territory; add gates where new routes enter gated levels.
+- **Capsule lifts of varying capacity.** Rounded glass capsules on exposed rails up tower faces and flyover piers, with lit edges. Capacity classes:
+  - **solo** (1 person: Mithi alone, followers must wait or take the next ride; cheap charge, fast);
+  - **family** (4: the party fits);
+  - **public** (12: shared with crowd riders who board and leave; slower, stops at more floors);
+  - **freight** (large, slow, rare; carries vehicles and crowds).
+  
+  Capacity is a real rule: with followers, a solo capsule makes Jeetu and Setu take the next cycle (they wait at the lobby and arrive after). Public capsules show crowd riders and may be full at rush hour (wait for the next). All capsules use 8B's solar charge, with cost scaled by capacity × height, and 8B's floor panel. Many more lifts: aim for about 2–3× the current count, spread across the city at varied heights (short hops of 6–12 m as well as tall runs). The map (8A) draws them with their capacity.
+- **Greener upper levels, not everywhere.** Green is a privilege of height and wealth (§3b cyberpunk: SURYA sells sunlight; New Wadala is the elite).
+  - **L3 and the tops of some towers:** roof gardens, trees on terraces, planters along the decks, hedges, lawns, and vertical-garden façades (green walls) on *some* elite towers.
+  - **L2:** occasional balcony plants and creepers on a few walkways, plus small rooftop kitchen gardens on some mid-rise roofs (a sign of people making do).
+  - **L1/G:** almost none: a few tulsi pots at shrines and potted plants on Dharavi window ledges. The dead tree stays dead.
+  - Distribute by a seeded density field so it's clustered and patchy: some towers lush, most bare. More green where sunlight shafts are.
+  - Plants sway gently in the wind (vertex shader).
+
+### 13.2 Workstreams (built in parallel)
+
+- **9A, the network and capsule lifts** (main checkout). Owns:
+  - `src/world/map.js` and the deck, ramp, stairs and pillar code in `src/world/**` (`city.js`, `builder.js`, `lift.js`, `gates.js`, `rail.js` where routes cross);
+  - `src/systems/lifts/**`;
+  - the crowd and vehicle routing data (`src/systems/crowds/**` paths, so vehicles drive the new road flyovers and pedestrians walk the skywalks);
+  - the debug bot and playthrough scripts.
+  
+  The map (`src/ui/map*.js`) is drawn from world data: verify it renders the new network and lift capacities, and adjust map drawing code if needed.
+- **9B, the greenery** (separate worktree). Owns a new `src/world/greenery.js` (plus any `src/world/plants/*.js`) and adds exactly one registration call in `src/world/city.js` after the city is built (`buildGreenery(game, world)`). It reads final building, tower, deck and lift footprints from world data at runtime, so it adapts to 9A's new network without editing 9A's files. It must not place plants on walk paths, stairs, lift lobbies, gates or track. Instanced and merged: plants add at most about 6 draw calls.
+
+### 13.3 Budgets and tests (both)
+
+- Draw calls are at most 150 in the worst case (currently about 136 at a busy station in third person). The network must be merged per material, and pillars, railings and barriers instanced. Distance-cull far decks. Triangles stay within about 400k.
+- **The scripted playthroughs must still reach ending 1** (`tools/shots-playthrough.json` with `--wait 500 --query "seed=1&intro=1"`, and `tools/shots-playthrough-seed2.json` with `--query seed=2`). Also keep `tools/shots-phase7b.json`, `tools/shots-phase8a.json`, `tools/shots-phase8b.json` and `tools/shots-phase8d.json` passing.
+- Each agent writes its own `tools/shots-phase9a.json` / `tools/shots-phase9b.json` and reads its screenshots. The money shot is looking up from a G street at layers of flyovers and walkways, and looking out across New Wadala's patchy green roofs from L3.
+
+## 14. Phase 10: Mithi's bag, the noisy street, vermin, voices, graffiti and side quests
+
+The player's feedback after Phase 9: the flyovers are great. Their requests, condensed (Mithi = "Mitty" in their notes):
+
+1. **Visible traffic** on the flyovers: cars and buses moving on every road deck, readable from below.
+2. **The street is noisier.** Constant honking, worst around Mithi, because a blind woman is always in the way of traffic. She **can be hit**.
+3. **Under-area people are weaker**, and many ride **super-fast two-wheeler e-scooters**.
+4. **Dirty, gritty, grimy streets** with garbage everywhere. **Beaten, dirty electric taxis and buses.**
+5. **Real-looking wild dogs and rats**, and **exterminators in suits** killing rats and cockroaches everywhere.
+6. **Mithi's backpack.** She rummages it to check what she has:
+   - **Earbuds**, which start by themselves when put in (body heat): noise-cancelling; nature sounds (running water, waves, rain on leaves, crackling fire, wind and water, wind and fire); frequency healing. She used to run a company selling them, with her parents. The story's version (PLAN §1b) is that she worked at Gautam's meditative-music company. Reconcile as: the earbuds were the family business her parents began and she kept running, and Gautam's company made the soundscapes for them.
+   - **Backup D-shots** from the start.
+   - **A mic.** She sings through it, and **asks people questions directly** through it. She can't see, so she speaks more.
+7. **Neon graffiti.** Spray canisters and neon tags, useful to whoever is with her: Setu finds a canister; Jeetu can read and spray.
+8. **The stakes shown on top from the start**: the personal ticking clock and what's at stake. A clear initial direction, and **plenty of side quests**.
+9. **Capsule lifts need a pass.** The pass tier depends on having enough health. Health comes from **D-shots**, bought with **money**. She earns money by **busking**: she sets up a **digital busking screen**, sings, and passers-by pay if it's good. The screen **takes the player's song and converts it into Mithi's voice**.
+10. **More real voices.**
+
+### 14.1 Rules decided here (binding)
+
+- **Money.**
+  - `game.wallet` holds rupees (₹), starting at about ₹60.
+  - Earned by busking and side quests.
+  - Spent on D-shots (vendors now price in ₹, still with unpredictable vendor variance and risk), lift passes, and some story costs (bail, the torch) where ₹ is natural. Some of those can still be paid in rays or time as an alternative.
+  - Health stays a currency in the deck's sense: rays are what passes and gates test, and D-shots turn money into rays.
+- **Passes.**
+  - Capsule lifts and gates check a **pass**: `walk` (L1, free), `flyover` (L2), `sky` (L3).
+  - A pass is bought at **pass kiosks** (by lift lobbies, at stations) for ₹, and the kiosk's bio-scan only issues it if rays meet the tier: flyover ≥ 5, sky ≥ 8, as before.
+  - A pass is a timed day-pass: it lasts until the next 06:00.
+  - The Tara permit stays a separate route to the bridge.
+- **Busking.**
+  - Mithi unfolds the screen at any spot with foot traffic (not on roads or track).
+  - The player provides a song in one of three ways, in this priority order:
+    - (a) **sing or hum into the device microphone** (`getUserMedia`, with the permission explained first): the pitch is tracked and resynthesised in Mithi's voice;
+    - (b) **play a melody on keys or taps**: a simple 8-note raga keyboard (Bhairav and a filmi scale), echoed in her voice;
+    - (c) **pick a song she knows** and play a timing and pitch-matching mini-game.
+  - Quality (in tune, in time, varied phrasing) times the crowd density times the time of day gives the earnings. Coins clink onto the screen's UPI QR, and the crowd gathers.
+  - Busking also helps the senses: singing calms dogs, as before. Police drones fine unregistered buskers (a risk). Better spots pay more.
+- **Earbuds.** Each pair goes in with E from the bag and auto-starts. Exactly one pair at a time.
+  - **Noise-cancelling**: the din and honks are ducked hard. Calmer, so stress drain is lower, but Mithi also hears far less: ripples shrink, Setu's mouth organ range halves, and she gets hit by traffic more. A real trade-off.
+  - **Nature soundscapes** (6 kinds): mask the din partly and slowly restore calm. Calm is a soft stat: noise and fear raise stress, and stress makes the darkness drain faster.
+  - **Frequency healing** (for example 432 Hz or solfeggio tones): a slow trickle of healing, or slower decay. Give a pair to **Setu** and his breath decays more slowly.
+  - They have battery-free charge from body heat, so no management, but there are limited pairs: some are lost when you give them away. Earbuds also make good **gifts** in side quests.
+- **The mic.**
+  - **Sing through the mic**: a bigger echolocation wave and calm radius, but police hear it from twice as far.
+  - **Ask through the mic**: choose a question ("Has anyone seen a boy, eight, with a mouth organ?", "Where's the nearest light?", "Where can I buy a pass?", "Which way to Sion Hospital?").
+    - Nearby people (crowd and cast) answer with spoken lines.
+    - Answers are useful, often partial, sometimes wrong, flavoured by who's around.
+    - It's the main way a blind protagonist navigates socially.
+- **Traffic danger.** Road lanes at G and on the flyover footpath edges are dangerous.
+  - Vehicles honk when Mithi is in or near their lane (directional honks you can hear coming).
+  - Scooters weave and are fast.
+  - A hit costs 1 ray (2 for a bus), with knockback, a fall and a curse from the driver. A near miss is a sharp honk and a shove.
+  - Followers can be hit too.
+  - Lane crossings are fair: honks warn about 1.5 s ahead, and zebra crossings with signals exist.
+- **Budget.** Raised for this phase:
+  - *High* quality (default on desktop): at most **175 draw calls** and about **450k triangles** in the worst case.
+  - *Low* quality (default on phones, in Settings): at most **130 calls** and about **300k triangles**, by thinning crowd, traffic, garbage and greenery density and LOD distances.
+  
+  Every workstream must respect both.
+
+### 14.2 Workstreams (four in parallel; file ownership)
+
+- **10A, the street** (main checkout). Owns:
+  - `src/systems/crowds/**` (people, vehicles, routing);
+  - `src/systems/transit/**` vehicles' look;
+  - a new `src/world/grime.js` (garbage and grime dressing, one registration line in `city.js`);
+  - a new `src/systems/audio/street.js` (street sound recipes);
+  - adding a small `game.audio.registerRecipe(kind, fn)` hook in `src/systems/audio/engine.js` (others call it defensively).
+  
+  Deliverables:
+  - dense visible moving traffic on every road flyover deck (headlights, tail-lights, buses), readable from below;
+  - beaten, dirty EV taxis, buses and autos (dents, grime, mismatched panels, roof racks, cracked glass);
+  - fast e-scooters at G and U ridden by thin, masked under-city people (the weaker people below: thinner builds, masks, coughs, slower gait);
+  - honking everywhere at G, more around Mithi, with directional warning honks;
+  - **vehicle hits and near misses** per 14.1, with zebra crossings and signals;
+  - garbage piles, bags, litter, overflowing bins, oily puddles, stains, peeling posters, puddle trash at G and U (instanced);
+  - the quality-setting thinning.
+- **10D, the vermin** (worktree). Owns `src/systems/hazards/**` and its own audio recipe file `src/systems/hazards/sounds.js` (registered via `game.audio?.registerRecipe?.`, with a fallback).
+  - **Realistic dogs**: real canine anatomy (a deep chest, tucked waist, a proper leg articulation with hocks, ears and tail that move), coat colours of Indian pariah dogs, mange patches, and a believable gait cycle (walk, trot, gallop), sniffing, scratching, lying.
+  - **Rats**: swarms in U and G garbage, scurrying along walls, fleeing light, sound and people, squeaking. A rat bite is minor damage; mostly they frighten (stress).
+  - **Cockroaches**: tiny instanced swarms on walls and garbage, scattering.
+  - **Exterminators** in hazmat suits (respirators, backpack tanks, spray lances) roam G and U: spraying fog that kills rats and roaches, carrying bags of dead rats, and logging on tablets. Their fog is a mild smog-like hazard (coughing, worse for Setu's breath). They're also people to *ask* via the mic.
+  - Keep the hazard calm and alert rules (singing calms dogs).
+- **10B, Mithi's bag and the economy** (worktree). Owns:
+  - a new `src/systems/kit/**` (wallet, earbuds, mic, busking, passes, D-shot use);
+  - a new `src/ui/backpack.js` and the busking UI;
+  - `src/ui/hud.js` (the stakes bar);
+  - `src/systems/lifts/panel.js` (the pass check);
+  - `src/systems/vendors.js` (₹ prices);
+  - `src/systems/story/items.js` (extend `DEFS` with the kit; keep the API).
+  
+  Deliverables:
+  - **Backpack UI**: B or a touch button. Rummaging is tactile: items are described by touch and sound as Mithi feels them. Jeetu, if present and active, reads labels.
+  - The starting kit: 2 backup D-shots, Setu's pills and inhaler, the mic, the folded busking screen, 7–8 earbud pairs of different kinds, ₹60.
+  - Earbuds with audio effects via the audio buses (a small hook in `engine.js` if needed), plus the stress stat.
+  - The mic: sing and ask, with `game.mic.addResponder(fn)` so 10C's story can answer.
+  - Busking with song input converted to Mithi's voice: a formant vocal synth, pitch-tracked from the microphone or played on keys.
+  - Wallet, passes and kiosks.
+  - **The stakes bar on top from the start**: "Setu: next pill due in 3h 40m", his breath, the flood countdown once known, and the primary objective with a direction cue. The first minutes must make the direction clear.
+  - APIs: `game.wallet {balance, add(n, why), spend(n, why)}` (events `wallet:changed`), `game.passes {has(tier), grant(tier, untilHour)}`, `game.kit`, `game.mic {ask(q), sing(), addResponder(fn)}`, `game.busking`.
+- **10C, voices, graffiti and side quests** (worktree). Owns `src/systems/story/**` except `items.js`, plus `src/systems/audio/pa.js`.
+  - **More real voices.** Pick the best available voice per character (prefer names with Enhanced, Premium, Neural, Natural, Google or Siri, and en-IN/hi-IN). Use natural prosody: sentence chunking, comma pauses, slight rate and pitch variation per line, breaths between lines, emotion presets (scared, warm, angry, tired), and Hinglish words pronounced sensibly (respell for TTS where needed).
+  - **Mithi speaks more**: voiced asides, her questions through the mic, her answers in conversations, and comments on sounds around her.
+  - **Neon graffiti**:
+    - spray-canister items (`game.items.DEFS.spray`, added defensively);
+    - graffiti-crew NPCs in U and G who teach the code;
+    - Setu finds a canister and leaves neon tags on his timeline route (the trail becomes visible neon for Jeetu and on the map);
+    - Jeetu, or Setu when following, can spray waypoint tags that glow and show on the minimap;
+    - crew tags hint at routes, passes and light.
+  - **Side quests aplenty** (10–14), with rewards in ₹, D-shots, passes, earbuds, info or shortcuts, using 10B's APIs defensively. Examples:
+    - find a lost child at the triage tents;
+    - fetch medicine for an old woman in Dharavi;
+    - play a wedding band gig;
+    - help the exterminators;
+    - return a stolen phone;
+    - deliver tiffins on the local train;
+    - repair a busker's speaker;
+    - trade earbuds for a pass;
+    - the graffiti crew's tag run;
+    - free caged dogs;
+    - a chai-stall owner's lost cat;
+    - Gautam's request.
+    
+    A quest log sits in the backpack.
+  - **Mic answers**: register responders via `game.mic?.addResponder?.(fn)`, so cast and crowd answer questions according to Setu's timeline and nearby places.
+  - **A clear initial direction** in the opening minutes (rescuers point, and Mithi says where she's going).
+
+**Shared files:** each workstream adds only its own registration lines to `src/main.js`, its own debug entries, its own §10 entry, and its own `tools/shots-phase10X.json`. The coordinator merges. **Playthroughs must still reach ending 1.** The bot may need updates for passes (buy a pass at a kiosk with ₹ it earns by busking via keys) and for traffic: 10B owns the bot updates for passes and busking, and 10A for traffic.

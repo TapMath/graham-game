@@ -1,0 +1,149 @@
+[
+ {
+  "name": "setup",
+  "wait": 1500,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.set('manual',true);A.set('invulnerable',true);A.set('hazards',false);A.setTime(10);A.teleport(75,38,-62,0);A.step(0.5);ok(GR,'world.greenery exists (buildGreenery ran)');const st=GR.stats;const by={};for(const p of GR.plants){by[p.kind]=(by[p.kind]||0)+1;}const lv={};for(const p of GR.plants){lv[p.level]=(lv[p.level]||0)+1;}for(const k of ['palm','rain','gulmohar','peepal','creeper','hedge','bed','shrub','green-wall','balcony','tulsi','ledge-pot','top-palm','drape']) ok((by[k]||0)>0,'has '+k);ok(by.peepal===1,'exactly one peepal');ok(lv.G<=45,'G has almost none: '+lv.G);ok(lv.L1===undefined||lv.L1<=6,'L1 has almost none: '+lv.L1);ok(lv.L3>lv.L2*2,'green is a privilege of height: '+JSON.stringify(lv));const towers=W.map.towers.filter(t=>!t.roof&&t.h>=40&&Math.min(t.x1-t.x0,t.z1-t.z0)>=14);ok(GR.debug.topped<=Math.ceil(towers.length*0.5),'most towers are bare: '+GR.debug.topped+' of '+towers.length);return {ms:st.ms,plants:st.plants,byKind:by,byLevel:lv,towersTopped:GR.debug.topped,towers:towers.length,tris:st.tris,colliders:st.colliders};})()",
+  "shot": false
+ },
+ {
+  "name": "approaches-clear",
+  "wait": 300,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const v=GR.verify();ok(v.overlaps.length===0,'a plant overlaps an approach: '+v.overlaps.slice(0,4));ok(v.blocked.length===0,'a plant blocks a route: '+v.blocked.slice(0,4));const near=[];for(const i of G.interactables.list()){for(const p of GR.plants){if(p.kind==='creeper'||p.kind==='green-wall'||p.kind.startsWith('top-'))continue;if(Math.abs(p.y-i.pos.y)<2.5&&Math.hypot(p.x-i.pos.x,p.z-i.pos.z)<1.2+p.r*0.5)near.push(p.kind+'@'+i.id);}}ok(near.length===0,'a plant is on an interactable: '+near.slice(0,4));const gates=W.map.gates;const bad=[];for(const g of gates){for(const p of GR.plants){if(!p.solid||Math.abs(p.y-g.y)>2)continue;if(Math.hypot(p.x-g.x,p.z-g.z)<5)bad.push(p.kind+'@'+g.id);}}ok(bad.length===0,'a plant is at a gate: '+bad.slice(0,4));return {checked:v.checked,zones:v.zones,interactables:G.interactables.list().length,gates:gates.length,lifts:W.lifts.length};})()",
+  "shot": false
+ },
+ {
+  "name": "walk-pod-routes",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.teleport(75,38,-64,0);A.step(0.2);const w1=A.walk([[75,-72],[75,-90],[93,-80],[100,-90],[110,-90]]);ok(w1.ok,'walk pod-3-1 bridge->hub->lift->east bridge: '+w1.log.slice(-2));A.teleport(75,38,-56,180);A.step(0.2);const w2=A.walk([[75,-48],[75,-30],[90,-30],[100,-30]]);ok(w2.ok,'walk pod-3-2 routes: '+w2.log.slice(-2));return {w1:w1.log[w1.log.length-1],w2:w2.log[w2.log.length-1]};})()",
+  "shot": false
+ },
+ {
+  "name": "money-day",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10);A.set('freeze',false);A.teleport(150,38,-27,90);A.look(90,-3);A.step(0.3);})()"
+ },
+ {
+  "name": "money-day-b",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10);A.set('freeze',false);A.teleport(57,38,-14,-35);A.look(-35,-2);A.step(0.3);})()"
+ },
+ {
+  "name": "money-dusk",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(18.4);A.set('freeze',false);A.teleport(150,38,-27,90);A.look(90,-3);A.step(0.3);})()"
+ },
+ {
+  "name": "money-night",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(22);A.set('freeze',false);A.teleport(150,38,-27,90);A.look(90,-3);A.step(0.3);})()"
+ },
+ {
+  "name": "night-lit-garden",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const t=GR.plants.find(q=>q.lit&&q.x<100&&q.z<-80);ok(t,'a lit tree');A.setTime(22.5);A.set('freeze',false);const px=t.x+9,pz=t.z+6;A.teleport(px,38,pz,0);A.look(Math.atan2(-(t.x-px),-(t.z-pz))*180/Math.PI,12);A.step(0.3);return {lit:GR.plants.filter(q=>q.lit).length,tree:[R1(t.x),R1(t.z)]};})()"
+ },
+ {
+  "name": "lush-pod-day",
+  "wait": 1600,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(11);A.set('freeze',false);A.teleport(70,38,-100,200);A.look(200,-6);A.step(0.3);})()"
+ },
+ {
+  "name": "peepal",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const p=GR.plants.find(q=>q.kind==='peepal');ok(p,'peepal');A.setTime(11);A.set('freeze',false);const px=p.x+9,pz=p.z+4;A.teleport(px,38,pz,0);A.look(Math.atan2(-(p.x-px),-(p.z-pz))*180/Math.PI,8);A.step(0.3);return {peepal:[R1(p.x),R1(p.z)]};})()"
+ },
+ {
+  "name": "lush-pod-night",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(22);A.set('freeze',false);A.teleport(70,38,-100,200);A.look(200,-6);A.step(0.3);})()"
+ },
+ {
+  "name": "green-wall-day",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10.5);A.set('freeze',false);A.teleport(68,38,-107,0);A.look(0,30);A.step(0.3);})()"
+ },
+ {
+  "name": "green-wall-night",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(22);A.teleport(68,38,-107,0);A.look(0,30);A.step(0.3);})()"
+ },
+ {
+  "name": "green-wall-close",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10.5);const w=GR.plants.find(q=>q.kind==='green-wall'&&q.tower==='tw-n4');ok(w,'a wall on Aurum');A.set('freeze',true);A.teleport(w.x,w.y-6,w.z+6,0);A.look(0,10);A.step(0.2);return {wall:[R1(w.x),R1(w.y),R1(w.z)]};})()"
+ },
+ {
+  "name": "drape-over-the-edge",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const d=GR.plants.filter(q=>q.kind==='drape'&&q.level==='L3'&&q.y>38&&Math.abs(q.z+60)<14&&q.nz*(-60-q.z)>0&&q.x>50&&q.x<160).sort((p,q)=>q.r-p.r)[0];ok(d,'a drape on a pod face over the EEH flyover');A.setTime(10.5);A.set('freeze',false);const px=d.x,pz=-60,tx=d.x,tz=d.z,ty=d.y-3;A.teleport(px,24,pz,0);A.look(Math.atan2(-(tx-px),-(tz-pz))*180/Math.PI,Math.atan2(ty-25.6,Math.hypot(tx-px,tz-pz))*180/Math.PI);A.step(0.3);return {drape:[R1(d.x),R1(d.z)],len:R1(d.r*2),count:GR.plants.filter(q=>q.kind==='drape').length};})()"
+ },
+ {
+  "name": "l2-balcony-gardens",
+  "wait": 2000,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10.5);A.set('freeze',false);const b=GR.plants.filter(q=>q.kind==='balcony').sort((p,q)=>Math.abs(p.x+25)-Math.abs(q.x+25))[0];ok(b,'balcony');A.teleport(-14,24,b.z,90);A.look(90,Math.atan2(b.y-25.6,11)*180/Math.PI);A.step(0.3);return {balcony:[R1(b.x),R1(b.y),R1(b.z)],count:GR.plants.filter(q=>q.kind==='balcony').length};})()"
+ },
+ {
+  "name": "l2-creepers",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10.5);const c=GR.plants.filter(q=>q.kind==='creeper'&&q.level==='L2').sort((p,q)=>p.x-q.x)[0];ok(c,'an L2 creeper');A.set('freeze',false);A.teleport(c.x+(c.x<0?2:-2),24,c.z+3.5,c.x<0?-90:90);A.look(0,-4);A.step(0.3);return {creeper:[R1(c.x),R1(c.y),R1(c.z)],n:GR.plants.filter(q=>q.kind==='creeper'&&q.level==='L2').length};})()"
+ },
+ {
+  "name": "g-street-bare",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10);A.set('freeze',false);A.teleport(-44,0,10,90);A.look(90,8);A.step(0.3);return {gPlants:GR.plants.filter(p=>p.level==='G').length};})()"
+ },
+ {
+  "name": "g-shrine-tulsi",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.teleport(-62,0,-80,90);A.look(95,-6);A.step(0.3);return {tulsi:GR.plants.filter(p=>p.kind==='tulsi').length};})()"
+ },
+ {
+  "name": "g-dharavi-ledge",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const p=GR.plants.find(q=>q.kind==='ledge-pot');ok(p,'ledge pot');const side=p.x<-110?1:-1;A.teleport(p.x+side*2.2,0,p.z,side>0?-90:90);A.look(side>0?-90:90,4);A.step(0.3);return {ledge:[R1(p.x),R1(p.z)]};})()"
+ },
+ {
+  "name": "g-dead-tree-stays-dead",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.teleport(-45,0,22,0);A.look(180,10);A.step(0.3);ok(!GR.plants.some(p=>Math.hypot(p.x+45,p.z-36)<10&&p.level==='G'),'nothing alive near the dead tree');})()"
+ },
+ {
+  "name": "sing-roof-day",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(10);A.set('freeze',false);A.teleport(70,38,-100,200);A.look(200,-6);A.step(0.3);A.do('singReset');G.sing.tryStart();A.do('pulseHold',1.2);A.step(0.2);return {patched:G.senses.patchedCount};})()"
+ },
+ {
+  "name": "sing-roof-night",
+  "wait": 1800,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(22);A.do('pulseHold',null);A.step(7);A.teleport(70,38,-100,200);A.look(200,-6);A.step(0.3);A.do('singReset');G.sing.tryStart();A.do('pulseHold',1.3);A.step(0.2);return 1;})()"
+ },
+ {
+  "name": "sing-patched",
+  "wait": 200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;ok(GR.debug.layers.every(l=>l.mat.userData&&l.mat.userData.sensePatched),'the greenery material is opted in to the senses patch');return {patched:true};})()",
+  "shot": false
+ },
+ {
+  "name": "budget-view",
+  "wait": 2600,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.do('pulseHold',null);A.step(7);A.setTime(10);A.set('freeze',false);A.teleport(57,38,-14,-35);A.look(-35,-2);A.step(0.3);})()"
+ },
+ {
+  "name": "budget-read",
+  "wait": 300,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const r=A.state().render,g=A.state().greenery;ok(g.calls<=2,'greenery is at most 2 draw calls (3 at night): '+g.calls);ok(g.visible.tris<=60000,'greenery triangles in view: '+g.visible.tris);ok(r.calls<=150,'whole scene draw calls: '+r.calls);return {sceneCalls:r.calls,sceneTriangles:r.triangles,greeneryCalls:g.calls,greeneryTriangles:g.visible.tris,cells:g.visible.cells,lod0:g.visible.lod0};})()",
+  "shot": false
+ },
+ {
+  "name": "budget-night",
+  "wait": 2200,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;A.setTime(22);A.step(0.3);})()",
+  "shot": false
+ },
+ {
+  "name": "budget-night-read",
+  "wait": 300,
+  "eval": "(()=>{const A=__grahan,G=A.game,W=G.world,GR=W.greenery;const ok=(c,m)=>{if(!c)throw new Error('ASSERT '+m);};const R1=(v)=>Math.round(v*10)/10;const r=A.state().render,g=A.state().greenery;ok(g.calls<=3,'greenery is at most 3 draw calls at night: '+g.calls);ok(r.calls<=150,'whole scene draw calls at night: '+r.calls);return {sceneCalls:r.calls,sceneTriangles:r.triangles,greeneryCalls:g.calls,greeneryTriangles:g.visible.tris};})()",
+  "shot": false
+ }
+]
