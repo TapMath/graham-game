@@ -1,0 +1,90 @@
+[
+ {
+  "name": "setup",
+  "wait": 800,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.set('manual', true); A.set('invulnerable', true); A.set('hazards', false); A.setTime(10); A.step(1); return 1;})()"
+ },
+ {
+  "name": "start-collapse-g",
+  "wait": 1200,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nhudFresh(); const t = T(); ok(t && t.id === 'collapse' && t.level === 'G' && t.label === 'the old man', 'start: target is the old man on G: ' + JSON.stringify(t)); ok(t.change === null && t.dist >= 0, 'no level change'); const w = where(); ok(!w.hidden && /^the old man · /.test(w.textContent), 'HUD line: ' + w.textContent); ok(M().minimapShown, 'minimap shown'); return { t, hud: w.textContent, gold: gold(G.map.canvas) };})()"
+ },
+ {
+  "name": "lead-underground-u",
+  "wait": 1200,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.set('reachedBelow', true); A.set('setuLead', 'catacombs'); G.objectives.refresh(true); A.step(0.5); G.map._force = true; hudFresh(); const t = T(); ok(t && t.id === 'underground' && t.lead === undefined && t.label === \"Setu's last lead\" && t.level === 'U' && t.change === 'down', 'lead is the target: ' + JSON.stringify(t)); const w = where(); ok(/Setu's last lead · .* · go down to U$/.test(w.textContent), 'HUD: ' + w.textContent); const c = G.map.collect('G'); ok(c.target.lead && c.objectives.every((m) => m.label !== 'last lead'), 'lead is drawn as the target, not twice'); return { t, hud: w.textContent };})()"
+ },
+ {
+  "name": "lead-full-map-u",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.open('U'); A.step(0.2); await wait(400); const s = M(); ok(s.full.sections[0].startsWith('Where to go'), 'first section: ' + s.full.sections); const side = document.querySelector('.fm-side'); ok(/Setu's last lead/.test(side.textContent) && /go down to U/.test(side.textContent) && /Underground/.test(side.querySelector('.fm-goto').textContent), 'side: ' + side.querySelector('.fm-goto').textContent); return s.full;})()"
+ },
+ {
+  "name": "setu-found-bridge-l3",
+  "wait": 1200,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.close(); A.do('setuFind'); G.objectives.refresh(true); A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1); G.map._force = true; hudFresh(); const t = T(); ok(t && t.id === 'bridge' && t.level === 'L3' && t.change === 'up' && t.label === 'Atal Setu', 'bridge target on L3: ' + JSON.stringify(t)); ok(t.dist > 150, 'it is far away: ' + t.dist); const w = where(); ok(/^Atal Setu · \\d+ m (N|NE|E|SE|S|SW|W|NW) · go up to L3$/.test(w.textContent), 'HUD: ' + w.textContent); const n = gold(G.map.canvas); ok(n > 20, 'gold on the minimap rim: ' + n); return { t, hud: w.textContent, gold: n };})()"
+ },
+ {
+  "name": "full-map-g-ghost-and-panel",
+  "wait": 1700,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.open(); A.step(0.2); await wait(500); const s = M(); ok(s.full.level === 'G', 'opens on the player level'); const sec = document.querySelector('.fm-goto'); ok(sec && /Atal Setu/.test(sec.textContent) && /Upper Decks/.test(sec.textContent) && /go up to L3/.test(sec.textContent) && /\\d+ m (north|south|east|west)/.test(sec.textContent), 'Where to go: ' + sec?.textContent); ok(document.querySelector('.fm-show'), 'Show button'); return { full: s.full, text: sec.textContent };})()"
+ },
+ {
+  "name": "full-map-l3-star",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.do('mapTab', 'L3'); await wait(500); ok(M().full.level === 'L3', 'tab L3'); return M().full;})()"
+ },
+ {
+  "name": "full-map-show-button",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.do('mapTab', 'G'); await wait(300); document.querySelector('.fm-show').click(); await wait(500); const f = M().full; ok(f.level === 'L3', 'Show switches to the objective level: ' + f.level); ok(Math.abs(f.cx - 211) < f.size[0] / 2 / f.zoom && Math.abs(f.cz + 30) < f.size[1] / 2 / f.zoom && f.zoom >= 2.2, 'and brings it into view: ' + JSON.stringify([f.cx, f.cz, f.zoom, T()])); return f;})()"
+ },
+ {
+  "name": "l3-same-level-line",
+  "wait": 1700,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.close(); A.teleport(100, 38, -90, 90); A.look(90, 0); A.step(1); G.map._force = true; hudFresh(); const t = T(); ok(t.level === 'L3' && t.change === null, 'same level now: ' + JSON.stringify(t)); ok(!/go (up|down)/.test(where().textContent), 'no level hint: ' + where().textContent); G.map.open(); await wait(500); ok(M().full.level === 'L3', 'opens on L3'); return { t, hud: where().textContent };})()"
+ },
+ {
+  "name": "l3-minimap-near",
+  "wait": 1300,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.close(); A.teleport(190, 38, -34, 90); A.look(90, 0); A.step(1); G.map._force = true; hudFresh(); const t = T(); ok(t.dist < 40, 'close: ' + t.dist); return { t, hud: where().textContent, gold: gold(G.map.canvas) };})()"
+ },
+ {
+  "name": "permit-two-stops",
+  "wait": 600,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.teleport(60, 0, 20, 90); A.set('bridgePermit', true); A.step(1); const t = T(); ok(t.label === 'permit gate' && t.level === 'G', 'with the permit the gate on G is the next stop: ' + JSON.stringify(t)); A.set('bridgePermit', false); A.step(0.5); return t;})()"
+ },
+ {
+  "name": "phone-portrait-minimap",
+  "wait": 1500,
+  "viewport": [
+   390,
+   844
+  ],
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nA.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1); G.map._force = true; hudFresh(); return { size: M().size, hud: where().textContent };})()"
+ },
+ {
+  "name": "phone-portrait-full-map",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.open(); A.step(0.2); await wait(500); ok(document.querySelector('.fm-goto'), 'panel on a phone'); return M().full.size;})()"
+ },
+ {
+  "name": "phone-portrait-where-panel",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\ndocument.querySelector('.fm-body').scrollTop = 0; document.querySelector('.fm-goto').scrollIntoView({ block: 'center' }); return document.querySelector('.fm-body').scrollTop;})()"
+ },
+ {
+  "name": "phone-landscape",
+  "wait": 1500,
+  "viewport": [
+   844,
+   390
+  ],
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.close(); A.step(0.5); G.map._force = true; hudFresh(); return where().textContent;})()"
+ },
+ {
+  "name": "phone-landscape-full-map",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const T=()=>M().target; const where=()=>document.querySelector('.hud-objective .obj-where');\n/* count the gold of the primary marker on a canvas: #ffcf33 within a few levels */\nconst gold=(cv)=>{ const c=cv.getContext('2d'), d=c.getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]>170&&d[i+1]>120&&d[i+2]<90&&d[i]-d[i+2]>110&&d[i+3]>240) n++; return n; };\nconst hudFresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); };\nG.map.open(); A.step(0.2); await wait(500); return M().full.size;})()"
+ }
+]

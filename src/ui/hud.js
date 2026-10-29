@@ -11,6 +11,7 @@
 //
 // API: game.hud.setFloodVisible(bool), game.hud.showSetu(bool), game.hud.el (root), game.hud.setThreshold(n|null) marks a ray
 // requirement on the sun. Debug HUD (?debug=1) is a separate element (ui/debughud.js).
+import { fmtDist } from './mapdata.js';
 const NS = 'http://www.w3.org/2000/svg';
 const RAYS = 12;
 
@@ -56,7 +57,7 @@ export class HudSystem {
             <div class="day">DAY <span>1</span> OF 2</div>
             <div class="flood" hidden>FLOOD IN <b>24h 20m</b><span class="scrawl rot-b">until the water</span></div>
           </div>
-          <div class="hud-objective"><div class="lbl"><span>OBJECTIVE</span><button type="button" class="opt-chip" hidden></button></div><p></p>${SQUIGGLE}</div>
+          <div class="hud-objective"><div class="lbl"><span>OBJECTIVE</span><button type="button" class="opt-chip" hidden></button></div><p></p><div class="obj-where" hidden></div>${SQUIGGLE}</div>
         </div>
         <div class="hud-setu" hidden>
           <div class="lbl"><s>SUBJECT 0471</s><span class="scrawl rot-b">Setu</span></div>
@@ -76,7 +77,7 @@ export class HudSystem {
     this.count = q('.rays-count b'); this.status = q('.rays-status');
     this.timeEl = q('.hud-clock .time'); this.dayEl = q('.hud-clock .day span'); this.floodEl = q('.hud-clock .flood'); this.floodB = q('.flood b');
     this.setuEl = q('.hud-setu'); this.ecg = q('.hud-setu .ecg'); this.ecgLine = q('.ecg-line'); this.ecgDot = q('.ecg-dot'); this.breathBar = q('.breath i'); this.breathN = q('.breath-n b');
-    this.objEl = q('.hud-objective p'); this.objWrap = q('.hud-objective');
+    this.objEl = q('.hud-objective p'); this.objWrap = q('.hud-objective'); this.whereEl = q('.obj-where'); this._whereT = 0; this._where = '';
     this.gateCard = q('.gate-card'); this.gcFig = q('.gc-fig'); this.gcReq = q('.gc-req'); this.gcState = q('.gc-state');
     this.promptEl = q('.prompt'); this.promptText = q('.prompt span');
     this.feed = q('.hud-feed');
@@ -289,6 +290,14 @@ export class HudSystem {
     // ---- objective
     const ot = game.objective ? game.objective.text : '';
     if (ot !== this._objText) { this._objText = ot; this.objEl.textContent = ot; this.objWrap.classList.toggle('empty', !ot); this.objWrap.hidden = !ot && !this._optN; this.objWrap.classList.remove('flip'); void this.objWrap.offsetWidth; this.objWrap.classList.add('flip'); }
+
+    // ---- where the objective is: "Atal Setu · 240 m NE · go up to L3", a few times a second, the DOM touched only when the words change
+    this._whereT -= dt;
+    if (this._whereT <= 0) {
+      this._whereT = 0.25;
+      const t = game.map?.target?.(), w = t && ot ? [t.label, t.dist < 5 ? (t.change ? '' : 'here') : fmtDist(t.dist) + ' ' + t.dirShort, t.hint].filter(Boolean).join(' \u00b7 ') : '';
+      if (w !== this._where) { this._where = w; this.whereEl.textContent = w; this.whereEl.hidden = !w; }
+    }
 
     // ---- gate card and sun threshold marker
     const gt = game.modal ? null : this._nearestGate();

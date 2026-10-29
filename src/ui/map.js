@@ -6,6 +6,7 @@
 //   game.map.setMinimap(on)                         the "Minimap" setting (settings.js drives it; on by default)
 //   game.map.collect(level)                         the live marks of one level (shared by both maps), see below
 //   game.map.discovered                             Set of place ids the player knows (names appear on the full map)
+//   game.map.target()                               where the primary objective is: {id, text, label, x, z, level, lead, dist, dir, dirShort, change, hint} or null (the maps and the HUD line)
 //   game.map.lead                                   the last lead to Setu: {id, x, y, z, level} or null (never his real position)
 //   game.map.warmth                                 the warmth cue (src/ui/warmth.js)
 //   game.map.snapshot()                             what state().map prints
@@ -16,7 +17,7 @@
 import { Minimap } from './minimap.js';
 import { FullMap } from './fullmap.js';
 import { Warmth } from './warmth.js';
-import { LEVELS, PLACES, RAIL, leadSpot, objectiveSpots, sunSources } from './mapdata.js';
+import { LEVELS, PLACES, RAIL, leadSpot, objectiveSpots, sunSources, compassOf, levelHint } from './mapdata.js';
 import { levelAt } from '../world/levels.js';
 
 const MAP_ICON = '<svg viewBox="0 0 24 24"><path d="M3.5 6.5 L9 4.5 L15 6.5 L20.5 4.5 V17.5 L15 19.5 L9 17.5 L3.5 19.5 Z M9 4.5 V17.5 M15 6.5 V19.5"/></svg>';
@@ -176,7 +177,8 @@ export class MapSystem {
     const obj = g.objectives;
     const ids = [obj?.primary?.id, ...(obj?.optional ?? []).map((o) => o.id)].filter(Boolean);
     const seen = new Set();
-    for (const id of ids) for (const sp of objectiveSpots(id, g.flags)) { if (sp.label === 'last lead') continue; const k = sp.label + sp.x; if (!seen.has(k)) { seen.add(k); out.objectives.push({ ...sp, primary: id === ids[0] }); } }
+    const tg = out.target = this.target();
+    for (const id of ids) for (const sp of objectiveSpots(id, g.flags)) { if (sp.label === 'last lead') continue; const k = sp.label + sp.x; if (!seen.has(k)) { seen.add(k); out.objectives.push({ ...sp, primary: id === obj?.primary?.id, main: !!tg && !tg.lead && sp.label === tg.label && sp.x === tg.x }); } }
     // fragments already found
     const found = g.fragments?.found;
     if (found && found.size) for (const s of w.fragmentSpots) if (found.has(s.id) && s.level === level) out.fragments.push({ x: s.x, z: s.z, id: s.id });
@@ -194,11 +196,34 @@ export class MapSystem {
     return out;
   }
 
+  /**
+   * Where the primary objective is, from where the player stands: the spot of it nearest to you (on your level first), or Setu's last lead when
+   * the objective is to find him. dist is in metres, rounded to 5 (so text built from it does not flicker); `change` is 'up'/'down' when
+   * another level is needed. null when the objective has no place on the map.
+   */
+  target() {
+    const g = this.game, p = g.player, id = g.objectives?.primary?.id;
+    if (!id || !p) return null;
+    let sp = null, lead = false;
+    if (id === 'underground' || id === 'search') {                       // the objective is Setu, and all the map knows is the last lead
+      if (g.setu?.found || g.setu?.following) return null;
+      sp = this.lead ?? leadSpot(g.flags.setuLead); lead = true;
+      if (!sp) return null;
+      sp = { x: sp.x, z: sp.z, level: sp.level, label: "Setu's last lead" };
+    } else {
+      let bd = 1e9;
+      for (const c of objectiveSpots(id, g.flags)) { const d = Math.hypot(c.x - p.pos.x, c.z - p.pos.z) + (c.level === p.level ? 0 : 400); if (d < bd) { bd = d; sp = c; } }
+      if (!sp) return null;
+    }
+    const dx = sp.x - p.pos.x, dz = sp.z - p.pos.z, d = Math.hypot(dx, dz), [dir, dirShort] = compassOf(dx, dz), hint = levelHint(p.level, sp.level);
+    return { id, text: g.objective?.text ?? '', label: sp.label, x: sp.x, z: sp.z, level: sp.level, lead, dist: Math.round(d / 5) * 5, dir, dirShort, change: hint ? (hint.startsWith('go up') ? 'up' : 'down') : null, hint };
+  }
+
   _frameData() {
     const g = this.game, p = g.player, level = p.level;
     const f = this.collect(level);
     f.x = p.pos.x; f.z = p.pos.z; f.yaw = this.viewYaw(); f.fov = g.camera.fov; f.hour = g.clock?.hour ?? 10;
-    f.inSun = !!g.world.isInSunlight?.(p.pos); f.rays = p.rays; f.permit = !!g.flags.bridgePermit;
+    f.inSun = !!g.world.isInSunlight?.(p.pos); f.rays = p.rays; f.permit = !!g.flags.bridgePermit; f.calm = !!g.settings?.get?.('reduceFlash');
     return f;
   }
 
@@ -280,7 +305,7 @@ export class MapSystem {
     const g = this.game, f = this.mini.stats;
     return {
       open: this.isOpen, tab: this.isOpen ? this.full.level : null, minimap: this.minimapOn, minimapShown: !!this._shown,
-      level: g.player?.level, discovered: [...this.discovered].filter((id) => !PLACES.find((p) => p.id === id)?.always), lead: this.lead && { id: this.lead.id, level: this.lead.level }, leadVia: this.leadVia,
+      level: g.player?.level, discovered: [...this.discovered].filter((id) => !PLACES.find((p) => p.id === id)?.always), lead: this.lead && { id: this.lead.id, level: this.lead.level }, leadVia: this.leadVia, target: ((t) => t && { id: t.id, label: t.label, level: t.level, dist: t.dist, dir: t.dir, change: t.change })(this.target()),
       warmth: this.warmth.snapshot(), mini: { redraws: f.redraws, cacheBuilds: f.cacheBuilds, ms: Math.round(f.lastMs * 10) / 10 },
       size: this.canvas ? [this.canvas.clientWidth, this.canvas.clientHeight] : null,
       full: this.isOpen ? this.full.snapshot() : null,

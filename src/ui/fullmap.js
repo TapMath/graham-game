@@ -8,7 +8,7 @@
 //   F fits the whole sheet, M or Esc closes.   Touch: drag, pinch, the buttons (they are large enough to hit).
 import { PAPER, paintLevel } from './maprender.js';
 import {
-  BOUNDS, LEVELS, LEVEL_INFO, GATES, LINKS, PLACES, RAIL, SUN_HOURS, levelData, levelIndex, linksAt, sunFactorAt, fmtHour, gatesAt,
+  BOUNDS, LEVELS, LEVEL_INFO, GATES, LINKS, PLACES, RAIL, SUN_HOURS, levelData, levelIndex, linksAt, sunFactorAt, fmtHour, gatesAt, compassOf, fmtDist, objectiveSpots,
 } from './mapdata.js';
 import { MAP } from '../world/map.js';
 
@@ -87,6 +87,7 @@ export class FullMap {
       if (z === 'in') this.zoomBy(1.35); else if (z === 'out') this.zoomBy(1 / 1.35); else if (z === 'me') this.centreOnMe(); else this.fit();
     });
     this.side.addEventListener('click', (e) => {
+      if (e.target.closest('[data-show]')) { this.showTarget(); return; }
       const p = e.target.closest('[data-place]'); if (!p) return;
       const pl = PLACES.find((q) => q.id === p.dataset.place); if (!pl) return;
       this.setLevel(pl.level, true); this.view.cx = pl.x; this.view.cz = pl.z; this.view.zoom = Math.max(this.view.zoom, 2.2); this.draw();
@@ -141,6 +142,12 @@ export class FullMap {
     this.level = l; this._tabs(); this._sideNow(true);
     if (!keepView) this.fit(false);
     this.draw();
+  }
+
+  /** "Show": the tab of the objective, centred on it (zoomed in enough to read the streets around it). */
+  showTarget() {
+    const t = this.sys.target(); if (!t) return;
+    this.setLevel(t.level, true); this.view.cx = t.x; this.view.cz = t.z; this.view.zoom = Math.max(this.view.zoom, 2.2); this._clampView(); this.draw();
   }
 
   setView(o = {}) { Object.assign(this.view, o); this._clampView(); this.draw(); }
@@ -491,23 +498,32 @@ export class FullMap {
     const game = this.game, p = game.player, S = clamp(z, 0.6, 3) ** 0.4;
     // fragments you found
     for (const m of data.fragments) { const x = X(m.x), y = Y(m.z); g.fillStyle = '#fff'; g.strokeStyle = '#1c6fb8'; g.lineWidth = 1.4; g.beginPath(); g.rect(x - 4, y - 5, 8, 10); g.fill(); g.stroke(); g.beginPath(); g.moveTo(x - 2, y - 1.5); g.lineTo(x + 2, y - 1.5); g.moveTo(x - 2, y + 1.5); g.lineTo(x + 2, y + 1.5); g.stroke(); }
-    // the last lead to Setu
-    const lead = data.lead;
-    if (lead && lead.level === this.level) {
+    // the last lead to Setu (when finding him IS the objective, the target star below stands for it)
+    const lead = data.lead, tg = data.target;
+    if (lead && lead.level === this.level && !tg?.lead) {
       const x = X(lead.x), y = Y(lead.z), r = 14 * S, pulse = 0.5 + 0.5 * Math.sin(now * 2.2);
       g.save(); g.setLineDash([4, 4]); g.strokeStyle = `rgba(150,100,0,${0.55 + 0.25 * pulse})`; g.lineWidth = 1.8; g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke(); g.setLineDash([]);
       g.font = `italic 700 ${17 * S}px ${SERIF}`; this._text(g, '?', x, y + 1, { font: g.font, color: '#8a5a00', haloW: 3 });
       g.font = `${13 * S}px ${HAND}`; this._text(g, 'Setu was seen near here', x, y + r + 12 * S, { font: g.font, color: '#8a5a00', haloW: 3 });
       g.restore();
     }
-    // where you are going
-    for (const m of data.objectives) {
-      if (m.level !== this.level) continue;
-      const x = X(m.x), y = Y(m.z), s = 7.5 * S;
-      g.fillStyle = m.primary ? '#ffcf33' : '#fff0b8'; g.strokeStyle = '#4a3400'; g.lineWidth = 1.8;
-      g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); g.stroke();
-      if (z > 1.3) { g.font = `${12 * S}px ${HAND}`; this._text(g, m.label, x, y - s - 8 * S, { font: g.font, color: '#4a3400', haloW: 3 }); }
+    // the straight way from you to the objective, when you are on the same level
+    if (tg && tg.level === this.level && p.level === this.level) {
+      g.save(); g.lineCap = 'round'; g.setLineDash([9, 7]);
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 5; g.beginPath(); g.moveTo(X(p.pos.x), Y(p.pos.z)); g.lineTo(X(tg.x), Y(tg.z)); g.stroke();
+      g.strokeStyle = '#b87500'; g.lineWidth = 2.4; g.stroke();
+      g.restore();
     }
+    // other places you are going (the optional ones, and the primary's second stop): small, with their names always showing
+    for (const m of data.objectives) {
+      if (m.level !== this.level || m.main) continue;
+      const x = X(m.x), y = Y(m.z), s = 6.5 * S;
+      g.fillStyle = m.primary ? '#ffcf33' : '#fff0b8'; g.strokeStyle = '#4a3400'; g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); g.stroke();
+      g.font = `${12 * S}px ${HAND}`; this._text(g, m.label, x, y - s - 8 * S, { font: g.font, color: '#4a3400', haloW: 3 });
+    }
+    // the objective: on every tab. Its own level gets a big pulsing star and a name that always shows; the others a faded ghost that says where it really is.
+    if (tg) this._target(g, X, Y, S, tg, now);
     // the people with you
     for (const m of data.party) {
       if (m.level !== this.level) continue;
@@ -554,6 +570,33 @@ export class FullMap {
       g.save(); g.globalAlpha = 0.5; g.fillStyle = '#d1362b'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, 6, 0, TAU); g.fill(); g.stroke(); g.restore();
       g.font = `${12 * S}px ${HAND}`; this._text(g, `you: ${p.level} ${levelIndex(p.level) > levelIndex(this.level) ? '↑' : '↓'}`, px, py - 13, { font: g.font, color: '#d1362b', haloW: 3 });
     }
+  }
+
+  _target(g, X, Y, S, t, now) {
+    const own = t.level === this.level, x = X(t.x), y = Y(t.z), calm = !!this.game.settings?.get?.('reduceFlash');
+    const k = calm ? 0 : 0.5 + 0.5 * Math.sin(now * 3.4), R = (own ? 16 : 10) * S * (1 + 0.1 * k);
+    const txt = own ? t.label : `${t.label}: on ${t.level} ${levelIndex(t.level) > levelIndex(this.level) ? '↑' : '↓'}`;
+    g.font = `700 ${(own ? 12.5 : 11) * S}px ${SANS}`;
+    const w = g.measureText(txt).width + 16, h = (own ? 20 : 17) * S, M = 14;
+    const inside = x > M && y > M && x < this.W - M && y < this.H - M;
+    g.save();
+    if (!own) g.globalAlpha = 0.8;
+    // off the sheet (zoomed in): park it on the edge, pointing the way
+    let sx = x, sy = y, a = 0;
+    if (!inside) { sx = clamp(x, M + 8, this.W - M - 8); sy = clamp(y, M + 8, this.H - M - 8); a = Math.atan2(y - this.H / 2, x - this.W / 2); }
+    if (own && inside) { g.strokeStyle = `rgba(184,117,0,${0.85 - 0.55 * k})`; g.lineWidth = 2.4; g.beginPath(); g.arc(sx, sy, R + 5 + 8 * k, 0, TAU); g.stroke(); }
+    g.fillStyle = own ? '#ffcf33' : '#ffe58a'; g.strokeStyle = '#4a3400'; g.lineWidth = own ? 2.2 : 1.8; g.lineJoin = 'round';
+    g.beginPath();
+    if (!inside) { const ux = Math.cos(a), uy = Math.sin(a), q = 10 * S; g.moveTo(sx + ux * q, sy + uy * q); g.lineTo(sx - ux * q * 0.6 - uy * q, sy - uy * q * 0.6 + ux * q); g.lineTo(sx - ux * q * 0.1, sy - uy * q * 0.1); g.lineTo(sx - ux * q * 0.6 + uy * q, sy - uy * q * 0.6 - ux * q); }
+    else if (own) { for (let i = 0; i < 10; i++) { const r = i % 2 ? R * 0.45 : R, th = -Math.PI / 2 + i * Math.PI / 5; g.lineTo(sx + Math.cos(th) * r, sy + Math.sin(th) * r); } }
+    else { g.moveTo(sx, sy - R); g.lineTo(sx + R, sy); g.lineTo(sx, sy + R); g.lineTo(sx - R, sy); }
+    g.closePath(); g.fill(); g.stroke();
+    // the name, on a dark chip near it (never over another chip, never off the sheet)
+    const [cx, cy] = this._spot(clamp(inside ? sx : sx - Math.cos(a) * (w / 2 + 14), w / 2 + 4, this.W - w / 2 - 4), inside ? sy - R - 6 - h / 2 : clamp(sy - Math.sin(a) * (h + 12), h, this.H - h), w, h, [[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0], [0, 2]]);
+    g.fillStyle = own ? '#1b2a36' : 'rgba(27,42,54,.85)'; this._pill(g, cx - w / 2, cy - h / 2, w, h, h / 2);
+    g.fillStyle = '#ffd84d'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, cx, cy + 0.5);
+    g.restore();
+    this._boxes.push({ x: sx - R, y: sy - R, w: R * 2, h: R * 2 });
   }
 
   _compass(g, W, H, z) {
@@ -605,7 +648,8 @@ export class FullMap {
     const disc = this.sys.discovered;
     const places = PLACES.filter((q) => q.level === lv && q.kind === 'story' && disc.has(q.id));
     const hidden = PLACES.filter((q) => q.level === lv && q.kind === 'story' && !disc.has(q.id)).length;
-    const key = JSON.stringify([lv, Math.round(I * 20), Math.floor(hour * 6), rays, lifts.map((l) => [l.id, Math.round(l.charge / 2), l.crowd]), T?.stations?.map((s) => [Math.round((s.next?.east?.eta ?? 999) / 3), Math.round((s.next?.west?.eta ?? 999) / 3)]), places.length, hidden, p.level, data.sun.length, game.flags.bridgePermit]);
+    const tg = data.target, ob = game.objectives, objText = game.objective?.text ?? '', opts = (ob?.optional ?? []).map((o) => ({ ...o, spot: objectiveSpots(o.id, game.flags)[0] }));
+    const key = JSON.stringify([tg && [tg.id, tg.label, tg.x, tg.z, tg.level, tg.dist, tg.dirShort], objText, opts.map((o) => [o.id, o.spot?.level]), lv, Math.round(I * 20), Math.floor(hour * 6), rays, lifts.map((l) => [l.id, Math.round(l.charge / 2), l.crowd]), T?.stations?.map((s) => [Math.round((s.next?.east?.eta ?? 999) / 3), Math.round((s.next?.west?.eta ?? 999) / 3)]), places.length, hidden, p.level, data.sun.length, game.flags.bridgePermit]);
     if (!force && key === this.sideKey) return;
     this.sideKey = key;
 
@@ -613,7 +657,7 @@ export class FullMap {
     let nearest = '';
     if (lv === p.level && data.sun.length) {
       let b = null, bd = 1e9; for (const s of data.sun) { const d = Math.hypot(s.x - p.pos.x, s.z - p.pos.z); if (d < bd) { bd = d; b = s; } }
-      const dx = b.x - p.pos.x, dz = b.z - p.pos.z, ang = (Math.atan2(dx, -dz) * 180 / Math.PI + 360) % 360, name = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(ang / 45) % 8];
+      const name = compassOf(b.x - p.pos.x, b.z - p.pos.z)[0];
       nearest = `<p class="fm-line">Nearest ${b.kind === 'lamp' ? 'solar lamp' : 'light'} on this level: <b>${Math.round(bd)} m ${name}</b>.</p>`;
     }
     const rise = fmtHour(SUN_HOURS.rise + 0.05), set = fmtHour(SUN_HOURS.set - 0.02), fade = fmtHour(SUN_HOURS.fade);
@@ -624,7 +668,15 @@ export class FullMap {
           : `The sun is down. The shafts return about ${rise}: the dashed rings show where they will stand.`;
     const sunSvg = this._sunStrip(hour);
 
-    let html = `<section class="fm-sec fm-level"><h3>${lv} <i>${esc(info.en)}</i> <span class="dev">${info.dev}</span></h3><p class="fm-line dim">${esc(info.note)}${lv !== p.level ? ` &middot; you are on ${p.level}` : ' &middot; you are on this level'}</p></section>`;
+    let html = '';
+    if (objText) {
+      const where = tg ? `<p class="fm-go-at"><b>${esc(tg.label)}</b><span class="lv">${tg.level} ${esc(LEVEL_INFO[tg.level].en)}</span></p>
+        <p class="fm-line">${tg.dist < 5 ? (tg.change ? '' : 'You are here.') : `<b>${fmtDist(tg.dist)}</b> ${tg.dir}`}${tg.hint ? `${tg.dist < 5 ? '' : ' &middot; '}<em class="fm-go-lvl">${esc(tg.hint)}</em>` : ''}</p>
+        <button type="button" class="fm-show" data-show="1">Show on map</button>` : '<p class="fm-line dim">No place to mark for this yet.</p>';
+      const more = opts.length ? `<ul class="fm-go-opt">${opts.map((o) => `<li><b>optional</b>${o.spot ? `${esc(o.spot.label)} &middot; ${o.spot.level}. ` : ''}${esc(o.text)}</li>`).join('')}</ul>` : '';
+      html += `<section class="fm-sec fm-goto"><h3>Where to go <span class="dev">कहाँ जाएँ</span></h3><p class="fm-go-text">${esc(objText)}</p>${where}${more}</section>`;
+    }
+    html += `<section class="fm-sec fm-level"><h3>${lv} <i>${esc(info.en)}</i> <span class="dev">${info.dev}</span></h3><p class="fm-line dim">${esc(info.note)}${lv !== p.level ? ` &middot; you are on ${p.level}` : ' &middot; you are on this level'}</p></section>`;
     html += `<section class="fm-sec fm-sun"><h3>Sunlight <span class="dev">धूप</span></h3>${sunSvg}<p class="fm-line">${esc(sunMsg)}</p>${nearest}</section>`;
     if (lv === 'G') {
       const rows = RAIL.stations.map((s) => {
@@ -652,7 +704,7 @@ export class FullMap {
     html += `<section class="fm-sec"><h3>Places <span class="dev">जगहें</span></h3>${places.length ? `<ul class="fm-list fm-places">${places.map((q) => `<li><button type="button" data-place="${q.id}"><span class="nm">${esc(q.en)}</span><span class="dev">${q.dev}</span></button></li>`).join('')}</ul>` : '<p class="fm-line dim">Nothing marked on this level yet.</p>'}${hidden ? `<p class="fm-line dim">${hidden} more to find here.</p>` : ''}</section>`;
     html += `<section class="fm-sec fm-legend"><h3>Key</h3><ul>
       <li><i class="k-sun"></i>sunlight now</li><li><i class="k-lamp"></i>solar lamp</li><li><i class="k-sunlater"></i>where it returns</li><li><i class="k-stairs"></i>stairs and ramps</li><li><i class="k-lift"></i>lift and its battery</li>
-      <li><i class="k-gate"></i>gate and its rays</li><li><i class="k-train"></i>Harbour Line train</li><li><i class="k-you"></i>you</li><li><i class="k-obj"></i>where you are going</li><li><i class="k-lead"></i>last lead to Setu</li><li><i class="k-frag"></i>pages you found</li></ul></section>`;
+      <li><i class="k-gate"></i>gate and its rays</li><li><i class="k-train"></i>Harbour Line train</li><li><i class="k-you"></i>you</li><li><i class="k-obj"></i>where to go</li><li><i class="k-route"></i>straight line to it</li><li><i class="k-lead"></i>last lead to Setu</li><li><i class="k-frag"></i>pages you found</li></ul></section>`;
     this.side.innerHTML = html;
   }
 

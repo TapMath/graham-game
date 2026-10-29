@@ -2,10 +2,10 @@
 //
 // The level's layout is painted once into an offscreen canvas (maprender.js, cached per level, rebuilt only when the level changes),
 // so a frame is one rotated blit plus a handful of live marks: sunlight patches, lift batteries, gate thresholds, the Harbour Line's
-// trains, the people with you, objectives, fragments you found and (faintly) the last lead to Setu. The layer never draws
+// trains, the people with you, objectives (the primary one big, gold and on the rim as an arrow when it is out of the lens), fragments you found and (faintly) the last lead to Setu. The layer never draws
 // where Setu is while he is unfound. `draw(frame)` is called about 10 times a second by the map system.
 import { DARK, paintLevel } from './maprender.js';
-import { BOUNDS, LEVEL_INFO, gatesAt, linksAt, levelIndex, RAIL } from './mapdata.js';
+import { BOUNDS, LEVEL_INFO, gatesAt, linksAt, levelIndex, fmtDist, RAIL } from './mapdata.js';
 
 const RADIUS_M = 60;                                   // metres from the player to the rim: 120 m across
 /** Ring radius (m) of a capsule lift on the maps, by class: the bigger the car, the bigger the ring. */
@@ -89,6 +89,7 @@ export class Minimap {
     this._fragments(g, f, P, dpr);
     this._lead(g, f, P, dpr, R);
     this._objectives(g, f, P, dpr, R);
+    this._target(g, f, P, dpr, R, time);
     this._party(g, f, P, dpr, R);
     this._player(g, f, R, dpr);
     g.restore();
@@ -182,7 +183,7 @@ export class Minimap {
   }
 
   _lead(g, f, P, dpr, R) {
-    const m = f.lead; if (!m) return;
+    const m = f.lead; if (!m || f.target?.lead) return;               // (when the lead IS the objective, _target draws it)
     const near = m.level === f.level;
     let [x, y] = P(m.x, m.z);
     const d = Math.hypot(x - R, y - R), lim = R - 10 * dpr;
@@ -197,6 +198,7 @@ export class Minimap {
 
   _objectives(g, f, P, dpr, R) {
     for (const m of f.objectives) {
+      if (m.main) continue;                                           // the main target has its own, louder marker (_target)
       const near = m.level === f.level;
       let [x, y] = P(m.x, m.z);
       const d = Math.hypot(x - R, y - R), lim = R - 9 * dpr, off = d > lim;
@@ -208,6 +210,39 @@ export class Minimap {
       if (!near) { g.fillStyle = '#ffdf9a'; g.font = `600 ${8 * dpr}px Inter, Arial, sans-serif`; g.textAlign = 'center'; g.fillText(m.level, x, y - s - 4 * dpr); }
       g.restore();
     }
+  }
+
+  /**
+   * The primary objective, the one thing the player should always be able to find: a big gold diamond that breathes (still with "reduce
+   * flashing"). Off the disc it sits on the rim as a chevron pointing out toward it with the distance; on another level it carries the level tag
+   * and an arrow ("L3 ↑") at full opacity.
+   */
+  _target(g, f, P, dpr, R, time) {
+    const m = f.target; if (!m) return;
+    const near = m.level === f.level;
+    let [x, y] = P(m.x, m.z);
+    const d = Math.hypot(x - R, y - R), lim = R - 20 * dpr, off = d > lim;      // (inside the compass letters, so the chevron never hides the N)
+    if (off) { x = R + (x - R) * lim / d; y = R + (y - R) * lim / d; }
+    const k = f.calm ? 0 : 0.5 + 0.5 * Math.sin(time * 3.4), s = (near && !off ? 8 : 8.5) * dpr * (1 + 0.12 * k);
+    g.save();
+    if (near && !off) { g.strokeStyle = `rgba(255,207,51,${0.75 - 0.5 * k})`; g.lineWidth = 2 * dpr; g.beginPath(); g.arc(x, y, s + (4 + 5 * k) * dpr, 0, TAU); g.stroke(); }
+    g.fillStyle = '#ffcf33'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.8 * dpr; g.lineJoin = 'round';
+    g.beginPath();
+    if (off) {                                                         // a chevron on the rim, its tip toward the objective
+      const a = Math.atan2(y - R, x - R), ux = Math.cos(a), uy = Math.sin(a), tx = x + ux * s * 0.9, ty = y + uy * s * 0.9;
+      g.moveTo(tx, ty); g.lineTo(x - ux * s * 0.6 - uy * s, y - uy * s * 0.6 + ux * s); g.lineTo(x - ux * s * 0.15, y - uy * s * 0.15); g.lineTo(x - ux * s * 0.6 + uy * s, y - uy * s * 0.6 - ux * s);
+    } else { g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); }
+    g.closePath(); g.stroke(); g.fill();
+    // the words: level change and/or distance, on a dark pill toward the middle of the lens (so it never runs off the edge)
+    const tag = [near ? '' : `${m.level} ${levelIndex(m.level) > levelIndex(f.level) ? '↑' : '↓'}`, off || !near ? fmtDist(Math.hypot(m.x - f.x, m.z - f.z)) : ''].filter(Boolean).join(' ');
+    if (tag) {
+      g.font = `700 ${8.5 * dpr}px Inter, Helvetica, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const w = g.measureText(tag).width + 9 * dpr, h = 12 * dpr, dx = R - x, dy = R - y, dl = Math.hypot(dx, dy) || 1;
+      const off2 = off ? s + 9 * dpr : s + 8 * dpr, cx = Math.max(w / 2 + 3 * dpr, Math.min(2 * R - w / 2 - 3 * dpr, off ? x + dx / dl * off2 : x)), cy = off ? y + dy / dl * off2 : y + off2;
+      g.fillStyle = 'rgba(8,14,19,.88)'; this._pill(g, cx - w / 2, cy - h / 2, w, h, 6 * dpr);
+      g.fillStyle = '#ffd84d'; g.fillText(tag, cx, cy + 0.4 * dpr);
+    }
+    g.restore();
   }
 
   _party(g, f, P, dpr, R) {
