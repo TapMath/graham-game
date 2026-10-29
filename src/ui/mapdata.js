@@ -6,6 +6,7 @@
 //   levelData(level)                       {walk[], solids[], streets[], shacks[], buildings[], links...} rectangles in world metres
 //   PLACES                                 named places (districts, water, stations, story places) with `level`, a discovery radius and `show`
 //   leadSpot(id)                           where one of Setu's leads (flags.setuLead / a trail clue) points: {x, y, z, level}
+//   objectiveSpots(id, flags)              the places an objective sends you to; compassOf / levelHint / fmtDist: how the maps and the HUD say "where"
 //   BOUNDS                                 the world rectangle the sheet covers
 //   sunSources(world, level)               the shafts (daytime) or solar lamps (night) of one level
 import { MAP, Y } from '../world/map.js';
@@ -181,6 +182,15 @@ export function objectiveSpots(id, flags = {}) {
     default: return [];
   }
 }
+
+// ------------------------------------------------------------------------------------------------ saying where
+const COMPASS = [['north', 'N'], ['north-east', 'NE'], ['east', 'E'], ['south-east', 'SE'], ['south', 'S'], ['south-west', 'SW'], ['west', 'W'], ['north-west', 'NW']];
+/** The 8-way compass name of a world offset (-Z is north): ['north-east', 'NE']. */
+export const compassOf = (dx, dz) => COMPASS[Math.round(((Math.atan2(dx, -dz) * 180 / Math.PI + 360) % 360) / 45) % 8];
+/** What it takes to get from one level to another: 'go up to L3', 'go down to U', or '' on the same level. */
+export const levelHint = (from, to) => (from === to ? '' : `go ${levelIndex(to) > levelIndex(from) ? 'up' : 'down'} to ${to}`);
+/** Metres for people: 'here' within 5 m, '240 m', '1.2 km'. */
+export const fmtDist = (d) => (d < 5 ? 'here' : d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m');
 
 // ------------------------------------------------------------------------------------------------ sunlight
 /** Shafts (day) or the solar lamps (night, Upper Decks only) of a level, as [{x, z, r, kind, id}]. */
