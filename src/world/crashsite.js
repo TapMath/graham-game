@@ -163,7 +163,7 @@ export function buildCrashSite(game, { cordon = false } = {}) {
     ['car', -35.5, 1.85, -32, 0, 0.4, Math.PI, 0x6a2a2a, 0.35, 'upside down'],
     ['car', -50, 1.85, -21, 0.05, 1.2, Math.PI - 0.06, 0x2a4a7a, 0.4, 'upside down'],
     ['car', -35.5, 0.92, -38.5, 0.05, 0.1, Math.PI / 2 - 0.05, 0xd0c8b0, 0.2, 'on its side'],
-    ['taxi', -60.3, 1.2, -38.2, -0.75, 0.3, 0.12, 0, 0.25, 'nose down against deck 4'],
+    ['taxi', -65.6, 1.2, -35.6, -0.75, 0.3, 0.12, 0, 0.25, 'nose down against deck 4'],
     ['auto', -41, 0.66, -21.5, 0, 2.2, Math.PI / 2, 0, 0.1, 'on its side'],
     ['car', -46, 0, -18.6, 0, 0.1, 0.02, 0x8a8a84, 0.62, 'flattened under deck 5'],
     ['truck', -31, 0, -44.8, 0.04, Math.PI / 2 - 0.06, -0.05, 0x6a2a2a, 0.35, 'crushed'],
