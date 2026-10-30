@@ -41,10 +41,13 @@ export class MapSystem {
     const mm = this.el = document.createElement('div');
     mm.className = 'minimap'; mm.hidden = true;
     mm.setAttribute('role', 'button'); mm.setAttribute('aria-label', 'Local map. Press M or tap to open the city map.');
-    mm.innerHTML = '<canvas class="mm-canvas"></canvas><div class="mm-cap"><b class="mm-lvl">G</b><span class="mm-name">Ground</span><kbd class="mm-key">M</kbd></div>';
+    mm.innerHTML = '<div class="mm-bezel"><div class="mm-top"><i class="mm-led"></i><span class="mm-tag">SKYGRID NAV</span><span class="mm-hdg">000°</span></div>'
+      + '<div class="mm-screen"><canvas class="mm-canvas"></canvas><i class="mm-sweep"></i><i class="mm-glass"></i></div>'
+      + '<div class="mm-bot"><span class="mm-pos">X+000 Z+000</span></div><s></s><s></s><s></s><s></s></div>'
+      + '<div class="mm-cap"><b class="mm-lvl">G</b><span class="mm-name">Ground</span><kbd class="mm-key">M</kbd></div>';
     hud.appendChild(mm);
     this.canvas = mm.querySelector('canvas'); this.lvlEl = mm.querySelector('.mm-lvl'); this.nameEl = mm.querySelector('.mm-name');
-    this.mini = new Minimap(this.canvas);
+    this.mini = new Minimap(this.canvas, { hdg: mm.querySelector('.mm-hdg'), pos: mm.querySelector('.mm-pos') });
     mm.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.open(); });
     mm.addEventListener('contextmenu', (e) => e.preventDefault());
 

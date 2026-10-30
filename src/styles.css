@@ -478,13 +478,35 @@ body.reduce-flash #cine-white, body.reduce-flash #cine-blink { filter: opacity(.
 @media (prefers-reduced-motion: reduce) { .loadline .bar::after { animation-duration: 3s; } }
 
 /* ---------------------------------------------------------------------------------------------- 10. maps and the warmth cue (Phase 8A) */
-/* the minimap: a round glass lens in the corner (src/ui/map.js), tappable to open the full map */
-.minimap { position: absolute; right: calc(var(--sar) + var(--pad)); top: calc(var(--sat) + 120px); width: 184px; pointer-events: auto; cursor: pointer; touch-action: none; text-shadow: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+/* the minimap: a CRT monitor in a gunmetal bezel in the corner (src/ui/map.js, minimap.js), tappable to open the full map */
+.minimap { --mm-c: #7dfbe9; position: absolute; right: calc(var(--sar) + var(--pad)); top: calc(var(--sat) + 120px); width: 184px; pointer-events: auto; cursor: pointer; touch-action: none; text-shadow: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; }
 .minimap[hidden] { display: none; }
-.mm-canvas { display: block; width: 100%; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 0 1px rgba(221, 233, 244, .22), 0 6px 24px rgba(0, 0, 0, .55); background: rgba(6, 12, 17, .5); }
-.mm-cap { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 7px; font: 400 9.5px var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--ink-dim); text-shadow: 0 0 6px rgba(4, 9, 14, .95), 0 1px 2px rgba(4, 9, 14, .9); white-space: nowrap; }
-.mm-cap .mm-lvl { min-width: 22px; padding: 1px 6px 2px; border: 1px solid rgba(255, 223, 154, .7); color: var(--sun-hot); font-weight: 500; letter-spacing: .08em; text-align: center; border-radius: 3px; background: rgba(8, 15, 21, .6); }
-.mm-cap kbd { font: 400 9px var(--sans); padding: 0 5px 1px; border: 1px solid var(--line); border-radius: 3px; color: var(--ink-dim); letter-spacing: 0; }
+.mm-bezel { position: relative; padding: 15px 7px; border-radius: 14px; border: 1px solid #3a454e; background: linear-gradient(145deg, #2c353c, #12181c 55%, #1e262c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), inset 0 -2px 4px rgba(0, 0, 0, .6), 0 6px 24px rgba(0, 0, 0, .65), 0 0 16px rgba(40, 255, 225, .1); }
+.mm-top, .mm-bot { position: absolute; left: 14px; right: 14px; display: flex; align-items: center; justify-content: space-between; gap: 5px; font-size: 7px; line-height: 1; letter-spacing: .14em; color: rgba(125, 251, 233, .75); white-space: nowrap; }
+.mm-top { top: 4px; justify-content: flex-start; } .mm-bot { bottom: 4px; }
+.mm-tag { color: rgba(190, 205, 210, .6); } .mm-hdg { margin-left: auto; color: var(--mm-c); text-shadow: 0 0 5px rgba(125, 251, 233, .7); }
+.mm-pos { text-shadow: 0 0 5px rgba(125, 251, 233, .5); }
+.mm-led { width: 4px; height: 4px; border-radius: 50%; background: #3dffb0; box-shadow: 0 0 5px 1px rgba(61, 255, 176, .8); animation: mm-led 2.4s steps(1) infinite; }
+.mm-bezel s { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #6a757d, #1a2126 70%); box-shadow: 0 0 0 .5px #000; }
+.mm-bezel s:nth-of-type(1) { left: 3px; top: 3px; } .mm-bezel s:nth-of-type(2) { right: 3px; top: 3px; } .mm-bezel s:nth-of-type(3) { left: 3px; bottom: 3px; } .mm-bezel s:nth-of-type(4) { right: 3px; bottom: 3px; }
+.mm-screen { position: relative; border-radius: 18%; overflow: hidden; background: #03080b; box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 255, 255, .07), 0 0 12px rgba(40, 255, 225, .22); animation: mm-flick 7s linear infinite; }
+.mm-canvas { display: block; width: 100%; aspect-ratio: 1; animation: mm-glitch 11s linear infinite; }
+/* glass: scanlines, curved-edge vignette, a soft highlight and a hint of RGB fringe */
+.mm-glass { position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .34) 0 1px, transparent 1px 3px), linear-gradient(155deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, 0) 32%), radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 6, 8, .72) 100%);
+  box-shadow: inset 2px 0 3px rgba(255, 40, 120, .2), inset -2px 0 3px rgba(40, 220, 255, .22), inset 0 0 10px rgba(0, 0, 0, .8); }
+.mm-sweep { position: absolute; left: 0; right: 0; top: 0; height: 24%; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(110, 255, 235, .06) 70%, rgba(170, 255, 245, .16) 97%, transparent); animation: mm-sweep 6s linear infinite; }
+@keyframes mm-sweep { from { transform: translateY(-110%); } to { transform: translateY(420%); } }
+@keyframes mm-flick { 0%, 91%, 100% { opacity: 1; } 92% { opacity: .8; } 93% { opacity: 1; } 94.5% { opacity: .9; } 95.5% { opacity: 1; } }
+@keyframes mm-glitch { 0%, 96.5%, 100% { transform: none; } 97% { transform: translateX(-2px) skewX(2deg); } 97.8% { transform: translateX(3px); } 98.6% { transform: translateX(-1px) scaleY(1.02); } }
+@keyframes mm-led { 0%, 80% { opacity: 1; } 80.1%, 100% { opacity: .25; } }
+.mm-cap { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 7px; font: 400 9px/1 ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: rgba(125, 251, 233, .75); text-shadow: 0 0 6px rgba(4, 9, 14, .95), 0 0 5px rgba(60, 255, 230, .4); white-space: nowrap; }
+.mm-cap .mm-lvl { min-width: 22px; padding: 1px 6px 2px; border: 1px solid rgba(255, 223, 154, .7); color: var(--sun-hot); font-weight: 600; letter-spacing: .08em; text-align: center; border-radius: 3px; background: rgba(8, 15, 21, .7); }
+.mm-cap kbd { font: 400 9px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; padding: 0 5px 1px; border: 1px solid rgba(125, 251, 233, .4); border-radius: 3px; color: rgba(125, 251, 233, .75); letter-spacing: 0; }
+body.reduce-flash .mm-screen, body.reduce-flash .mm-canvas, body.reduce-flash .mm-led { animation: none; }
+body.reduce-flash .mm-sweep { display: none; }
+@media (prefers-reduced-motion: reduce) { .mm-screen, .mm-canvas, .mm-led { animation: none; } .mm-sweep { display: none; } }
 body.touch .mm-cap kbd { display: none; }
 body.map-open #hud { visibility: hidden; }
 body.map-open #touch { display: none; }
@@ -632,10 +654,12 @@ body.touch .fm-close kbd { display: none; }
 @media (max-height: 520px) {
   .minimap { width: 104px; top: calc(var(--sat) + 64px); right: calc(var(--sar) + 12px); }
   .mm-cap { margin-top: 4px; font-size: 8px; }
+  .mm-bezel { padding: 4px; border-radius: 9px; } .mm-top, .mm-bot, .mm-bezel s { display: none; }   /* small: the frame stays thin, the readouts go */
 }
 @media (max-width: 700px) and (orientation: portrait) {
   .minimap { width: 100px; right: auto; left: calc(var(--sal) + 12px); top: calc(var(--sat) + 168px); }
   .mm-cap { margin-top: 4px; font-size: 8px; gap: 5px; }
+  .mm-bezel { padding: 4px; border-radius: 9px; } .mm-top, .mm-bot, .mm-bezel s { display: none; }
   #t-map { top: calc(var(--sat) + 8px); right: calc(var(--sar) + 56px); width: 40px; height: 40px; }
   body.touch:not(.minimap-on) .hud-top { padding-right: calc(var(--sar) + 112px); }
 }
