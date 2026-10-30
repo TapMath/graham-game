@@ -3,7 +3,7 @@
 //   left side    a floating virtual stick: it appears under the thumb, the knob follows, push it to the edge to sprint
 //   anywhere else drag to look (the stick zone is the lower-left of the screen; everything else looks)
 //   buttons      jump (Space), use (E; hold to dig), sing (Q; hold for second sight), switch (Tab, once Jeetu has joined),
-//                view (V) and pause
+//                view (V), backpack (B) and pause
 //
 // It only talks to `game.input` (setStick, lookTouch, virtualKey), so every system that reads keys keeps working. The layer
 // hides itself while a dialogue, card, vision or cutscene holds `game.modal` (their own buttons are large tap targets) and
@@ -19,6 +19,7 @@ const ICON = {
   swap: '<svg viewBox="0 0 24 24"><path d="M4 8 H19 M15 4 L19 8 L15 12 M20 16 H5 M9 12 L5 16 L9 20"/></svg>',
   view: '<svg viewBox="0 0 24 24"><path d="M2.5 12 C6 6 18 6 21.5 12 C18 18 6 18 2.5 12 Z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path d="M8 5 V19 M16 5 V19"/></svg>',
+  bag: '<svg viewBox="0 0 24 24"><path d="M8 7 V5 a4 4 0 0 1 8 0 V7"/><path d="M5 9 a2 2 0 0 1 2 -2 H17 a2 2 0 0 1 2 2 V20 a1 1 0 0 1 -1 1 H6 a1 1 0 0 1 -1 -1 Z"/><path d="M8 13 H16 V17 H8 Z M12 13 V15"/></svg>',
   map: '<svg viewBox="0 0 24 24"><path d="M3.5 6.5 L9 4.5 L15 6.5 L20.5 4.5 V17.5 L15 19.5 L9 17.5 L3.5 19.5 Z M9 4.5 V17.5 M15 6.5 V19.5"/></svg>',
 };
 const BUTTONS = [
@@ -27,6 +28,7 @@ const BUTTONS = [
   { id: 'sing', code: 'KeyQ', icon: ICON.sing, key: 'Q', label: 'Sing' },
   { id: 'swap', code: 'Tab', icon: ICON.swap, key: 'Tab', label: 'Switch' },
   { id: 'view', code: 'KeyV', icon: ICON.view, key: 'V', label: 'View' },
+  { id: 'bag', code: 'KeyB', icon: ICON.bag, key: '', label: 'Backpack' },   // opens Mithi's backpack (src/systems/story/backpack.js)
 ];
 const SPRINT_ON = 0.97, SPRINT_OFF = 0.84, DEAD = 0.12;
 

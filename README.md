@@ -22,7 +22,8 @@ It is based on *Grahan (Children of the Sun)*, a story by Sarat T. Rao, and a co
 - **The web.** Single, double and triple road flyovers on shared piers (the triple stack stands at Sion Junction, beside the collapsed spans), bridges between the tower faces and skywalks at 6, 12, 18, 24, 30 and 38 m, ribbed like cathedral vaults underneath, with traffic on the roads and people on the footpaths. The routes up are stairs, ramps and **capsule lifts**: rounded glass cars on exposed rails in four classes (solo 1, family 4, public 12, freight 24). Capacity is a rule, not a label: Jeetu and Setu wait for the next cycle in a solo capsule, and a public one is full at rush hour. A ride costs solar charge by capacity and height, and the maps show every lift's class and seats.
 - **Finding the light.** Mithi feels the sun on her skin: a soft glow on the edge of the screen points the way to the nearest sunlight you can reach (the same level, or the nearest stairs or lift up), and grows as you near it. Pale columns of light stand out of the smog from afar, and painted arrows and **धूप ↑ SUN ↑** signs mark the ways up.
 - **The clock and the flood.** Time runs from before dawn to dawn the next day, in real time (about 30 minutes by default). Something is wrong with the water below. Once you know, a flood timer appears.
-- **D-shots** are illegal health jabs from black-market sellers. Each one has a different price in time and a different risk.
+- **D-shots** are illegal health jabs from black-market sellers. Each one has a different price in time and a different risk. Sellers also take cash, which costs no time.
+- **Mithi's backpack (B).** Cash (₹120 to start), two D-shots of her own (+3 rays, a small chance of a bad one), earbuds (the city goes quiet, a song plays and the dark drains her a little slower, but she cannot hear the street), a talking phone that says the time (it costs battery), a water bottle (three sips; each halves the darkness drain for a minute), glucose biscuits (+1 ray each), and everything she picks up. The game waits while the bag is open.
 
 The in-game "How to play" screen has the same cards with pictograms.
 
@@ -38,6 +39,7 @@ The in-game "How to play" screen has the same cards with pictograms.
 | Sing / second sight | `Q` (hold 2 s) | Q button (hold) |
 | Switch character | `Tab` | switch button (after Jeetu joins) |
 | Third person | `V` | V button |
+| Backpack (the game waits while it is open) | `B` (`B` or `Esc` closes; `1`-`9` pick; `Enter` uses) | bag button |
 | Map (full city map, pauses the game) | `M` (`Esc` or `M` closes it; `1`-`5` or the arrows change level; `+` `-` zoom; `C` centres on you) | tap the little map, or the map button when the minimap is off |
 | Pause | `Esc` | pause button |
 

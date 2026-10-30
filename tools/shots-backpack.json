@@ -1,0 +1,67 @@
+[
+ {
+  "name": "bag-setup",
+  "eval": "window.G=__grahan.game; window.A=__grahan; A.set('hazards',false); A.step(0.2); ({bag:A.state().backpack, rupees:G.wallet.rupees, touch:A.state().touch})",
+  "wait": 800
+ },
+ {
+  "name": "bag-open-key",
+  "eval": "G.input.tap('KeyB'); ({}) ",
+  "wait": 700
+ },
+ {
+  "name": "bag-opened",
+  "eval": "({open:A.state().backpack.open, modal:G.modal, tiles:A.state().backpack.tiles})",
+  "wait": 300
+ },
+ {
+  "name": "bag-count-cash",
+  "eval": "document.querySelector('#backpack .bp-act').click(); ({result:document.querySelector('.bp-result').textContent})",
+  "wait": 400
+ },
+ {
+  "name": "bag-dshot",
+  "eval": "A.set('rays',5); document.querySelector('[data-tile=dshots]').click(); document.querySelector('#backpack .bp-act').click(); ({rays:G.player.rays, left:A.state().backpack.dshots, result:document.querySelector('.bp-result').textContent})",
+  "wait": 600
+ },
+ {
+  "name": "bag-earbuds",
+  "eval": "document.querySelector('[data-tile=earbuds]').click(); document.querySelector('#backpack .bp-act').click(); ({earbuds:A.state().backpack.earbuds, decayMul:A.state().health.decayMul})",
+  "wait": 600
+ },
+ {
+  "name": "bag-phone-water-biscuit",
+  "eval": "const r=[A.do('bagUse','phone','time'), A.do('bagUse','water','sip'), A.do('bagUse','biscuits','eat'), A.do('bagUse','item:pills','feel')]; ({r, s:A.state().backpack, decayMul:A.state().health.decayMul})",
+  "wait": 600
+ },
+ {
+  "name": "bag-full-rays-refuses",
+  "eval": "A.set('rays',12); const before=A.state().backpack.dshots; const r=A.do('bagUse','dshots','jab'); ({r, before, after:A.state().backpack.dshots})",
+  "wait": 300
+ },
+ {
+  "name": "bag-close-esc",
+  "eval": "G.input.tap('Escape'); ({})",
+  "wait": 500
+ },
+ {
+  "name": "bag-closed",
+  "eval": "({open:A.state().backpack.open, modal:G.modal, mode:G.mode, earbudsStillIn:A.state().backpack.earbuds})",
+  "wait": 300
+ },
+ {
+  "name": "bag-water-wears-off",
+  "eval": "A.step(61); ({waterT:A.state().backpack.waterT, decayMul:A.state().health.decayMul})",
+  "wait": 300
+ },
+ {
+  "name": "vendor-cash",
+  "eval": "A.set('rays',4); const v=G.vendors.active[0]; A.do('vendorRoll', v.id, {potency:3, risk:0}); const t0=G.clock.t; A.do('vendorOpen', v.id); const d=A.state().dialog; ({dialog:d, rupees:G.wallet.rupees, t0})",
+  "wait": 700
+ },
+ {
+  "name": "vendor-cash-paid",
+  "eval": "const t0=G.clock.t; A.do('dialogChoose','cash'); A.step(2); ({rupees:G.wallet.rupees, rays:G.player.rays, clockMoved:+(G.clock.t-t0).toFixed(3), stats:A.state().vendors.stats})",
+  "wait": 600
+ }
+]
