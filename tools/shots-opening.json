@@ -1,0 +1,77 @@
+[
+ {
+  "name": "op-setup",
+  "wait": 1200,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.set('manual',true);A.setTime(6);A.step(2);const s=S();ok(s.live&&s.active,'the opening runs with opening=1');ok(s.stage==='hat','starts at the hard hat: '+s.stage);ok(s.cordon==='shut','the cordon is shut');ok(P().id==='os-hat','objective os-hat: '+P().id);ok(A.state().map.target&&A.state().map.target.label==='hard hats','the map points at the hats');return s;})()"
+ },
+ {
+  "name": "op-cordon",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.set('invulnerable',true);A.teleport(-45,0,4,180);A.run(['KeyW'],5);const z=A.state().pos.z;ok(z<9,'the south line holds: z '+z);A.teleport(-30,0,-30,-90);A.run(['KeyW'],6);const x=A.state().pos.x;ok(x<-24,'the east line holds: x '+x);ok(A.state().messages.last.some(t=>t.includes('Constable')||t.includes('\"')),'someone speaks');return [z,x];})()"
+ },
+ {
+  "name": "op-dig-held",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-37.6,0,-27.4,0);A.run(['KeyE'],4);ok(!A.state().flags.oldManFreed,'the old man cannot be dug out before the hush');return S().stage;})()"
+ },
+ {
+  "name": "op-debris-nohat",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-46,0,-33,0);A.set('invulnerable',false);A.step(0.3);const r0=A.state().rays;const h0=S().stats.hits;A.do('openingDebris',true);const w=G.opening.warn[G.opening.warn.length-1];ok(w,'a warning');for(let i=0;i<14;i++){A.teleport(w.x,0,w.z);A.step(0.25);}ok(S().stats.hits>h0,'the chunk hit');ok(A.state().rays<r0,'no hat: a ray lost '+r0+' -> '+A.state().rays);return [r0,A.state().rays];})()"
+ },
+ {
+  "name": "op-hat",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-39.7,0,-35.1,180);A.step(0.2);ok(G.interactables.nearest()?.id==='opening:hat','the hat prompt');G.interactables.interact();A.step(0.5);ok(A.state().items.includes('hardhat'),'has the hard hat');ok(S().stage==='rubble','stage rubble');ok(P().id==='os-rubble','objective os-rubble');return P().text;})()"
+ },
+ {
+  "name": "op-debris-hat",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.set('rays',8);A.teleport(-46,0,-33,0);A.step(0.3);const r0=A.state().rays;const s0=S().stats.hatSaves;A.do('openingDebris',true);const w=G.opening.warn[G.opening.warn.length-1];for(let i=0;i<14;i++){A.teleport(w.x,0,w.z);A.step(0.25);}ok(S().stats.hatSaves>s0,'the hat took it');ok(A.state().rays===r0,'no ray lost with the hat');A.set('invulnerable',true);return [r0,A.state().rays];})()"
+ },
+ {
+  "name": "op-lift",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-44,0,-40,0);A.run(['KeyE'],1.6);ok(S().carrying==='chunk','carrying a chunk');ok(A.state().map.target.label==='spoil heap','the map points at the heap');return P().text;})()"
+ },
+ {
+  "name": "op-drop",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-55,0,-35.2,0);A.step(0.2);ok(G.interactables.nearest()?.id==='opening:drop','the drop prompt');G.interactables.interact();A.step(0.3);ok(S().trips===1&&!S().carrying,'one trip');for(let i=0;i<2;i++){A.teleport(-44,0,-40,0);A.run(['KeyE'],1.6);A.teleport(-55,0,-35.2,0);A.step(0.2);G.interactables.interact();A.step(0.2);}ok(S().stage==='stretcher','stage stretcher after three trips');ok(P().id==='os-stretcher','objective os-stretcher');return S();})()"
+ },
+ {
+  "name": "op-stretcher",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-56.5,0,-31.4,180);A.step(0.3);ok(G.interactables.nearest()?.id==='opening:stretcher','the stretcher prompt');G.interactables.interact();A.step(0.3);ok(S().carrying==='stretcher','carrying the stretcher');const s1=G.opening.str;A.teleport(s1.x+Math.sin(s1.yaw)*5.3,0,s1.z+Math.cos(s1.yaw)*5.3);A.step(1.5);const z0=S().stretcher.z;A.step(1.5);ok(Math.abs(S().stretcher.z-z0)<0.01,'he waits when she falls behind');ok(S().carrying==='stretcher','still holding at 4 m');return S().stretcher;})()"
+ },
+ {
+  "name": "op-carry",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;const O=G.opening;for(let i=0;i<240&&!O.str.done;i++){const s=O.str;A.teleport(s.x+Math.sin(s.yaw)*1.7,0,s.z+Math.cos(s.yaw)*1.7);A.step(0.25);}ok(S().stretcher.done,'the stretcher reached the row');ok(A.state().flags.openingStretcher,'flag openingStretcher');return S();})()"
+ },
+ {
+  "name": "op-hush",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.step(6);ok(S().stage==='oldman','the hush: stage oldman');ok(P().id==='collapse','the chain takes over: '+P().id);return A.state().messages.last;})()"
+ },
+ {
+  "name": "op-oldman",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.teleport(-37.6,0,-27.4,0);A.run(['KeyE'],4);ok(A.state().flags.oldManFreed,'the old man is out');return S().stage;})()"
+ },
+ {
+  "name": "op-open",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;G.dialogue?.close?.();A.step(0.5);for(let i=0;i<50&&S().stage!=='done';i++)A.step(0.5);ok(S().stage==='done'&&S().cordon==='open','the line is open');ok(A.state().flags.openingDone,'flag openingDone');ok(P().id==='hospital','next: the hospital, got '+P().id);A.teleport(-45,0,4,180);A.run(['KeyW'],5);ok(A.state().pos.z>9.5,'she can walk out: z '+A.state().pos.z);return S();})()"
+ },
+ {
+  "name": "op-ambulance",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.do('openingAmbulance');for(let i=0;i<40&&S().ambulance.state!=='load';i++)A.step(0.5);ok(S().ambulance.state==='load','an ambulance in the bay');const r0=S().row;for(let i=0;i<120&&S().ambulance.state==='load';i++)A.step(0.5);ok(S().stats.loaded>0,'it took the injured');A.teleport(-36,0,-12,-130);A.step(0.2);return [r0,S()];})()"
+ },
+ {
+  "name": "op-budget",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const S=()=>A.state().opening;const P=()=>A.state().objectives.primary;A.set('view','first');const out=[];for(const [x,z] of [[-44,-30],[-30,-8],[-56,-36],[-40,-44],[-60,-20],[-28,4]])for(const yaw of [0,90,180,270]){A.teleport(x,0,z,yaw);A.step(0.1);G.render();out.push(A.state().render.calls)}A.set('view','third');for(const [x,z] of [[-44,-30],[-30,-8],[-56,-36]])for(const yaw of [0,90,180,270]){A.teleport(x,0,z,yaw);A.step(0.1);G.render();out.push(A.state().render.calls)}A.set('view','first');const m=Math.max(...out);ok(m<=175,'draw calls '+m);return m;})()"
+ }
+]

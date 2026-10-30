@@ -168,6 +168,9 @@ const POS = {
   oldman: { x: -38.2, z: -26.3, level: 'G' },
   home: { x: S.mithiHome.x, z: S.mithiHome.z, level: 'G' },
 };
+const EXTRA_SPOTS = [];
+/** Another system's objectives (the opening act): `fn(id, flags)` returns the spots of the ids it knows, or null. */
+export function registerObjectiveSpots(fn) { EXTRA_SPOTS.push(fn); }
 /** The places an objective (by id, as in systems/story/chain.js) sends you to. */
 export function objectiveSpots(id, flags = {}) {
   switch (id) {
@@ -179,7 +182,7 @@ export function objectiveSpots(id, flags = {}) {
     case 'warn': return [{ ...POS.control, label: 'Control Tower' }, { ...POS.tara, label: 'Tara' }];
     case 'permit': case 'blood': return [{ ...POS.tara, label: 'Tara' }];
     case 'bail': return [{ ...POS.police, label: 'police station' }];
-    default: return [];
+    default: for (const fn of EXTRA_SPOTS) { const s = fn(id, flags); if (s) return s; } return [];
   }
 }
 

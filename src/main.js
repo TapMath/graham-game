@@ -44,6 +44,7 @@ import { FragmentSystem } from './systems/story/fragments.js';
 import { TrailSystem } from './systems/story/trail.js';
 import { FireworkSystem } from './systems/story/fireworks.js';
 import { CinematicSystem } from './systems/story/cinematics.js';
+import { OpeningSystem } from './systems/story/opening.js';
 import { MessageSystem } from './ui/messages.js';
 import { DialogSystem } from './ui/dialog.js';
 import { ScreenFxSystem } from './ui/screenfx.js';
@@ -128,6 +129,7 @@ function boot() {
     game.addSystem('director', new Director());
     game.addSystem('party', new PartySystem());
     game.addSystem('banter', new Banter());
+    game.addSystem('opening', guarded(new OpeningSystem(), 'opening'));   // the crash-site opening act: the cordon, the rescue, Mithi's first actions (after the director: it gates the dig)
   }
   game.addSystem('touch', new TouchSystem());                  // the touch layer (stick, look, buttons); a no-op without touch
   game.addSystem('debughud', new DebugHudSystem());
