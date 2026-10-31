@@ -49,6 +49,8 @@ export const KINDS = {
   'pa-chime': { gain: 0.6, loud: 0.5, gap: 1, max: 1, tone: null, dur: 1.6 },
   'pa-squelch': { gain: 0.5, loud: 0.5, gap: 0.1, max: 2, tone: null, dur: 0.3 },
   'pa-babble': { gain: 0.6, loud: 0.5, gap: 1, max: 1, tone: null, dur: 5 },
+  // busking (src/systems/busk.js)
+  coin: { gain: 0.7, loud: 0.45, gap: 0.15, max: 3, tone: null, caption: 'A coin rings on the ground', dur: 1.0 },
 };
 
 /** Loop kinds from the contract (plus our own: lift, neon). */

@@ -16,6 +16,7 @@ It is based on *Grahan (Children of the Sun)*, a story by Sarat T. Rao, and a co
 - **Stand in sunlight** to heal. There is more of it the higher you go, and you can go higher the more health you have: bio-scanner gates want 5 rays for the flyovers and 8 for the upper decks.
 - **Sing (Q).** A wave of sound shows you the shape of the world and Setu may answer. Singing calms dogs and frightened people, but police, drones and guards hate it. Hold Q for two seconds for second sight, a glimpse from Setu's side.
 - **Listen for the mouth organ.** Setu plays it when you sing and now and then on his own. Gold rings show where it comes from, even through walls.
+- **Sing for money (K).** With the microphone on (K, or the mic button on touch), the player sings as Mithi with their own voice. Hold a tune near people and passers-by drop coins (₹1 to ₹10, more for a real melody and a bigger crowd); each person gives once every 90 seconds, so a street runs dry and you move on. Talking or noise earns nothing, Jeetu cannot sing, and a long steady song sends out a soft wave of sound like Q. Cash shows under the rays. The mic needs the game served over https (or localhost); on iPad allow it when Safari asks (Settings, Safari, Microphone if it was refused).
 - **Tab** swaps between Mithi and Jeetu once he joins you. Jeetu can read signs and documents, climb, and carry a torch. He cannot sing.
 - **V** switches between first and third person.
 - **The map.** A round minimap in the corner turns with your view and shows the level you are on: streets, decks, stairs, ramps and lifts (with their battery), gates and their ray thresholds, the Harbour Line with the next train, and the **sunlight patches active right now**. **M** opens the full city map: a transit sheet of the slice of Mumbai (Dharavi, Sion Junction, King's Circle, New Wadala, Sewri, Atal Setu, Mahim Bay, the Mithi River), one tab per level, with the lifts, gates, trains, sunlight (and when it returns), places you have found and a "you are here". **Where to go:** the current objective is a big pulsing gold marker on the minimap (a chevron with the distance on the rim when it is out of view, "L3 ↑" when it is on another level) and a star on the full map on every tab (a faded ghost on the other levels, a dashed line from you on your own level); the top of the full map's side panel is a "Where to go" card (distance, compass direction, level, a "Show on map" button), and a small line under the objective on the HUD says the same ("Atal Setu · 240 m NE · go up to L3").
@@ -37,6 +38,7 @@ The in-game "How to play" screen has the same cards with pictograms.
 | Use, talk, read (hold to dig) | `E` | E button, or tap the prompt |
 | Sing / second sight | `Q` (hold 2 s) | Q button (hold) |
 | Switch character | `Tab` | switch button (after Jeetu joins) |
+| Microphone on / off (sing for coins) | `K` | mic button |
 | Third person | `V` | V button |
 | Map (full city map, pauses the game) | `M` (`Esc` or `M` closes it; `1`-`5` or the arrows change level; `+` `-` zoom; `C` centres on you) | tap the little map, or the map button when the minimap is off |
 | Pause | `Esc` | pause button |
@@ -86,7 +88,7 @@ src/world/            the city as data (map.js) and everything that builds it: s
                       lifts (capsules: solo, family, public and freight classes, solar battery), the flyover network (network.js is the data, netcheck.js its
                       self-check, network-build.js its piers, footpaths and vaulted undersides), gates, sunlight, fx
 src/characters/       procedural low-poly people
-src/systems/          clock, health, Setu, vendors, hazards/, audio/ (a procedural Web Audio engine), senses/ (sing, ripples,
+src/systems/          clock, health, wallet (rupees), busk (the microphone: sing for coins), Setu, vendors, hazards/, audio/ (a procedural Web Audio engine), senses/ (sing, ripples,
                       visions), story/ (cast, dialogue, objectives, fragments, cinematics), endings,
                       transit/ (the Harbour Line trains), crowds/ (instanced pedestrians and traffic), lifts/ (floor panels and charge, the capsule fleet,
                       capacity: who fits in the car and who waits for the next one)

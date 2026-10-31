@@ -200,6 +200,24 @@ button { font-family: inherit; }
 .rays-count { font-size: 36px; font-weight: 200; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rays-count b { font-weight: 200; color: var(--sun-hot); } .rays-count i { font-style: normal; font-size: 14px; color: var(--ink-dim); margin-left: 5px; letter-spacing: .1em; }
 .rays-status { font-family: var(--hand); font-style: italic; font-size: 14px; color: var(--ink-dim); margin-top: 3px; min-height: 18px; }
+/* cash, under the rays: busking and the backpack fill it */
+.hud-wallet { position: relative; margin-top: 2px; font-size: 15px; font-weight: 300; letter-spacing: .06em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hud-wallet .lbl { display: inline; font-size: 9px; letter-spacing: .24em; color: var(--ink-dim); margin-right: 4px; }
+.hud-wallet b { font-weight: 300; color: #ffe6a8; }
+.hud-wallet .pop { position: absolute; left: 100%; top: 0; margin-left: 8px; font-style: normal; font-size: 14px; color: #ffd36a; opacity: 0; pointer-events: none; text-shadow: 0 0 8px rgba(255, 200, 90, .6); }
+.hud-wallet.gain b { animation: cashGlow 1.4s ease-out; } .hud-wallet.gain .pop { animation: cashPop 1.6s ease-out; }
+@keyframes cashGlow { 0% { text-shadow: 0 0 14px rgba(255, 210, 110, .95); } 100% { text-shadow: none; } }
+@keyframes cashPop { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+/* busking: the live mic pill, bottom centre */
+#busk { position: fixed; left: 50%; bottom: calc(var(--sab) + var(--touch-h) + 14px); transform: translateX(-50%); z-index: 8; display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 10px; pointer-events: none;
+  font: 300 13px/1 var(--sans); letter-spacing: .06em; color: var(--ink); background: rgba(8, 15, 21, .72); border: 1px solid rgba(255, 140, 120, .55); border-radius: 18px; white-space: nowrap; }
+#busk[hidden] { display: none; }
+#busk .bk-ic svg { display: block; width: 18px; height: 18px; fill: none; stroke: #ff9c8a; stroke-width: 1.8; stroke-linecap: round; }
+#busk .bk-meter { display: flex; align-items: flex-end; gap: 2px; height: 14px; } #busk .bk-meter i { width: 3px; height: 30%; background: rgba(221, 233, 244, .22); border-radius: 1px; }
+#busk .bk-meter i:nth-child(n+3) { height: 50%; } #busk .bk-meter i:nth-child(n+5) { height: 75%; } #busk .bk-meter i:nth-child(n+7) { height: 100%; }
+#busk .bk-meter i.on { background: #bfe6ff; } #busk.singing .bk-meter i.on { background: #ffd36a; }
+#busk .bk-note { font-weight: 400; color: #ffe6a8; min-width: 0; } #busk .bk-note:empty { display: none; }
+#busk .bk-state { color: var(--ink-dim); font-size: 12px; } #busk.singing { border-color: rgba(255, 211, 106, .8); box-shadow: 0 0 18px rgba(255, 200, 90, .3); }
 .rays-status[data-s="healing"] { color: var(--sun); } .rays-status[data-s="draining"] { color: #9fc4de; }
 
 /* centre: time first, the flood once it is known (a prominent red chip), then the objective strip and the quiet optionals */
@@ -348,6 +366,9 @@ body.touch #touch.on { pointer-events: auto; opacity: 1; }
 .t-view { right: 160px; bottom: 82px; width: 52px; height: 52px; } .t-view b, .t-swap b { font-size: 9px; min-width: 16px; height: 16px; }
 .t-swap b { right: auto; left: 50%; transform: translateX(-50%); bottom: -2px; padding: 0 6px; }
 .t-swap[hidden] { display: none; }
+.t-mic { right: 96px; bottom: 168px; width: 50px; height: 50px; } .t-mic b { font-size: 8.5px; min-width: 16px; height: 15px; right: auto; left: 50%; transform: translateX(-50%); bottom: -4px; padding: 0 4px; }
+.t-mic.live { opacity: 1; border-color: #ff8a7a; color: #ffd6cc; box-shadow: 0 0 22px rgba(255, 110, 90, .5); animation: micLive 1.6s ease-in-out infinite; }
+@keyframes micLive { 50% { box-shadow: 0 0 8px rgba(255, 110, 90, .25); } }
 #t-pause { position: absolute; top: calc(var(--sat) + 10px); right: calc(var(--sar) + 12px); width: 46px; height: 46px; border-radius: 50%; padding: 0; color: var(--ink); background: rgba(8, 15, 21, .5); border: 1.5px solid rgba(221, 233, 244, .5); display: flex; align-items: center; justify-content: center; opacity: .75; }
 #t-pause svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
 #t-skip { display: none; position: fixed; right: calc(var(--sar) + 16px); bottom: calc(var(--sab) + 18px); z-index: 32; min-height: 46px; padding: 0 26px; font: 400 12px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .6); pointer-events: auto; }
@@ -394,6 +415,7 @@ body.touch .hud-party, body.touch .dl-btn kbd, body.touch .cv-choice kbd { displ
   body.touch { --touch-h: 236px; }
   body.touch .hud-feed { bottom: calc(var(--sab) + var(--touch-h) + 96px); }
   body.touch .hud-bottom { bottom: calc(var(--sab) + var(--touch-h) + 16px); }
+  body.touch #busk { bottom: calc(var(--sab) + var(--touch-h) + 58px); }
   body.touch #hud .hud-items { top: calc(var(--sat) + 214px); left: auto; right: calc(var(--sar) + 12px); flex-direction: column; flex-wrap: nowrap; }
   body.touch #t-pause { width: 40px; height: 40px; top: calc(var(--sat) + 8px); right: calc(var(--sar) + 8px); }
   body.touch .hud-top { padding-right: calc(var(--sar) + 72px); }
@@ -418,6 +440,7 @@ body.touch .hud-party, body.touch .dl-btn kbd, body.touch .cv-choice kbd { displ
   .hud-feed { bottom: calc(var(--sab) + 14px); width: min(380px, 40vw); gap: 4px; } .msg { font-size: 12.5px; line-height: 1.3; } .msg.story, .msg.clue { font-size: 13px; } .msg.pa { font-size: 10px; padding: 3px 8px; }
   body.touch .hud-feed { left: 50%; transform: translateX(-50%); width: min(380px, calc(100vw - 470px)); }
   .hud-bottom { bottom: calc(var(--sab) + 18px); } .prompt { font-size: 13px; padding: 5px 12px 5px 6px; }
+  body.touch #busk { left: calc(var(--sal) + 16px); bottom: calc(var(--sab) + 200px); transform: none; }   /* over the stick's corner (it lets touches through); the feed has the bottom centre */
   .gate-card { padding: 5px 12px 5px 8px; gap: 10px; } .gate-card .gc-req { font-size: 18px; } .gc-fig { width: 24px; height: 32px; }
   /* title: brand left, menu right, so four buttons and the wordmark both fit under 400 px */
   #ov-title { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: max(var(--sab), 44px); }
