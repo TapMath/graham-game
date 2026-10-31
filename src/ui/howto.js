@@ -75,6 +75,9 @@ const PICTO = {
     `<g transform="rotate(-32 70 52)"><rect x="34" y="42" width="52" height="16" rx="3"/><path d="M34 50 h-10 M24 42 v16 M86 50 h26 M112 50 l16 0"/><path class="mv" d="M46 42 v8 M56 42 v8 M66 42 v8 M76 42 v8"/><rect x="40" y="45" width="22" height="10" class="fillsn"/></g>` +
     `<path class="water" d="M30 82 q4 -6 8 0 q-4 6 -8 0 z"/>` +
     `<path d="M120 28 h22 M120 78 h22 M123 28 q0 18 9 25 q9 -7 9 -25 M123 78 q0 -18 9 -25 q9 7 9 25"/><path class="sn" d="M126 72 h12"/>`),
+  bag: wrap(
+    `<path d="M66 30 v-6 a14 14 0 0 1 28 0 v6"/><path d="M52 38 a8 8 0 0 1 8 -8 h40 a8 8 0 0 1 8 8 v44 a4 4 0 0 1 -4 4 h-48 a4 4 0 0 1 -4 -4 z"/><path d="M64 54 h32 v16 h-32 z M80 54 v8"/>` +
+    `<path class="sn" d="M118 44 h12 M118 56 h18 M118 68 h10"/><path class="mv" d="M30 50 h12 M34 62 h8"/>`),
 };
 
 const KEY = (k) => `<kbd>${k}</kbd>`;
@@ -92,7 +95,7 @@ export function howToCards({ touch = false } = {}) {
     id: 'touch', n: 'TOUCH', pic: PICTO.touch, title: 'Two thumbs',
     body: `<ul class="keys">${[
       row('<b class="ic">&#9678;</b>', 'left thumb: stick. Push it to the edge to sprint'), row('<b class="ic">&#9998;</b>', 'right thumb: drag anywhere to look'),
-      row(KEY('E'), 'use, talk, read (hold to dig)'), row(KEY('Q'), 'sing (hold: second sight)'), row(KEY('&#8645;'), 'switch to Jeetu'), row(KEY('V'), 'third person'), row(KEY('Mic'), 'microphone: sing for coins'), row('<b class="ic">&#9707;</b>', 'tap the little map: the city map'),
+      row(KEY('E'), 'use, talk, read (hold to dig)'), row(KEY('Q'), 'sing (hold: second sight)'), row(KEY('&#8645;'), 'switch to Jeetu'), row(KEY('V'), 'third person'), row('<b class="ic">&#128093;</b>', 'the bag: Mithi\'s backpack'), row(KEY('Mic'), 'microphone: sing for coins'), row('<b class="ic">&#9707;</b>', 'tap the little map: the city map'),
       row('<b class="ic">&#10074;&#10074;</b>', 'pause and settings'),
     ].join('')}</ul><p>Tap an answer to speak. Tap a card to close it.</p>`,
   };
@@ -116,7 +119,9 @@ export function howToCards({ touch = false } = {}) {
     { id: 'clock', n: '08', pic: PICTO.clock, title: 'The clock and the flood', scrawl: 'the water is coming',
       body: `<p>Municipal time runs from before dawn to dawn the next day, in real time. Read what you find. Once you know about the breach a flood timer appears.</p><p>Warn the city through Tara, or at the Control Tower terminal on level three.</p>` },
     { id: 'dshot', n: '09', pic: PICTO.dshot, title: 'D-shots', scrawl: 'read the seller',
-      body: `<p>Black-market health jabs. Every seller is different: the rays it gives, the hours it takes from your clock, and the chance it is cut with something. Accept, or walk away.</p>` },
+      body: `<p>Black-market health jabs. Every seller is different: the rays it gives, the hours it takes from your clock, and the chance it is cut with something. Pay in time or in cash, or walk away.</p>` },
+    { id: 'bag', n: '10', pic: PICTO.bag, title: 'Mithi\'s backpack', kbd: 'B', scrawl: 'try everything',
+      body: `<p>${KEY('B')}, or the bag button on a touch screen, opens her backpack: cash, two D-shots, earbuds, a talking phone, water, glucose biscuits, and everything she picks up on the way. Tap a thing to read about it, and try it.</p><p>The world waits while the bag is open.</p>` },
   ];
   return cards;
 }

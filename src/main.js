@@ -37,6 +37,7 @@ import { DialogueSystem } from './systems/story/dialogue.js';
 import { VoiceSystem } from './systems/story/voices.js';
 import { Banter } from './systems/story/banter.js';
 import { ItemSystem } from './systems/story/items.js';
+import { BackpackSystem } from './systems/story/backpack.js';
 import { ObjectiveBoard } from './systems/story/objectives.js';
 import { CastSystem } from './systems/story/cast/index.js';
 import { Director } from './systems/story/director.js';
@@ -127,6 +128,7 @@ function boot() {
   game.addSystem('dialogue', new DialogueSystem());
   if (!params.arena) {
     game.addSystem('items', new ItemSystem());
+    game.addSystem('backpack', new BackpackSystem());       // Mithi's backpack (B / the bag button): cash, D-shots, earbuds, phone, water, biscuits
     game.addSystem('objectives', new ObjectiveBoard());
     game.addSystem('cast', new CastSystem());
     game.addSystem('director', new Director());
