@@ -1,0 +1,27 @@
+[
+ {
+  "name": "busk-setup",
+  "wait": 600,
+  "eval": "(()=>{const A=__grahan,G=A.game;A.set('manual',true);A.set('invulnerable',true);A.set('hazards',false);A.setTime(9);A.step(1);const s=A.state();if(!s.wallet||s.wallet.rupees!==G.wallet.rupees) throw new Error('ASSERT wallet state');if(!document.querySelector('.hud-wallet')) throw new Error('ASSERT wallet HUD');return {wallet:s.wallet,busk:s.busk,crowd:A.do('crowdNear',14)};})()"
+ },
+ {
+  "name": "busk-noise-earns-nothing",
+  "wait": 400,
+  "eval": "(()=>{const A=__grahan,G=A.game,ok=(c,m)=>{if(!c) throw new Error('ASSERT '+m);};const r0=G.wallet.rupees;A.do('buskSim',0,-30);A.step(6);const b=A.state().busk;ok(b.on&&!b.singing&&b.tips===0,'noise is not singing: '+JSON.stringify(b));ok(G.wallet.rupees===r0,'no money for noise');A.do('buskSim',null);return b;})()"
+ },
+ {
+  "name": "busk-singing-in-a-crowd",
+  "wait": 900,
+  "eval": "(()=>{const A=__grahan,G=A.game,ok=(c,m)=>{if(!c) throw new Error('ASSERT '+m);};const P=G.player.pos;let best=null;for(const a of G.crowds.agents){if(a.hidden||Math.abs(a.y-P.y)>2) continue;const n=G.crowds.near(a.x,a.z,14).filter(b=>Math.abs(b.y-a.y)<3).length;if(!best||n>best.n) best={a,n};if(n>=8) break;}ok(best&&best.n>0,'a crowd somewhere');A.teleport(best.a.x+1.2,best.a.y,best.a.z+1.2);A.step(0.5);const r0=G.wallet.rupees;A.do('buskReset');const notes=[220,220,246.9,261.6,293.7,329.6,293.7,261.6];for(let i=0;i<notes.length*2;i++){A.do('buskSim',notes[i%notes.length],-22);A.step(0.9);}const b=A.state().busk;ok(b.tips>=3,'tips: '+JSON.stringify(b));ok(G.wallet.rupees===r0+b.rupees&&b.rupees>0,'paid into the wallet: '+G.wallet.rupees+' vs '+r0);const ev=A.events('busk:tip');ok(ev.length===b.tips,'tip events');ok(/₹\\d+/.test(document.querySelector('.hud-wallet b').textContent),'HUD shows cash');ok(!document.getElementById('busk').hidden,'mic pill shown');return {busk:b,wallet:G.wallet.rupees,crowd:best.n,hud:document.querySelector('.hud-wallet').textContent,pill:document.getElementById('busk').textContent};})()"
+ },
+ {
+  "name": "busk-crowd-runs-dry",
+  "wait": 400,
+  "eval": "(()=>{const A=__grahan,G=A.game,ok=(c,m)=>{if(!c) throw new Error('ASSERT '+m);};const b0=A.state().busk;A.do('buskSim',261.6,-22);A.step(60);const b=A.state().busk;const n=b.tips-b0.tips;ok(n>=3&&n<=26,'a minute of song pays a steady trickle: '+n);ok(G.busk.given.size===b.tips,'nobody gives twice within 90 s: '+G.busk.given.size+' vs '+b.tips);return {before:b0.tips,after:b.tips,listeners:b.listeners};})()"
+ },
+ {
+  "name": "busk-off",
+  "wait": 400,
+  "eval": "(()=>{const A=__grahan,G=A.game,ok=(c,m)=>{if(!c) throw new Error('ASSERT '+m);};A.do('buskSim',null);A.step(0.2);ok(document.getElementById('busk').hidden,'pill hidden when off');ok(!A.state().busk.on,'off');const ok2=G.wallet.spend(1,'test'),no=G.wallet.spend(1e9,'test');ok(ok2&&!no,'spend rules');return A.state().wallet;})()"
+ }
+]

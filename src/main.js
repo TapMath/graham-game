@@ -16,6 +16,8 @@ import { InteractableSystem } from './systems/interactables.js';
 import { ClockSystem } from './systems/clock.js';
 import { AirSystem } from './systems/air.js';
 import { HealthSystem } from './systems/health.js';
+import { WalletSystem } from './systems/wallet.js';
+import { BuskSystem } from './systems/busk.js';
 import { SetuSystem } from './systems/setu.js';
 import { VendorSystem } from './systems/vendors.js';
 import { EndingSystem } from './systems/endings.js';
@@ -35,6 +37,7 @@ import { DialogueSystem } from './systems/story/dialogue.js';
 import { VoiceSystem } from './systems/story/voices.js';
 import { Banter } from './systems/story/banter.js';
 import { ItemSystem } from './systems/story/items.js';
+import { BackpackSystem } from './systems/story/backpack.js';
 import { ObjectiveBoard } from './systems/story/objectives.js';
 import { CastSystem } from './systems/story/cast/index.js';
 import { Director } from './systems/story/director.js';
@@ -86,6 +89,7 @@ function boot() {
   game.addSystem('clock', new ClockSystem());
   game.addSystem('air', new AirSystem());
   game.addSystem('health', new HealthSystem());
+  game.addSystem('wallet', new WalletSystem());                // Mithi's rupees (busking pays in, the backpack and vendors read and spend)
   if (!params.arena) {                                        // the city only: they need its POIs
     game.addSystem('setu', new SetuSystem());
     game.addSystem('vendors', new VendorSystem());
@@ -112,6 +116,7 @@ function boot() {
   game.addSystem('ripples', guarded(new RippleSystem(), 'ripples'));
   game.addSystem('senses', guarded(new SensesSystem(), 'senses'));
   game.addSystem('sing', guarded(new Sing(), 'sing'));
+  game.addSystem('busk', guarded(new BuskSystem(), 'busk'));   // the microphone: the player sings, passers-by drop coins (after sing: it borrows the wave)
   game.addSystem('setuVoice', guarded(new SetuVoice(), 'setuVoice'));
   game.addSystem('visionSystem', guarded(new VisionSystem(), 'visionSystem'));
   game.addSystem('pa', guarded(new PASystem(), 'pa'));
@@ -124,6 +129,7 @@ function boot() {
   game.addSystem('dialogue', new DialogueSystem());
   if (!params.arena) {
     game.addSystem('items', new ItemSystem());
+    game.addSystem('backpack', new BackpackSystem());       // Mithi's backpack (B / the bag button): cash, D-shots, earbuds, phone, water, biscuits
     game.addSystem('objectives', new ObjectiveBoard());
     game.addSystem('cast', new CastSystem());
     game.addSystem('director', new Director());

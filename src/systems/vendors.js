@@ -6,11 +6,13 @@
 //
 // Accepting: the screen fades, `clock.advance(hours)` (Setu's breath keeps draining for that time), then either
 // +potency rays, or, if contaminated, -2 rays and a 20 s blur. Repeat buys cost 25% more time each. Declining walks away.
+// Cash: with rupees in `game.wallet` (the backpack, busking) the vendor also takes money instead of time: `cashPrice(v)`,
+// ₹40 + ₹20 a ray, rounded to ₹10, the same 25% more for each repeat. Paying cash costs no time.
 //
 //   game.vendors.active           [{id, spot, offer, sold, interactable}]       .stats {shots, contaminated, hours}
 //   game.vendors.open(id)         open the dialog as if the player had pressed E at that booth
 //   game.vendors.state            'idle' | 'dialog' | 'waiting'
-// Events: 'vendor:open' {id}, 'vendor:decline' {id}, 'vendor:purchase' {id, potency, hours, contaminated, rays}.
+// Events: 'vendor:open' {id}, 'vendor:decline' {id}, 'vendor:purchase' {id, potency, hours, cash, contaminated, rays}.
 // Debug: __grahan.do('vendorOpen', id) , __grahan.do('vendorRoll', id, {potency,hours,risk}) to force an offer,
 //        state().vendors.
 import * as THREE from '../../vendor/three.module.js';
@@ -18,7 +20,7 @@ import { mergeGeometries } from '../../vendor/addons/utils/BufferGeometryUtils.j
 import { buildCharacter, characterMaterial, npcSpec, SKIN, mergeStatic } from '../characters/humanoid.js';
 import { faceMaterial } from '../characters/face.js';
 
-export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], riskMax: 0.3, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25 });
+export const DSHOT = Object.freeze({ active: 4, potency: [2, 6], hours: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], riskMax: 0.3, contaminationDamage: 2, blurSeconds: 20, repeatMul: 1.25, cashBase: 40, cashPerRay: 20 });
 
 const LINES = {
   clean: [
@@ -59,7 +61,7 @@ export class VendorSystem {
     game.vendors = this;
     this.rng = game.rng.fork('vendors');
     this.state = 'idle';
-    this.stats = { shots: 0, contaminated: 0, hours: 0, declined: 0 };
+    this.stats = { shots: 0, contaminated: 0, hours: 0, declined: 0, cash: 0 };
     this.wait = null;
     const spots = game.world.vendorSpots ?? [];
     const open = new Set(this.rng.shuffle(spots.map((s) => s.id)).slice(0, DSHOT.active));
@@ -125,23 +127,27 @@ export class VendorSystem {
   }
 
   price(v) { return v.offer.hours * Math.pow(DSHOT.repeatMul, v.sold); }
+  cashPrice(v) { return Math.round((DSHOT.cashBase + DSHOT.cashPerRay * v.offer.potency) * Math.pow(DSHOT.repeatMul, v.sold) / 10) * 10; }
 
   open(id) {
     const v = this._get(id), game = this.game;
     if (!v || this.state !== 'idle') return;
     this.state = 'dialog';
-    const hours = this.price(v);
+    const hours = this.price(v), cash = this.cashPrice(v), have = game.wallet?.rupees ?? 0;
+    const canPay = !!game.wallet && have >= cash;
     game.events.emit('vendor:open', { id: v.id });
     game.dialog.open({
       tag: 'D-SHOT', title: v.spot.name ?? 'Vendor',
       quote: v.sold ? `"Again? Prices go up, didi. ${v.offer.line}"` : `"${v.offer.line}"`,
-      rows: [['Offers', `+${v.offer.potency} rays, ${POTENCY_WORD[v.offer.potency]}`], ['Price', `${fmtHours(hours)} of your day`]],
-      note: `You wait while they fetch it. The flood clock keeps running, and so does Setu's breath.`,
+      rows: [['Offers', `+${v.offer.potency} rays, ${POTENCY_WORD[v.offer.potency]}`], ['Price', `${fmtHours(hours)} of your day`],
+        ...(game.wallet ? [['Or cash', `₹${cash} (you have ₹${have})`]] : [])],
+      note: `You wait while they fetch it. The flood clock keeps running, and so does Setu's breath.` + (canPay ? ' Cash, and it is in your hand at once.' : ''),
       choices: [
         { id: 'accept', label: 'Take the shot', keys: ['KeyY', 'Enter', 'Digit1'], hint: 'Y' },
+        ...(canPay ? [{ id: 'cash', label: `Pay ₹${cash}`, keys: ['KeyC', 'Digit3'], hint: 'C' }] : []),
         { id: 'decline', label: 'Walk away', keys: ['KeyN', 'Escape', 'Digit2'], hint: 'N' },
       ],
-      onChoose: (choice) => (choice === 'accept' ? this._accept(v, hours) : this._decline(v)),
+      onChoose: (choice) => (choice === 'accept' ? this._accept(v, hours) : choice === 'cash' ? this._pay(v, cash) : this._decline(v)),
     });
   }
 
@@ -151,10 +157,16 @@ export class VendorSystem {
     this.game.messages?.say('You shake your head. The vendor shrugs and goes back to his phone.', { kind: 'system', ttl: 4 });
   }
 
-  _accept(v, hours) {
+  _pay(v, cash) {
+    if (!this.game.wallet?.spend(cash, 'dshot')) { this._decline(v); return; }
+    this.stats.cash += cash;
+    this._accept(v, 0, cash);
+  }
+
+  _accept(v, hours, cash = 0) {
     this.state = 'waiting';
     this.game.modal = true;
-    this.wait = { v, hours, t: 0, applied: false };
+    this.wait = { v, hours, cash, t: 0, applied: false };
     this.game.screenfx.fade(1, 0.6, '#000');
   }
 
@@ -162,7 +174,7 @@ export class VendorSystem {
     const game = this.game, v = w.v;
     const contaminated = this.rng.chance(v.offer.risk);
     v.sold++; this.stats.shots++; this.stats.hours += w.hours;
-    game.clock.advance(w.hours, 'dshot');
+    if (w.hours > 0) game.clock.advance(w.hours, 'dshot');
     const rays0 = game.player.rays;
     if (contaminated) {
       this.stats.contaminated++;
@@ -174,8 +186,9 @@ export class VendorSystem {
       game.health.heal(v.offer.potency, 'dshot');
       game.messages?.say(`Cold, then warm, then a little like sunlight under the skin. (+${game.player.rays - rays0} rays)`, { kind: 'story', ttl: 7 });
     }
-    game.messages?.say(`${fmtHours(w.hours)} gone. It is ${game.clock.hhmm}.`, { kind: 'system', ttl: 6 });
-    game.events.emit('vendor:purchase', { id: v.id, potency: v.offer.potency, hours: w.hours, contaminated, rays: game.player.rays });
+    if (w.cash) game.messages?.say(`₹${w.cash} handed over. ₹${game.wallet?.rupees ?? 0} left.`, { kind: 'system', ttl: 6 });
+    else game.messages?.say(`${fmtHours(w.hours)} gone. It is ${game.clock.hhmm}.`, { kind: 'system', ttl: 6 });
+    game.events.emit('vendor:purchase', { id: v.id, potency: v.offer.potency, hours: w.hours, cash: w.cash, contaminated, rays: game.player.rays });
   }
 
   update(dt) {

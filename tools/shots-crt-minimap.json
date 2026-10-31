@@ -1,0 +1,88 @@
+[
+ {
+  "name": "setup",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nA.set('manual', true); A.set('invulnerable', true); A.set('hazards', false); G.settings.set('reduceFlash', false); A.setTime(10); A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1); fresh(); return check('G');})()"
+ },
+ {
+  "name": "ground-day-big",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nbig(400); fresh(); const r=check('G'); ok(r.anim==='mm-flick','CRT flicker animates'); ok(r.sweep!=='none','sweep shows'); return r;})()"
+ },
+ {
+  "name": "ground-day-normal",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nbig(0); fresh(); return check('G');})()"
+ },
+ {
+  "name": "underground",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nA.teleport(45, -8, -30, 0); A.look(180, 0); A.step(1); big(400); fresh(); return check('U');})()"
+ },
+ {
+  "name": "upper-level-l3",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nbig(0); A.teleport(-95, 0, -62, 20); A.look(20, 0); A.step(1); const lv=M().level; big(400); fresh(); return check(lv);})()"
+ },
+ {
+  "name": "l1-sunlight",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nbig(0); A.teleport(10, 12, -25, -20); A.look(-20, 0); A.step(1); big(400); fresh(); const r=check('L1'); ok(G.map.collect('L1').sun.length>=2,'sun patches'); return r;})()"
+ },
+ {
+  "name": "objective-other-level",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nA.teleport(-44, 0, -30, -90); A.look(-90, 0); A.set('reachedBelow', true); A.set('setuLead', 'catacombs'); G.objectives.refresh(true); A.step(0.5); G.map._force=true; big(400); fresh(); const t=M().target; ok(t && t.level==='U' && t.change==='down','target on U: '+JSON.stringify(t)); const n=(()=>{ const gold=(cv)=>{ const c=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<c.length;i+=4) if(c[i]>170&&c[i+1]>120&&c[i+2]<90&&c[i]-c[i+2]>110&&c[i+3]>240) n++; return n; }; return gold(G.map.canvas); })(); ok(n>20,'gold marker with level tag: '+n); return check('G');})()"
+ },
+ {
+  "name": "objective-edge-chevron",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nA.set('setuLead', null); A.set('reachedBelow', false); G.map.close(); A.do('setuFind'); G.objectives.refresh(true); A.teleport(60, 38, -90, 90); A.look(90, 0); A.step(1); G.map._force=true; big(400); fresh(); const t=M().target; ok(t && t.level==='L3' && t.change===null && t.dist>40,'same-level far target: '+JSON.stringify(t)); const gold=(cv)=>{ const c=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data; let n=0; for(let i=0;i<c.length;i+=4) if(c[i]>170&&c[i+1]>120&&c[i+2]<90&&c[i]-c[i+2]>110&&c[i+3]>240) n++; return n; }; const n=gold(G.map.canvas); ok(n>20,'gold chevron on the edge: '+n); return { gold:n, t, ...check('L3') };})()"
+ },
+ {
+  "name": "night",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nA.setTime(23); A.step(1); big(400); fresh(); return check(M().level);})()"
+ },
+ {
+  "name": "reduce-flash",
+  "wait": 900,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nG.settings.set('reduceFlash', true); A.step(0.5); fresh(); const r=check(M().level); ok(r.anim==='none','flicker off: '+r.anim); ok(r.sweep==='none','sweep off'); ok(getComputedStyle(document.querySelector('.mm-canvas')).animationName==='none','glitch off'); return r;})()"
+ },
+ {
+  "name": "ipad-landscape-1024",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nG.settings.set('reduceFlash', false); A.setTime(10); big(0); A.teleport(-44, 0, -30, -90); A.look(-90, 0); A.step(1); fresh(); const r=check('G'); ok(r.size[0]>=150,'size '+r.size); return r;})()",
+  "viewport": [
+   1024,
+   768
+  ]
+ },
+ {
+  "name": "ipad-landscape-1180",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nfresh(); return check('G');})()",
+  "viewport": [
+   1180,
+   820
+  ]
+ },
+ {
+  "name": "phone-portrait",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nfresh(); const r=check('G'); ok(r.size[0]<=104 && r.size[0]>=88,'phone size '+r.size); ok(getComputedStyle(document.querySelector('.mm-top')).display==='none','readouts hidden on phones'); return r;})()",
+  "viewport": [
+   390,
+   844
+  ]
+ },
+ {
+  "name": "phone-landscape",
+  "wait": 1500,
+  "eval": "(async()=>{const A=__grahan,G=A.game;const ok=(c,m)=>{ if(!c) throw new Error('ASSERT '+m); };const wait=(ms)=>new Promise((r)=>setTimeout(r,ms));\nconst M=()=>A.state().map; const mm=document.querySelector('.minimap'); const big=(w)=>{ mm.style.width=w?w+'px':''; };\nconst fresh=()=>{ A.step(0.6); G.hud.update(0.3, G); A.do('mapRedraw'); A.step(0.3); };\nconst check=(lv)=>{ const m=M(); ok(m.minimapShown, 'minimap shown'); ok(m.level===lv, 'level '+lv+' got '+m.level); ok(m.mini.ms<30, 'mini.ms '+m.mini.ms); const cs=getComputedStyle(document.querySelector('.mm-screen')); return { ms:m.mini.ms, size:m.size, anim:cs.animationName, sweep:getComputedStyle(document.querySelector('.mm-sweep')).display }; };\nfresh(); const r=check('G'); ok(r.size[0]<=108,'phone size '+r.size); return r;})()",
+  "viewport": [
+   844,
+   390
+  ]
+ }
+]
