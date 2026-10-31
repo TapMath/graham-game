@@ -1,20 +1,24 @@
-// The minimap: a circular local map (about 120 m across) that turns with the view, on a 2D canvas in the corner of the HUD.
+// The minimap: a CRT screen (rounded-square phosphor display in a gunmetal bezel, about 120 m across) that turns with the view, on a 2D canvas in the corner of the HUD.
+// The scanlines, glass, sweep and flicker are CSS (styles.css .mm-*), so the canvas only pays for the map and its marks.
 //
 // The level's layout is painted once into an offscreen canvas (maprender.js, cached per level, rebuilt only when the level changes),
 // so a frame is one rotated blit plus a handful of live marks: sunlight patches, lift batteries, gate thresholds, the Harbour Line's
-// trains, the people with you, objectives (the primary one big, gold and on the rim as an arrow when it is out of the lens), fragments you found and (faintly) the last lead to Setu. The layer never draws
+// trains, the people with you, objectives (the primary one big, gold and on the screen's edge as an arrow when it is out of view), fragments you found and (faintly) the last lead to Setu. The layer never draws
 // where Setu is while he is unfound. `draw(frame)` is called about 10 times a second by the map system.
-import { DARK, paintLevel } from './maprender.js';
+import { NEON, paintLevel } from './maprender.js';
 import { BOUNDS, LEVEL_INFO, gatesAt, linksAt, levelIndex, fmtDist, RAIL } from './mapdata.js';
 
 const RADIUS_M = 60;                                   // metres from the player to the rim: 120 m across
 /** Ring radius (m) of a capsule lift on the maps, by class: the bigger the car, the bigger the ring. */
 const CAR_R = { solo: 2.4, family: 3.4, public: 4.6, freight: 5.8 };
 const TAU = Math.PI * 2;
+const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
+const CORNER = 0.18;                                    // screen corner radius as a fraction of its width (matches .mm-screen in CSS)
+const pad3 = (v) => (v < 0 ? '-' : '+') + String(Math.min(999, Math.round(Math.abs(v)))).padStart(3, '0');
 
 export class Minimap {
-  constructor(canvas) {
-    this.canvas = canvas;
+  constructor(canvas, readouts) {
+    this.canvas = canvas; this.ro = readouts ?? {}; this._roTxt = {}; this.rc = 0;
     this.g = canvas.getContext('2d');
     this.cache = null; this.cacheLevel = null; this.cachePpm = 0;
     this.size = 0; this.dpr = 1;
@@ -40,9 +44,11 @@ export class Minimap {
     this.cache.width = W; this.cache.height = H;
     const g = this.cache.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.fillStyle = level === 'G' ? DARK.sea : DARK.bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = level === 'G' ? NEON.sea : NEON.bg; g.fillRect(0, 0, W, H);
     g.setTransform(ppm, 0, 0, ppm, -BOUNDS.x0 * ppm, -BOUNDS.z0 * ppm);
-    paintLevel(g, level, DARK, BOUNDS, 1 / ppm);
+    paintLevel(g, level, NEON, BOUNDS, 1 / ppm);
+    // phosphor bloom, once per level: a blurred copy added back on itself (skipped where canvas filters are missing)
+    if ('filter' in g) { const t = document.createElement('canvas'); t.width = W; t.height = H; t.getContext('2d').drawImage(this.cache, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = `blur(${Math.max(1.2, ppm * 0.7)}px)`; g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55; g.drawImage(t, 0, 0); g.globalAlpha = 1; g.filter = 'none'; g.globalCompositeOperation = 'source-over'; }
     this.cacheLevel = level; this.cachePpm = ppm; this.stats.cacheBuilds++;
   }
 
@@ -58,12 +64,13 @@ export class Minimap {
     const cy = Math.cos(f.yaw), sy = Math.sin(f.yaw);
     this.t = time;
     this._ensureCache(f.level);
+    this._readouts(f);
 
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, S, S);
     g.save();
-    g.beginPath(); g.arc(R, R, R - 1.5 * dpr, 0, TAU); g.clip();
-    g.fillStyle = f.level === 'G' ? DARK.sea : DARK.bg; g.fillRect(0, 0, S, S);
+    this.rc = S * CORNER; this._rr(g, 1.5 * dpr, S - 3 * dpr, this.rc - 1.5 * dpr); g.clip();
+    g.fillStyle = f.level === 'G' ? NEON.sea : NEON.bg; g.fillRect(0, 0, S, S);
 
     // ---- the world, rotated so the view points up
     g.save();
@@ -94,15 +101,29 @@ export class Minimap {
     this._player(g, f, R, dpr);
     g.restore();
 
-    g.strokeStyle = 'rgba(221,233,244,.1)'; g.lineWidth = 1 * dpr; g.setLineDash([2 * dpr, 4 * dpr]); g.beginPath(); g.arc(R, R, 30 * sc, 0, TAU); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = 'rgba(90,255,235,.12)'; g.lineWidth = 1 * dpr; g.setLineDash([2 * dpr, 4 * dpr]); g.beginPath(); g.arc(R, R, 30 * sc, 0, TAU); g.stroke(); g.setLineDash([]);
 
-    // ---- the rim: glass edge, compass, dark vignette at the border so marks do not just stop
-    const grad = g.createRadialGradient(R, R, R * 0.72, R, R, R);
-    grad.addColorStop(0, 'rgba(5,10,14,0)'); grad.addColorStop(1, 'rgba(5,10,14,.55)');
-    g.fillStyle = grad; g.beginPath(); g.arc(R, R, R - 1 * dpr, 0, TAU); g.fill();
+    // ---- the screen edge: a thin phosphor border and the compass (the dark vignette and the glass are CSS)
     this._rim(g, f, R, dpr);
     this._caption(g, f, R, dpr);
     this.stats.redraws++; this.stats.lastMs = performance.now() - t0;
+  }
+
+  /** Rounded-square path from `a` to `b` (device px), corner radius r. */
+  _rr(g, a, b, r) { g.beginPath(); g.moveTo(a + r, a); g.arcTo(b, a, b, b, r); g.arcTo(b, b, a, b, r); g.arcTo(a, b, a, a, r); g.arcTo(a, a, b, a, r); g.closePath(); }
+
+  /** Clamp (x, y) into the screen's rounded square inset by m; third value true when it had to move (the mark is out of view). */
+  _edge(x, y, m) {
+    const S = this.canvas.width, rc = this.rc, b = Math.max(rc, m), r = Math.max(rc - m, 0);
+    const cx = Math.min(S - b, Math.max(b, x)), cy = Math.min(S - b, Math.max(b, y)), dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
+    return d > r ? [cx + (d ? dx * r / d : 0), cy + (d ? dy * r / d : 0), true] : [x, y, false];
+  }
+
+  /** Heading and position on the bezel (DOM, updated only when the text changes). */
+  _readouts(f) {
+    const ro = this.ro, hdg = ((Math.round(-f.yaw * 180 / Math.PI) % 360) + 360) % 360;
+    const set = (k, v) => { if (ro[k] && this._roTxt[k] !== v) { this._roTxt[k] = v; ro[k].textContent = v; } };
+    set('hdg', `${String(hdg).padStart(3, '0')}°`); set('pos', `X${pad3(f.x)} Z${pad3(f.z)}`);
   }
 
   // ------------------------------------------------------------------------------------------------ world-space layers
@@ -148,36 +169,36 @@ export class Minimap {
 
   // ------------------------------------------------------------------------------------------------ screen-space layers
   _gates(g, f, P, dpr) {
-    g.font = `500 ${8.5 * dpr}px Inter, Helvetica, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `500 ${8.5 * dpr}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     for (const gt of gatesAt(f.level)) {
       const [x, y] = P(gt.x, gt.z);
-      if (Math.hypot(x - this.canvas.width / 2, y - this.canvas.width / 2) > this.canvas.width / 2 - 8 * dpr) continue;
+      if (this._edge(x, y, 8 * dpr)[2]) continue;
       const ok = gt.permit ? !!f.permit : f.rays >= gt.min, txt = gt.permit ? 'P' : String(gt.min);
       const w = (txt.length > 1 ? 15 : 12) * dpr, h = 11 * dpr;
-      g.fillStyle = ok ? 'rgba(143,232,168,.92)' : 'rgba(255,128,104,.95)'; this._pill(g, x - w / 2, y - h / 2 - 8 * dpr, w, h, 3 * dpr);
+      g.fillStyle = ok ? 'rgba(61,255,176,.92)' : 'rgba(255,60,172,.95)'; this._pill(g, x - w / 2, y - h / 2 - 8 * dpr, w, h, 3 * dpr);
       g.fillStyle = '#10171b'; g.fillText(txt, x, y - 7.5 * dpr);
     }
   }
 
   _liftLabels(g, f, P, dpr) {
-    if (this.size < 130) return;                                   // phones: the battery ring says enough, the text would swamp the lens
-    g.font = `500 ${8 * dpr}px Inter, Helvetica, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (this.size < 130) return;                                   // phones: the battery ring says enough, the text would swamp the screen
+    g.font = `500 ${8 * dpr}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     for (const l of f.lifts) {
       const [x, y] = P(l.center[0], l.center[1]);
-      if (Math.hypot(x - this.canvas.width / 2, y - this.canvas.width / 2) > this.canvas.width / 2 - 24 * dpr) continue;
+      if (this._edge(x, y, 24 * dpr)[2]) continue;
       const lv = l.stops.map((s) => s.level).filter((v, i, a) => v !== f.level && a.indexOf(v) === i);
       const full = l.seats >= 12 && l.crowd >= l.seats;
       const txt = `${l.chargePct}% ${lv.length ? (lv.length > 1 ? '↕' : levelIndex(lv[0]) > levelIndex(f.level) ? '↑' : '↓') + lv.join('·') : ''} ·${l.seats}p${full ? ' FULL' : ''}`;
       const w = g.measureText(txt).width + 7 * dpr;
-      g.fillStyle = 'rgba(8,14,19,.8)'; this._pill(g, x - w / 2, y + 6 * dpr, w, 10 * dpr, 3 * dpr);
-      g.fillStyle = '#c9ece6'; g.fillText(txt, x, y + 11 * dpr);
+      g.fillStyle = 'rgba(2,10,12,.85)'; this._pill(g, x - w / 2, y + 6 * dpr, w, 10 * dpr, 3 * dpr);
+      g.fillStyle = '#7dfbe9'; g.fillText(txt, x, y + 11 * dpr);
     }
   }
 
   _fragments(g, f, P, dpr) {
     g.fillStyle = 'rgba(191,228,255,.92)'; g.strokeStyle = 'rgba(8,14,19,.8)'; g.lineWidth = 1 * dpr;
     for (const m of f.fragments) {
-      const [x, y] = P(m.x, m.z); if (Math.hypot(x - this.canvas.width / 2, y - this.canvas.width / 2) > this.canvas.width / 2 - 6 * dpr) continue;
+      const [x, y] = P(m.x, m.z); if (this._edge(x, y, 6 * dpr)[2]) continue;
       g.beginPath(); g.rect(x - 2.6 * dpr, y - 3.2 * dpr, 5.2 * dpr, 6.4 * dpr); g.fill(); g.stroke();
     }
   }
@@ -186,8 +207,7 @@ export class Minimap {
     const m = f.lead; if (!m || f.target?.lead) return;               // (when the lead IS the objective, _target draws it)
     const near = m.level === f.level;
     let [x, y] = P(m.x, m.z);
-    const d = Math.hypot(x - R, y - R), lim = R - 10 * dpr;
-    if (d > lim) { x = R + (x - R) * lim / d; y = R + (y - R) * lim / d; }
+    [x, y] = this._edge(x, y, 10 * dpr);
     g.save(); g.globalAlpha = near ? 0.62 : 0.34;
     g.strokeStyle = '#ffdf9a'; g.lineWidth = 1.3 * dpr; g.setLineDash([2.5 * dpr, 2.5 * dpr]);
     g.beginPath(); g.arc(x, y, 7.5 * dpr, 0, TAU); g.stroke(); g.setLineDash([]);
@@ -201,42 +221,40 @@ export class Minimap {
       if (m.main) continue;                                           // the main target has its own, louder marker (_target)
       const near = m.level === f.level;
       let [x, y] = P(m.x, m.z);
-      const d = Math.hypot(x - R, y - R), lim = R - 9 * dpr, off = d > lim;
-      if (off) { x = R + (x - R) * lim / d; y = R + (y - R) * lim / d; }
+      let off; [x, y, off] = this._edge(x, y, 9 * dpr);
       g.save(); g.globalAlpha = near ? 1 : 0.5;
       const s = (off ? 4.6 : 5.6) * dpr;
       g.fillStyle = '#ffdf9a'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.4 * dpr;
       g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); g.stroke();
-      if (!near) { g.fillStyle = '#ffdf9a'; g.font = `600 ${8 * dpr}px Inter, Arial, sans-serif`; g.textAlign = 'center'; g.fillText(m.level, x, y - s - 4 * dpr); }
+      if (!near) { g.fillStyle = '#ffdf9a'; g.font = `600 ${8 * dpr}px ${MONO}`; g.textAlign = 'center'; g.fillText(m.level, x, y - s - 4 * dpr); }
       g.restore();
     }
   }
 
   /**
    * The primary objective, the one thing the player should always be able to find: a big gold diamond that breathes (still with "reduce
-   * flashing"). Off the disc it sits on the rim as a chevron pointing out toward it with the distance; on another level it carries the level tag
+   * flashing"). Off the screen it sits on the edge as a chevron pointing out toward it with the distance; on another level it carries the level tag
    * and an arrow ("L3 ↑") at full opacity.
    */
   _target(g, f, P, dpr, R, time) {
     const m = f.target; if (!m) return;
     const near = m.level === f.level;
     let [x, y] = P(m.x, m.z);
-    const d = Math.hypot(x - R, y - R), lim = R - 20 * dpr, off = d > lim;      // (inside the compass letters, so the chevron never hides the N)
-    if (off) { x = R + (x - R) * lim / d; y = R + (y - R) * lim / d; }
+    let off; [x, y, off] = this._edge(x, y, 20 * dpr);                           // (inside the compass letters, so the chevron never hides the N)
     const k = f.calm ? 0 : 0.5 + 0.5 * Math.sin(time * 3.4), s = (near && !off ? 8 : 8.5) * dpr * (1 + 0.12 * k);
     g.save();
     if (near && !off) { g.strokeStyle = `rgba(255,207,51,${0.75 - 0.5 * k})`; g.lineWidth = 2 * dpr; g.beginPath(); g.arc(x, y, s + (4 + 5 * k) * dpr, 0, TAU); g.stroke(); }
-    g.fillStyle = '#ffcf33'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.8 * dpr; g.lineJoin = 'round';
+    g.fillStyle = '#ffcf33'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.8 * dpr; g.lineJoin = 'round'; g.shadowColor = 'rgba(255,207,51,.95)'; g.shadowBlur = 9 * dpr;   // the one thing that glows gold
     g.beginPath();
     if (off) {                                                         // a chevron on the rim, its tip toward the objective
       const a = Math.atan2(y - R, x - R), ux = Math.cos(a), uy = Math.sin(a), tx = x + ux * s * 0.9, ty = y + uy * s * 0.9;
       g.moveTo(tx, ty); g.lineTo(x - ux * s * 0.6 - uy * s, y - uy * s * 0.6 + ux * s); g.lineTo(x - ux * s * 0.15, y - uy * s * 0.15); g.lineTo(x - ux * s * 0.6 + uy * s, y - uy * s * 0.6 - ux * s);
     } else { g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); }
-    g.closePath(); g.stroke(); g.fill();
-    // the words: level change and/or distance, on a dark pill toward the middle of the lens (so it never runs off the edge)
+    g.closePath(); g.stroke(); g.fill(); g.shadowBlur = 0;
+    // the words: level change and/or distance, on a dark pill toward the middle of the screen (so it never runs off the edge)
     const tag = [near ? '' : `${m.level} ${levelIndex(m.level) > levelIndex(f.level) ? '↑' : '↓'}`, off || !near ? fmtDist(Math.hypot(m.x - f.x, m.z - f.z)) : ''].filter(Boolean).join(' ');
     if (tag) {
-      g.font = `700 ${8.5 * dpr}px Inter, Helvetica, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = `700 ${8.5 * dpr}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
       const w = g.measureText(tag).width + 9 * dpr, h = 12 * dpr, dx = R - x, dy = R - y, dl = Math.hypot(dx, dy) || 1;
       const off2 = off ? s + 9 * dpr : s + 8 * dpr, cx = Math.max(w / 2 + 3 * dpr, Math.min(2 * R - w / 2 - 3 * dpr, off ? x + dx / dl * off2 : x)), cy = off ? y + dy / dl * off2 : y + off2;
       g.fillStyle = 'rgba(8,14,19,.88)'; this._pill(g, cx - w / 2, cy - h / 2, w, h, 6 * dpr);
@@ -250,10 +268,10 @@ export class Minimap {
     for (const m of f.party) {
       if (m.level !== f.level) continue;
       let [x, y] = P(m.x, m.z);
-      const d = Math.hypot(x - R, y - R), lim = R - 8 * dpr; if (d > lim) { x = R + (x - R) * lim / d; y = R + (y - R) * lim / d; }
+      [x, y] = this._edge(x, y, 8 * dpr);
       g.fillStyle = m.color; g.strokeStyle = '#0a1217'; g.lineWidth = 1.5 * dpr;
       g.beginPath(); g.arc(x, y, 4.4 * dpr, 0, TAU); g.fill(); g.stroke();
-      g.fillStyle = '#10171b'; g.font = `700 ${6.4 * dpr}px Inter, Arial, sans-serif`; g.fillText(m.tag, x, y + 0.3 * dpr);
+      g.fillStyle = '#10171b'; g.font = `700 ${6.4 * dpr}px ${MONO}`; g.fillText(m.tag, x, y + 0.3 * dpr);
     }
   }
 
@@ -263,22 +281,23 @@ export class Minimap {
     const cone = g.createRadialGradient(R, R, 2 * dpr, R, R, L * 1.8);
     cone.addColorStop(0, 'rgba(255,255,255,.20)'); cone.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = cone; g.beginPath(); g.moveTo(R, R); g.arc(R, R, L * 1.8, -Math.PI / 2 - fov / 2, -Math.PI / 2 + fov / 2); g.closePath(); g.fill();
-    g.fillStyle = '#ffffff'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.6 * dpr; g.lineJoin = 'round';
-    g.beginPath(); g.moveTo(R, R - 7.6 * dpr); g.lineTo(R + 5.2 * dpr, R + 5.4 * dpr); g.lineTo(R, R + 2.6 * dpr); g.lineTo(R - 5.2 * dpr, R + 5.4 * dpr); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#ffffff'; g.strokeStyle = '#0a1217'; g.lineWidth = 1.6 * dpr; g.lineJoin = 'round'; g.shadowColor = 'rgba(120,255,240,.9)'; g.shadowBlur = 6 * dpr;
+    g.beginPath(); g.moveTo(R, R - 7.6 * dpr); g.lineTo(R + 5.2 * dpr, R + 5.4 * dpr); g.lineTo(R, R + 2.6 * dpr); g.lineTo(R - 5.2 * dpr, R + 5.4 * dpr); g.closePath(); g.fill(); g.stroke(); g.shadowBlur = 0;
     if (f.inSun) { g.strokeStyle = 'rgba(255,225,150,.9)'; g.lineWidth = 1.6 * dpr; g.beginPath(); g.arc(R, R, 10.5 * dpr, 0, TAU); g.stroke(); }
   }
 
   _rim(g, f, R, dpr) {
     g.save();
-    g.strokeStyle = 'rgba(221,233,244,.55)'; g.lineWidth = 1.6 * dpr; g.beginPath(); g.arc(R, R, R - 1.2 * dpr, 0, TAU); g.stroke();
-    // cardinal ticks that turn with the view; north in gold
-    const cy = Math.cos(f.yaw), sy = Math.sin(f.yaw);
-    const dirs = [['N', 0, -1, '#ffdf9a'], ['E', 1, 0, 'rgba(221,233,244,.55)'], ['S', 0, 1, 'rgba(221,233,244,.55)'], ['W', -1, 0, 'rgba(221,233,244,.55)']];
-    g.font = `700 ${8.5 * dpr}px Inter, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const S = 2 * R; this._rr(g, 1.2 * dpr, S - 1.2 * dpr, this.rc - 1.2 * dpr); g.strokeStyle = 'rgba(90,255,235,.5)'; g.lineWidth = 1.4 * dpr; g.stroke();
+    // cardinal letters that turn with the view, on the square's edge; north in gold
+    const cy = Math.cos(f.yaw), sy = Math.sin(f.yaw), m = 8.2 * dpr;
+    const dirs = [['N', 0, -1, '#ffdf9a'], ['E', 1, 0, 'rgba(120,255,240,.6)'], ['S', 0, 1, 'rgba(120,255,240,.6)'], ['W', -1, 0, 'rgba(120,255,240,.6)']];
+    g.font = `700 ${8.5 * dpr}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     for (const [name, dx, dz, col] of dirs) {
-      const x = R + (dx * cy - dz * sy) * (R - 8.2 * dpr), y = R + (dx * sy + dz * cy) * (R - 8.2 * dpr);
+      const vx = dx * cy - dz * sy, vy = dx * sy + dz * cy, t = (R - m) / Math.max(Math.abs(vx), Math.abs(vy));   // along the heading to the square's edge
+      const [x, y] = this._edge(R + vx * t, R + vy * t, m);
       g.fillStyle = col;
-      if (name === 'N') { g.fillStyle = 'rgba(8,14,19,.75)'; g.beginPath(); g.arc(x, y, 6 * dpr, 0, TAU); g.fill(); g.fillStyle = col; }
+      if (name === 'N') { g.fillStyle = 'rgba(2,10,12,.8)'; g.beginPath(); g.arc(x, y, 6 * dpr, 0, TAU); g.fill(); g.fillStyle = col; }
       g.fillText(name, x, y + 0.4 * dpr);
     }
     g.restore();
@@ -287,10 +306,10 @@ export class Minimap {
   _caption(g, f, R, dpr) {
     if (!f.eta) return;
     g.save();
-    g.font = `500 ${8 * dpr}px Inter, Helvetica, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `500 ${8 * dpr}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     const w = g.measureText(f.eta).width + 12 * dpr;
-    g.fillStyle = 'rgba(8,14,19,.84)'; this._pill(g, R - w / 2, 2 * R - 36 * dpr, w, 12.5 * dpr, 6 * dpr);
-    g.fillStyle = '#bfe4ff'; g.fillText(f.eta, R, 2 * R - 29.6 * dpr);
+    g.fillStyle = 'rgba(2,10,12,.86)'; this._pill(g, R - w / 2, 2 * R - 36 * dpr, w, 12.5 * dpr, 6 * dpr);
+    g.fillStyle = '#7dfbe9'; g.fillText(f.eta, R, 2 * R - 29.6 * dpr);
     g.restore();
   }
 

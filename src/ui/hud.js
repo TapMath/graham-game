@@ -48,6 +48,7 @@ export class HudSystem {
             <div class="lbl">DAILY LIGHT <s>ALLOWANCE</s><span class="scrawl rot-a">ration</span></div>
             <div class="rays-count"><b>7</b><i>/ 12</i></div>
             <div class="rays-status"></div>
+            <div class="hud-wallet"><span class="lbl">CASH</span> <b>\u20b90</b><i class="pop"></i></div>
           </div>
         </div>
         <div class="hud-center">
@@ -75,6 +76,12 @@ export class HudSystem {
     this.rayEls = [...this.sun.querySelectorAll('.ray')];
     this.mark = this.sun.querySelector('.mark');
     this.count = q('.rays-count b'); this.status = q('.rays-status');
+    this.walletEl = q('.hud-wallet'); this.walletB = q('.hud-wallet b'); this.walletPop = q('.hud-wallet .pop'); this._rupees = null;
+    game.events.on('wallet:change', ({ delta, reason }) => {
+      if (!(delta > 0) || reason === 'set' || reason === 'new run') return;   // money earned or found pops; a reset does not
+      this.walletPop.textContent = '+\u20b9' + delta;
+      this.walletEl.classList.remove('gain'); void this.walletEl.offsetWidth; this.walletEl.classList.add('gain');
+    });
     this.timeEl = q('.hud-clock .time'); this.dayEl = q('.hud-clock .day span'); this.floodEl = q('.hud-clock .flood'); this.floodB = q('.flood b');
     this.setuEl = q('.hud-setu'); this.ecg = q('.hud-setu .ecg'); this.ecgLine = q('.ecg-line'); this.ecgDot = q('.ecg-dot'); this.breathBar = q('.breath i'); this.breathN = q('.breath-n b');
     this.objEl = q('.hud-objective p'); this.objWrap = q('.hud-objective'); this.whereEl = q('.obj-where'); this._whereT = 0; this._where = '';
@@ -267,6 +274,10 @@ export class HudSystem {
       if (this._glitchIn <= 0) { this._glitchIn = 4 + Math.random() * 5; game.screenfx.glitch(260); }
     }
     this.sun.classList.toggle('low', lowLevel >= 0.45);
+
+    // ---- cash
+    const ru = game.wallet ? game.wallet.rupees : null;
+    if (ru !== this._rupees) { this._rupees = ru; this.walletEl.hidden = ru == null; this.walletB.textContent = '\u20b9' + (ru ?? 0); }
 
     // ---- clock
     const c = game.clock;

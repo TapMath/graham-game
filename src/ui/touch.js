@@ -3,7 +3,7 @@
 //   left side    a floating virtual stick: it appears under the thumb, the knob follows, push it to the edge to sprint
 //   anywhere else drag to look (the stick zone is the lower-left of the screen; everything else looks)
 //   buttons      jump (Space), use (E; hold to dig), sing (Q; hold for second sight), switch (Tab, once Jeetu has joined),
-//                view (V), backpack (B) and pause
+//                view (V), backpack (B), the microphone (K: sing into the mic to busk, see systems/busk.js) and pause
 //
 // It only talks to `game.input` (setStick, lookTouch, virtualKey), so every system that reads keys keeps working. The layer
 // hides itself while a dialogue, card, vision or cutscene holds `game.modal` (their own buttons are large tap targets) and
@@ -20,6 +20,7 @@ const ICON = {
   view: '<svg viewBox="0 0 24 24"><path d="M2.5 12 C6 6 18 6 21.5 12 C18 18 6 18 2.5 12 Z"/><circle cx="12" cy="12" r="3.2"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path d="M8 5 V19 M16 5 V19"/></svg>',
   bag: '<svg viewBox="0 0 24 24"><path d="M8 7 V5 a4 4 0 0 1 8 0 V7"/><path d="M5 9 a2 2 0 0 1 2 -2 H17 a2 2 0 0 1 2 2 V20 a1 1 0 0 1 -1 1 H6 a1 1 0 0 1 -1 -1 Z"/><path d="M8 13 H16 V17 H8 Z M12 13 V15"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11 a6.5 6.5 0 0 0 13 0 M12 17.5 V21 M8.5 21 H15.5"/></svg>',
   map: '<svg viewBox="0 0 24 24"><path d="M3.5 6.5 L9 4.5 L15 6.5 L20.5 4.5 V17.5 L15 19.5 L9 17.5 L3.5 19.5 Z M9 4.5 V17.5 M15 6.5 V19.5"/></svg>',
 };
 const BUTTONS = [
@@ -29,6 +30,7 @@ const BUTTONS = [
   { id: 'swap', code: 'Tab', icon: ICON.swap, key: 'Tab', label: 'Switch' },
   { id: 'view', code: 'KeyV', icon: ICON.view, key: 'V', label: 'View' },
   { id: 'bag', code: 'KeyB', icon: ICON.bag, key: '', label: 'Backpack' },   // opens Mithi's backpack (src/systems/story/backpack.js)
+  { id: 'mic', code: 'KeyK', icon: ICON.mic, key: 'Mic', label: 'Sing into the microphone' },
 ];
 const SPRINT_ON = 0.97, SPRINT_OFF = 0.84, DEAD = 0.12;
 
@@ -55,6 +57,8 @@ export class TouchSystem {
     document.body.appendChild(root);
     this.stickEl = root.querySelector('#t-stick'); this.knobEl = this.stickEl.querySelector('.knob'); this.ghostEl = root.querySelector('#t-ghost');
     this.swapBtn = root.querySelector('.t-swap');
+    this.micBtn = root.querySelector('.t-mic');
+    game.events.on('busk:mic', ({ on }) => this.micBtn.classList.toggle('live', !!on));
 
     // the game surface: look and stick
     root.addEventListener('pointerdown', (e) => this._down(e));

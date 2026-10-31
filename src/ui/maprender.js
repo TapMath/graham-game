@@ -16,6 +16,16 @@ export const DARK = {
   tree: '#2a4a3a', rubble: 'rgba(160,150,130,.18)', metro: '#6fa8dc', text: '#dde9f4', textDim: 'rgba(221,233,244,.6)',
   lineScale: 1,
 };
+/** The minimap's CRT phosphor: a near-black screen, cyan/teal lines, magenta gates, amber stairs. Fills stay dim so the sunlight (gold, drawn live) and the objective stay the brightest things. */
+export const NEON = {
+  name: 'neon', bg: '#03080b', sea: '#041218', ground: '#07151a', street: '#0d2a31', streetLine: 'rgba(90,255,235,.16)', zone: 0.0,
+  walk: '#0f3a42', walkEdge: '#33e6e0', deckByKind: {}, solid: '#04090c', solidEdge: '#1f8f98', shack: '#0c2a30', shackEdge: 'rgba(0,0,0,.4)',
+  building: '#0b2d35', buildingWall: '#3fd9d0', uFloor: '#0e343c', uEdge: '#2fc9c9', uWall: '#04090c',
+  track: '#46b4ff', platform: '#14506a', corridor: '#061014', sleeper: 'rgba(90,190,255,.4)',
+  stairs: '#ffb000', stairsFill: 'rgba(255,176,0,.3)', ramp: '#ffc640', lift: '#2dffd0', gate: '#ff3cac',
+  tree: '#0f3a30', rubble: 'rgba(120,200,190,.16)', metro: '#46b4ff', text: '#bffcf4', textDim: 'rgba(150,255,240,.6)',
+  lineScale: 1,
+};
 export const PAPER = {
   name: 'paper', bg: '#e9eef1', sea: '#bcd8e8', ground: '#f7f9f9', street: '#ffffff', streetLine: 'rgba(120,140,155,.28)', zone: 1,
   walk: '#ffffff', walkEdge: '#2b3d4a', deckByKind: { walkway: '#e8742f', road: '#f0a020', bridge: '#2e6bd1', pier: '#9aa7ad', terrace: '#f1c3a0', garden: '#bfe0b0' },

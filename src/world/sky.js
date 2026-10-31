@@ -9,9 +9,14 @@
 //   game.sky.dayFactor              0 at night .. 1 in full day (drives sunlight shafts, solar lamps)
 //   event 'sky:time' {hour, phase, dayFactor}  when setTimeOfDay is called with a changed hour
 //
-// The sun rises in the EAST (+X), is highest at noon, sets in the west, and sits a little south (+Z).
+// The sun rises in the EAST (+X) at SUNRISE, climbs to its highest at midday, sets in the west at SUNSET, and
+// sits a little south (+Z). It travels one continuous arc, below the horizon at night, so the disc comes up over
+// the eastern horizon instead of popping in. The moon is opposite it: up in the east at dusk, low in the west and
+// fading at the start of the run. Low sun paints a warm glow on the dome on its side of the sky, and the
+// directional light follows whichever body is up, swinging over smoothly at dawn and dusk.
 // Palettes (setTimeOfDay): pre-dawn 05:00, sunrise 06:15, morning 07:30, noon, late afternoon 16:30,
-// dusk 18:30, night 20:30..04:30. No shadows anywhere (PLAN section 4).
+// dusk 18:30, night 20:30..04:30. The time of day also reaches the gloomy lower levels (darker, bluer
+// nights, a warm cast at sunrise). No shadows anywhere (PLAN section 4).
 import * as THREE from '../../vendor/three.module.js';
 
 const STATIC_DEFAULT = {
@@ -44,12 +49,26 @@ const LEVEL_ATMOS = [
   [38, 0.00, 44, 220, 1.05, 1.0],
 ];
 
+export const SUNRISE = 6.1, SUNSET = 18.4;
+const DAY_LEN = SUNSET - SUNRISE, NIGHT_LEN = 24 - DAY_LEN;
+
 const TEAL = new THREE.Color(0x1f4540);
 const TEAL_DEEP = new THREE.Color(0x0a1716);
 
 const _a = new THREE.Color(), _b = new THREE.Color(), _c = new THREE.Color(), _d = new THREE.Color();
 const HEMI_GLOOM = new THREE.Color(0xa8cfc6);
+const GLOW_RED = new THREE.Color(1, 0.45, 0.2);
+const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _glow = { color: new THREE.Color(), dir: new THREE.Vector3(), amount: 0 };
 const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+/** Sun direction for an hour of day: one continuous arc, above the horizon from SUNRISE to SUNSET. */
+function sunDirAt(h, out) {
+  const a = h >= SUNRISE && h < SUNSET
+    ? ((h - SUNRISE) / DAY_LEN) * Math.PI
+    : Math.PI + ((((h - SUNSET) % 24) + 24) % 24 / NIGHT_LEN) * Math.PI;
+  return out.set(Math.cos(a), Math.sin(a) * 0.95, 0.38).normalize();
+}
 
 function keyAt(hour) {
   const h = ((hour % 24) + 24) % 24;
@@ -116,7 +135,13 @@ export class SkySystem {
     this.hour = 8;
     this.phase = phaseOf(8);
     this.dayFactor = 1;
-    this.sunDir = new THREE.Vector3(0, 1, 0);
+    this.sunDir = new THREE.Vector3(0, 1, 0);           // the sun (below the horizon at night)
+    this.moonDir = new THREE.Vector3(0, 1, 0);          // the moon, opposite the sun
+    this.bodyDir = new THREE.Vector3(0, 1, 0);          // the disc on show: the sun by day, the moon by night
+    this.sunElev = 1;                                   // sunDir.y: < 0 before sunrise and after sunset
+    this.sunUp = true;                                  // the disc is the sun (else the moon)
+    this.glow = 0;                                      // 0..1 warm horizon glow on the sun's side (dawn, dusk)
+    this._lightDir = new THREE.Vector3();
     this._key = null;
     this._domeKey = '';
     this.setPalette({});
@@ -137,12 +162,21 @@ export class SkySystem {
     this._paintDome(new THREE.Color(p.horizon), new THREE.Color(p.zenith));
   }
 
-  _paintDome(h, z) {
+  /** Horizon-to-zenith gradient; with `glow` ({color, dir, amount}) a warm patch spreads along the horizon on dir's side. */
+  _paintDome(h, z, glow = null) {
     const pos = this.dome.geometry.attributes.position, col = this.dome.geometry.attributes.color;
     const c = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
-      const t = Math.pow(Math.max(0, pos.getY(i) / 300), 0.55);
+      const y = pos.getY(i) / 300, t = Math.pow(Math.max(0, y), 0.55);
       c.copy(h).lerp(z, t);
+      if (glow && glow.amount > 0.001) {
+        const x = pos.getX(i) / 300, zz = pos.getZ(i) / 300, flat = Math.hypot(x, zz) || 1;
+        const facing = Math.max(0, (x * glow.dir.x + zz * glow.dir.z) / flat);           // horizontal: toward the sun
+        const near = Math.max(0, x * glow.dir.x + y * glow.dir.y + zz * glow.dir.z);      // around the disc itself
+        const low = Math.pow(1 - Math.min(1, Math.abs(y - Math.max(0, glow.dir.y) * 0.5) * 1.6), 2);
+        const w = glow.amount * Math.min(1, facing * facing * low * 0.85 + Math.pow(near, 12) * 0.6);
+        c.lerp(glow.color, w);
+      }
       col.setXYZ(i, c.r, c.g, c.b);
     }
     col.needsUpdate = true;
@@ -157,12 +191,19 @@ export class SkySystem {
     this._key = keyAt(this.hour);
     this.phase = phaseOf(this.hour);
     this.dayFactor = this._dayFactor(this.hour);
-    // sun direction: east (+X) at 06:00, overhead at noon, west at 18:00, leaning south (+Z)
-    const night = this.hour < 6 || this.hour >= 18;
-    // by night the same arc is followed by a dim moon (rises in the east at 18:00)
-    const ang = night ? ((this.hour >= 18 ? this.hour - 18 : this.hour + 6) / 12) * Math.PI : ((this.hour - 6) / 12) * Math.PI;
-    this.sunDir.set(Math.cos(ang), Math.max(0.12, Math.sin(ang)) * 0.95, 0.38).normalize();
-    this.sun.position.copy(this.sunDir).multiplyScalar(120);
+    // sun: east (+X) at SUNRISE, high at midday, west at SUNSET, leaning south (+Z); the moon opposite
+    sunDirAt(this.hour, this.sunDir);
+    this.moonDir.set(-this.sunDir.x, -this.sunDir.y, this.sunDir.z);
+    this.sunElev = this.sunDir.y;
+    const up = smooth(-0.06, 0.06, this.sunElev);                 // 0 = the moon leads, 1 = the sun
+    this.sunUp = up > 0.5;
+    this.bodyDir.copy(this.sunUp ? this.sunDir : this.moonDir);
+    // the light comes from whichever body is up, never from below the horizon, and swings over smoothly
+    const clampUp = (v) => { v.y = Math.max(0.1, v.y); return v.normalize(); };
+    this._lightDir.copy(clampUp(_v.copy(this.moonDir))).lerp(clampUp(_w.copy(this.sunDir)), up).normalize();
+    this.sun.position.copy(this._lightDir).multiplyScalar(120);
+    // the warm glow on the horizon: strongest with the sun just below or just above it
+    this.glow = Math.exp(-Math.pow((this.sunElev - 0.04) / 0.16, 2));
     // window glow and the shafts follow the day
     const mats = this.game.materials;
     mats.building.emissiveIntensity = this._key.windows;
@@ -202,14 +243,17 @@ export class SkySystem {
     const sc = this.game.scene;
     // fog: teal murk (scaled by how bright the day is) below, hazy ochre above
     const dayLevel = 0.35 + 0.65 * k.day;
-    _a.copy(TEAL).multiplyScalar(dayLevel).lerp(TEAL_DEEP, Math.max(0, Math.min(1, (-y) / 8 * 0.6 + (y < -2 ? 0.2 : 0))));
+    // the time of day leaks into the murk too (above ground): a warm cast at sunrise, a deeper blue-black at night
+    const above = smooth(-4, 0, y);
+    _a.copy(TEAL).multiplyScalar(dayLevel).lerp(_d.copy(k.haze).multiplyScalar(0.55), 0.3 * above)
+      .lerp(TEAL_DEEP, Math.max(0, Math.min(1, (-y) / 8 * 0.6 + (y < -2 ? 0.2 : 0))));
     _b.copy(k.haze);
     sc.fog.color.copy(_b).lerp(_a, gloom);
     sc.fog.near = near; sc.fog.far = far;
     sc.background.copy(sc.fog.color);
-    this.hemi.color.copy(k.haze).lerp(HEMI_GLOOM, gloom * 0.7);
+    this.hemi.color.copy(k.haze).lerp(HEMI_GLOOM, gloom * lerp(0.7, 0.42, above));
     this.hemi.groundColor.set(0x5a6860).lerp(_b.set(0x8a7658), 1 - gloom);
-    this.hemi.intensity = k.hemiIntensity * hemiMul;
+    this.hemi.intensity = k.hemiIntensity * hemiMul * lerp(1, lerp(0.65, 1 + 0.18 * gloom, k.day), above);
     this.sun.color.copy(k.sunColor);
     this.sun.intensity = k.sunIntensity * sunMul;
     // dome: warm sky tinted mildly by gloom so patches of sky between towers read as hazy ochre
@@ -217,15 +261,20 @@ export class SkySystem {
     if (force || key !== this._domeKey) {
       this._domeKey = key;
       const dg = _c.copy(k.horizon).lerp(_d.copy(TEAL).multiplyScalar(0.8 + 0.4 * k.day), gloom * 0.35);
-      this._paintDome(dg, _a.copy(k.zenith).lerp(TEAL_DEEP, gloom * 0.25));
+      _glow.color.copy(k.sunColor).lerp(GLOW_RED, 0.35);
+      _glow.dir.copy(this.sunDir); _glow.amount = this.glow * (1 - gloom * 0.45);
+      this._paintDome(dg, _a.copy(k.zenith).lerp(TEAL_DEEP, gloom * 0.25), _glow);
     }
-    // sun / moon disc
-    this.disc.visible = true;
-    this.disc.material.color.copy(k.disc);
-    this.disc.material.opacity = Math.max(0.0, Math.min(1, 0.25 + k.day * 0.9));
+    // sun / moon disc: fades out at the horizon, so the moon sets in the west and the sun comes up in the east
+    const sunUp = this.sunUp, elev = this.bodyDir.y;
+    const fade = smooth(-0.03, 0.07, elev);
+    this.disc.visible = fade > 0.001;
+    if (sunUp) this.disc.material.color.copy(k.disc);
+    else this.disc.material.color.set(0xc8d4ec);
+    this.disc.material.opacity = sunUp ? fade * Math.min(1, 0.55 + k.day * 0.6) : fade * 0.55 * (1 - 0.8 * k.day);
     const cam = this.game.camera;
-    this.disc.position.copy(cam.position).addScaledVector(this.sunDir, 250);
-    this.disc.scale.setScalar(this.dayFactor > 0.02 || this.phase !== 'night' ? 150 + 60 * (1 - Math.min(1, this.sunDir.y * 1.6)) : 50);
+    this.disc.position.copy(cam.position).addScaledVector(this.bodyDir, 250);
+    this.disc.scale.setScalar(sunUp ? 150 + 70 * (1 - Math.min(1, elev * 1.6)) : 50);
   }
 
   update() { this._applyLevel(); }

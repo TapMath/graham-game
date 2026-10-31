@@ -670,6 +670,19 @@ function paBabble(ctx, out, t, o) {
   return syl * 0.19 + 0.3;
 }
 
+/** A coin tossed at a busker's feet: a bright inharmonic ring, a bounce, and a smaller second ring. */
+function coin(ctx, out, t) {
+  [[0, 1], [0.13, 0.55]].forEach(([d, g]) => {
+    [[2793, 1, 0.5], [4186 * 1.012, 0.55, 0.32], [6150, 0.3, 0.18]].forEach(([f, a, dec]) => {
+      const s = osc(ctx, 'sine', f * (d ? 1.006 : 1)), e = burst(ctx, t + d, 0.32 * a * g, 0.002, dec * (d ? 0.6 : 1), out);
+      s.connect(e); s.start(t + d); stopAt([s], t + d + 1.0);
+    });
+    const n = noiseSrc(ctx, 'white'), hp = filt(ctx, 'highpass', 5000, 0.7), ne = burst(ctx, t + d, 0.25 * g, 0.001, 0.012, out);
+    n.connect(hp); hp.connect(ne); startNoise(n, t + d); stopAt([n], t + d + 0.1);
+  });
+  return 0.9;
+}
+
 const ONESHOT_RAW = {
   bark, growl, bite, whimper,
   drone: droneWhirr, 'drone-alert': droneAlert, 'camera-alert': cameraAlert,
@@ -677,7 +690,7 @@ const ONESHOT_RAW = {
   'guard-shout': guardShout, footstep, 'vendor-call': vendorCall,
   mouthorgan: (ctx, out, t, o) => mouthOrgan(ctx, out, t, { weak: o.weak ?? 0, level: 0.5, notes: o.notes }).dur,
   drip, bird, clank, caneTap, jump, land, breath, 'gate-buzz': gateBuzz, 'gate-chime': gateChime, heal, hurt, heartbeat,
-  'vision-sting': visionSting, 'pa-chime': paChime, 'pa-squelch': paSquelch, 'pa-babble': paBabble,
+  'vision-sting': visionSting, 'pa-chime': paChime, 'pa-squelch': paSquelch, 'pa-babble': paBabble, coin,
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -780,7 +793,7 @@ const LOOPS_RAW = {
 // near -26 dBFS RMS, so the music (-28), the voice (-21) and the events all land where a mix should.
 const TRIM_DB = {
   growl: -14, bite: -13, 'drone-alert': -9, crack: -13, collapse: -9, grab: -9, wheeze: -8, 'gate-buzz': -12, hurt: -7,
-  land: -5, whimper: -6, 'camera-alert': -3, bark: 4, mutter: 8, jump: 6, breath: 8, 'pa-babble': 9, 'pa-squelch': 4,
+  land: -5, whimper: -6, 'camera-alert': -3, coin: -8, bark: 4, mutter: 8, jump: 6, breath: 8, 'pa-babble': 9, 'pa-squelch': 4,
 };
 const LOOP_TRIM_DB = { drone: -10, water: -8, 'smog-wind': -4, machine: -20, crowd: -6, 'dog-pant': -6, lift: -22, neon: -24 };
 const db = (x) => Math.pow(10, x / 20);
