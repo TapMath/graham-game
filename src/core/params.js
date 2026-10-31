@@ -1,4 +1,4 @@
-// URL parameters: seed, minutes, debug, autostart, mute, arena.
+// URL parameters: seed, minutes, debug, autostart, mute, arena, opening.
 // `minutes` = total real-time length of the run (05:40 day 1 to 06:00 day 2). Default: 1 game hour = 1.5 real minutes.
 export const GAME_HOURS = 24 + 20 / 60;                 // 05:40 -> 06:00 next day
 export const DEFAULT_MINUTES = GAME_HOURS * 1.5;        // about 36.5 real minutes (Phase 7b: was 1.25 per hour, 30.4 minutes)
@@ -16,5 +16,6 @@ export function parseParams(search = '') {
     autostart: flag('autostart'),
     mute: flag('mute'),
     arena: flag('arena'),          // Phase 2 makes the city default; ?arena=1 keeps the test arena
+    opening: q.has('opening') ? flag('opening') : null,   // the crash-site opening act: on in normal play, off with autostart; ?opening=1 / 0 forces it
   };
 }

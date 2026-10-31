@@ -5,7 +5,7 @@
 //   game.items.DEFS                                       {id: {name, desc, icon}}
 //
 // Ids: jacket (the blue Metro jacket), torch, batteries, tvRemote, pills (Setu's pills and inhaler; used up when he is found),
-// breachEvidence (6b adds it), food. Side effects kept in one place:
+// breachEvidence (6b adds it), food, hardhat (the opening act). Side effects kept in one place:
 //   jacket    -> game.flags.jacket = true (the guards read it) and Mithi's model wears the jacket variant
 //   torch     -> game.flags.torch = true
 //   breachEvidence -> game.flags.hasEvidence
@@ -19,6 +19,7 @@ export const DEFS = {
   tvRemote: { name: 'TV remote', desc: 'Home\'s TV remote, with nothing left inside.', icon: svg('<rect x="8" y="2" width="8" height="20" rx="2"/><circle cx="12" cy="6.5" r="1.4"/><path d="M10 11 H14 M10 14 H14 M10 17 H14"/>') },
   pills: { name: 'Pills & inhaler', desc: 'Setu\'s pills and inhaler. He needs one every eight hours.', icon: svg('<rect x="3" y="7" width="12" height="6" rx="3" transform="rotate(-35 9 10)"/><path d="M8 5 L12 12" transform="rotate(-35 9 10)"/><path d="M14 16 H21 V20 H14 Z M17.5 16 V13"/>') },
   breachEvidence: { name: 'Breach evidence', desc: 'Proof that the deep tunnels have breached the water table.', icon: svg('<path d="M6 3 H15 L19 7 V21 H6 Z"/><path d="M15 3 V7 H19"/><path d="M9 12 H16 M9 15 H16"/><path d="M12 17.5 C10.5 19 10.5 20.5 12 20.5 C13.5 20.5 13.5 19 12 17.5 Z"/>') },
+  hardhat: { name: 'Hard hat', desc: 'A yellow rescue helmet from the crate at the crash site. Falling debris rings off it instead of you.', icon: svg('<path d="M4 16 C4 10 7.5 6 12 6 C16.5 6 20 10 20 16 Z"/><path d="M2 16 H22 V18.5 H2 Z"/><path d="M12 6 V11 M8.5 7.5 L9.5 11.5 M15.5 7.5 L14.5 11.5"/>') },
   food: { name: 'Food', desc: 'Roti, rice and water from home. Enough to share.', icon: svg('<path d="M3 12 H21 C21 17 17 20 12 20 C7 20 3 17 3 12 Z"/><path d="M8 9 C8 7 10 7 10 5 M13 9 C13 7 15 7 15 5"/>') },
 };
 

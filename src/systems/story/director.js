@@ -42,7 +42,7 @@ export class Director {
     game.interactables.add({
       id: 'dig:oldman', pos: { x: o.pos.x, y: o.pos.y, z: o.pos.z }, radius: 2.6, height: 2.4,
       prompt: () => 'Hold E: dig him out',
-      enabled: () => !game.flags.oldManFreed && !game.modal,
+      enabled: () => !game.flags.oldManFreed && !game.modal && (game.opening?.digReady() ?? true),   // the opening act holds him back until its hush
       onInteract: () => { game.events.emit('sound:emit', { x: o.pos.x, y: o.pos.y + 0.4, z: o.pos.z, kind: 'clank', loudness: 0.3 }); },
     });
     this._holdUi();
@@ -200,6 +200,7 @@ export class Director {
   _updateDig(dt, game) {
     const o = this.oldman;
     if (game.flags.oldManFreed) { this._moanT = Infinity; return; }
+    if (!(game.opening?.digReady() ?? true)) { if (!this.holdEl.hidden) this.holdEl.hidden = true; this.dig = 0; return; }   // the opening act: not until the rescuers call for quiet
     const p = game.player, near = Math.hypot(p.pos.x - o.pos.x, p.pos.z - o.pos.z) < 2.7 && !game.modal;
     const held = near && game.input.action('interact');
     if (held) {
